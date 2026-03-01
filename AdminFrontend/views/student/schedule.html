@@ -1,0 +1,157 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Lịch học"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Loading State -->
+            <div ng-if="loading" class="schedule-loading">
+                <div class="schedule-loading-content">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Đang tải lịch học...</p>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div ng-if="!loading" class="schedule-container">
+                <!-- Week Navigation -->
+                <div class="schedule-nav-card">
+                    <div class="schedule-nav-content">
+                        <button type="button" class="schedule-nav-btn schedule-nav-prev" ng-click="previousWeek()" aria-label="Tuần trước">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="schedule-nav-center">
+                            <div class="schedule-nav-title">
+                                <i class="fas fa-calendar-week"></i>
+                                <span>Tuần này</span>
+                            </div>
+                            <div class="schedule-nav-date" ng-if="currentWeekRange">{{currentWeekRange}}</div>
+                            <div class="schedule-nav-date" ng-if="!currentWeekRange">Đang tải...</div>
+                        </div>
+                        
+                        <button type="button" class="schedule-nav-btn schedule-nav-next" ng-click="nextWeek()" aria-label="Tuần sau">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        
+                        <button type="button" class="schedule-nav-today" ng-click="loadSchedule()" aria-label="Về tuần hiện tại">
+                            <i class="fas fa-calendar-day"></i>
+                            <span>Hôm nay</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Schedule Table -->
+                <div class="schedule-table-wrapper">
+                    <div class="schedule-table-header">
+                        <h3>
+                            <i class="fas fa-table"></i>
+                            Lịch học theo tuần
+                        </h3>
+                    </div>
+                    <div class="schedule-table-content">
+                        <div class="schedule-table-scroll">
+                            <table class="schedule-table">
+                                <thead>
+                                    <tr>
+                                        <th class="schedule-col-period">Tiết</th>
+                                        <th class="schedule-col-day">Thứ 2</th>
+                                        <th class="schedule-col-day">Thứ 3</th>
+                                        <th class="schedule-col-day">Thứ 4</th>
+                                        <th class="schedule-col-day">Thứ 5</th>
+                                        <th class="schedule-col-day">Thứ 6</th>
+                                        <th class="schedule-col-day">Thứ 7</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="period in periods">
+                                        <td class="schedule-cell-period">
+                                            <div class="schedule-period-name">{{period.name}}</div>
+                                            <div class="schedule-period-time">{{period.time}}</div>
+                                        </td>
+                                        <td ng-repeat="day in [2,3,4,5,6,7]" class="schedule-cell-day">
+                                            <div ng-if="getSchedule(day, period.value)" class="schedule-item">
+                                                <div class="schedule-item-subject">
+                                                    <i class="fas fa-book"></i>
+                                                    <span>{{getSchedule(day, period.value).subjectName}}</span>
+                                                </div>
+                                                <div class="schedule-item-meta">
+                                                    <div class="schedule-item-row">
+                                                        <i class="fas fa-chalkboard-teacher"></i>
+                                                        <span>{{getSchedule(day, period.value).lecturerName}}</span>
+                                                    </div>
+                                                    <div class="schedule-item-row">
+                                                        <i class="fas fa-door-open"></i>
+                                                        <span>{{getSchedule(day, period.value).room}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Schedule List -->
+                <div ng-if="scheduleList.length > 0" class="schedule-list-wrapper">
+                    <div class="schedule-list-header">
+                        <h3>
+                            <i class="fas fa-list"></i>
+                            Danh sách lịch học
+                            <span class="schedule-list-count">{{scheduleList.length}} môn</span>
+                        </h3>
+                    </div>
+                    <div class="schedule-list-content">
+                        <div class="schedule-list-items">
+                            <div class="schedule-list-entry" ng-repeat="item in scheduleList | orderBy:'dayOfWeek'">
+                                <div class="schedule-entry-date">
+                                    <div class="schedule-entry-day">{{getDayName(item.dayOfWeek)}}</div>
+                                    <div class="schedule-entry-date-value">{{item.date}}</div>
+                                </div>
+                                <div class="schedule-entry-time">
+                                    <div class="schedule-entry-period">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Tiết {{item.period}}</span>
+                                    </div>
+                                    <div class="schedule-entry-time-value">{{item.startTime}} - {{item.endTime}}</div>
+                                </div>
+                                <div class="schedule-entry-info">
+                                    <div class="schedule-entry-subject">
+                                        <i class="fas fa-book"></i>
+                                        <span>{{item.subjectName}}</span>
+                                    </div>
+                                    <div class="schedule-entry-details">
+                                        <div class="schedule-entry-detail">
+                                            <i class="fas fa-chalkboard-teacher"></i>
+                                            <span>{{item.lecturerName}}</span>
+                                        </div>
+                                        <div class="schedule-entry-detail">
+                                            <i class="fas fa-door-open"></i>
+                                            <span>Phòng {{item.room}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div ng-if="scheduleList.length === 0" class="schedule-empty">
+                    <div class="schedule-empty-content">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>Không có lịch học</h3>
+                        <p>Tuần này không có môn học nào được lên lịch.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

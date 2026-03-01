@@ -1,0 +1,999 @@
+/* ============================================
+   MODERN LOGIN PAGE - Glass Morphism Design
+   Theme: Blue & White (Light & Professional)
+   ============================================ */
+
+/* ============================================
+   1. LOGIN PAGE LAYOUT
+   ============================================ */
+.modern-login-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* Background Image Container */
+.login-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/login-background.png?v=3');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #3b82f6; /* Fallback color nếu ảnh không load */
+    z-index: 1;
+}
+
+/* ============================================
+   2. GLASS CONTAINER - HORIZONTAL RECTANGLE
+   ============================================ */
+.login-glass-container {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 600px; /* Tăng width để tạo hình chữ nhật ngang */
+    padding: 35px 50px; /* Giảm padding dọc, tăng padding ngang */
+    
+    /* Glass Morphism Effect */
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.37),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
+    
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   3. BRANDING SECTION
+   ============================================ */
+.login-brand {
+    text-align: center;
+    margin-bottom: 25px; /* Giảm margin để form gọn hơn */
+}
+
+.login-logo-circle {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 15px;
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.login-logo-circle i {
+    font-size: 32px;
+    color: white;
+}
+
+.login-brand-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 8px 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.02em;
+}
+
+.login-brand-subtitle {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+    font-weight: 400;
+}
+
+/* ============================================
+   4. ERROR MESSAGE
+   ============================================ */
+.login-error-message {
+    background: rgba(244, 67, 54, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 14px;
+    animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.login-error-message i {
+    font-size: 16px;
+    color: #ff5252;
+}
+
+/* ============================================
+   5. FORM STYLES
+   ============================================ */
+.login-glass-form {
+    margin-bottom: 20px;
+}
+
+/* Input Group */
+.login-input-group {
+    margin-bottom: 18px;
+}
+
+.login-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Input Icon - NỔI BẬT */
+.login-input-icon {
+    position: absolute;
+    left: 18px;
+    font-size: 18px; /* Tăng kích thước icon */
+    color: #64B5F6; /* Xanh dương sáng để nổi bật */
+    pointer-events: none;
+    z-index: 2;
+    text-shadow: 0 0 8px rgba(100, 181, 246, 0.5); /* Hiệu ứng glow xanh */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); /* Shadow để nổi */
+}
+
+/* Input Field - ĐẬM NÉT OUTLINE - TRONG SUỐT TÔI */
+.login-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 18px 0 50px;
+    
+    background: rgba(0, 0, 0, 0.25); /* Nền đen trong suốt 25% - tối hơn */
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(33, 150, 243, 0.6); /* Border xanh đậm hơn */
+    border-radius: 12px;
+    
+    font-size: 16px;
+    color: #FFFFFF; /* Đổi sang màu trắng để đọc trên nền tối */
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.login-input::placeholder {
+    color: rgba(255, 255, 255, 0.6); /* Placeholder màu trắng mờ */
+}
+
+.login-input:focus {
+    background: rgba(0, 0, 0, 0.35); /* Nền tối hơn một chút khi focus */
+    border: 3px solid #2196F3; /* Border xanh sáng khi focus */
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.3); /* Shadow xanh nổi bật */
+    color: #FFFFFF; /* Giữ màu chữ trắng */
+}
+
+/* Override browser's autofill styles để đảm bảo button toggle vẫn nổi bật */
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgba(0, 0, 0, 0.3) inset !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border: 3px solid rgba(33, 150, 243, 0.6) !important;
+    transition: background-color 5000s ease-in-out 0s; /* Prevent background color change */
+    animation-name: autofill-detected !important;
+    animation-duration: 0.01s !important;
+}
+
+/* Animation để phát hiện autofill */
+@keyframes autofill-detected {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Đảm bảo toggle button vẫn hiển thị khi autofill */
+/* Fallback */
+.login-input-wrapper.autofilled .password-toggle-btn {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+}
+
+/* Modern browser với :has() support */
+@supports selector(:has(*)) {
+    .login-input-wrapper:has(.login-input:-webkit-autofill) .password-toggle-btn {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+    }
+}
+
+/* Input with Password Toggle */
+.login-input-with-toggle {
+    padding-right: 50px;
+}
+
+/* Hide browser's default password reveal button */
+.login-input[type="password"]::-webkit-credentials-auto-fill-button,
+.login-input[type="password"]::-webkit-strong-password-auto-fill-button,
+.login-input[type="password"]::-webkit-inner-spin-button,
+.login-input[type="password"]::-webkit-outer-spin-button {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    right: -9999px !important;
+}
+
+/* Hide browser's default password reveal for Firefox */
+.login-input[type="password"]::-moz-reveal {
+    display: none !important;
+}
+
+/* Hide browser's default password reveal for Edge/IE */
+.login-input[type="password"]::-ms-reveal {
+    display: none !important;
+}
+
+/* Password Toggle Button - Nổi bật và rõ ràng */
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    background: rgba(33, 150, 243, 0.15); /* Background xanh nhạt để nổi bật */
+    border: 1px solid rgba(100, 181, 246, 0.4); /* Border xanh để thấy rõ */
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: #64B5F6; /* Icon màu xanh sáng - nổi bật hơn */
+    font-size: 16px;
+    z-index: 10; /* Đảm bảo luôn ở trên cùng */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Shadow để nổi bật */
+}
+
+.password-toggle-btn:hover {
+    background: rgba(33, 150, 243, 0.3); /* Background xanh đậm hơn khi hover */
+    border-color: #64B5F6;
+    color: #FFFFFF; /* Icon trắng khi hover */
+    box-shadow: 0 3px 8px rgba(33, 150, 243, 0.4);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.password-toggle-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Đảm bảo icon luôn nổi bật khi browser auto-fill */
+/* Fallback cho browser không hỗ trợ :has() */
+.login-input-wrapper.autofilled .password-toggle-btn {
+    background: rgba(33, 150, 243, 0.25) !important;
+    border-color: #2196F3 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.5) !important;
+}
+
+/* Modern browser với :has() support */
+@supports selector(:has(*)) {
+    .login-input-wrapper:has(.login-input:-webkit-autofill) .password-toggle-btn,
+    .login-input-wrapper:has(.login-input:autofill) .password-toggle-btn {
+        background: rgba(33, 150, 243, 0.25) !important;
+        border-color: #2196F3 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.5) !important;
+    }
+}
+
+/* Icon inside button - đảm bảo luôn rõ ràng */
+.password-toggle-btn i {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)); /* Shadow cho icon */
+    text-shadow: 0 0 4px rgba(100, 181, 246, 0.6); /* Glow effect */
+}
+
+/* ============================================
+   6. CHECKBOX & OPTIONS
+   ============================================ */
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+/* Custom Checkbox */
+.login-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95); /* Giữ màu trắng cho text */
+}
+
+.login-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 18px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.login-checkbox input[type="checkbox"]:checked + .checkbox-custom {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border-color: #2196F3;
+}
+
+.login-checkbox input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+}
+
+.checkbox-label {
+    font-weight: 400;
+}
+
+/* ============================================
+   7. LINKS
+   ============================================ */
+.login-link-primary {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.login-link-primary::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: white;
+    transition: width 0.3s ease;
+}
+
+.login-link-primary:hover {
+    color: white;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.login-link-primary:hover::after {
+    width: 100%;
+    background: white;
+}
+
+.login-link-accent {
+    color: #64B5F6; /* Xanh sáng hơn để thấy rõ trên background tối */
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.login-link-accent:hover {
+    color: white;
+    text-decoration: underline;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   8. BUTTONS
+   ============================================ */
+.login-btn-primary {
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+}
+
+.login-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.5);
+}
+
+.login-btn-primary:active {
+    transform: translateY(0);
+}
+
+.login-btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.login-btn-primary i.fa-spinner {
+    margin-right: 8px;
+}
+
+/* ============================================
+   9. FOOTER TEXT
+   ============================================ */
+.login-footer-text {
+    text-align: center;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* ============================================
+   10. RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .login-glass-container {
+        width: 95%;
+        max-width: 500px;
+        padding: 30px 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-glass-container {
+        width: 95%;
+        max-width: 100%;
+        padding: 30px 25px;
+    }
+    
+    .login-brand-title {
+        font-size: 28px;
+    }
+    
+    .login-logo-circle {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .login-logo-circle i {
+        font-size: 28px;
+    }
+    
+    .login-input,
+    .login-btn-primary {
+        height: 48px;
+    }
+}
+
+/* ============================================
+   11. FOCUS & ACCESSIBILITY
+   ============================================ */
+*:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   12. LIGHT THEME VARIANT (Optional)
+   ============================================ */
+.modern-login-page.light-theme {
+    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+}
+
+.modern-login-page.light-theme .login-glass-container {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.modern-login-page.light-theme .login-brand-title {
+    color: #1976D2;
+}
+
+.modern-login-page.light-theme .login-brand-subtitle {
+    color: #424242;
+}
+
+.modern-login-page.light-theme .login-input {
+    background: rgba(255, 255, 255, 0.6);
+    color: #212121;
+    border-color: rgba(33, 150, 243, 0.2);
+}
+
+.modern-login-page.light-theme .login-input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.modern-login-page.light-theme .login-input-icon {
+    color: #2196F3;
+}
+
+.modern-login-page.light-theme .login-footer-text,
+.modern-login-page.light-theme .checkbox-label {
+    color: #424242;
+}
+
+.modern-login-page.light-theme .login-link-primary {
+    color: #1976D2;
+}
+
+/* ============================================
+   FORGOT PASSWORD & OTP STYLES
+   ============================================ */
+
+/* Success Message */
+.login-success-message {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.login-success-message i {
+    font-size: 18px;
+}
+
+/* OTP Sent Message */
+.otp-sent-message {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.otp-sent-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.otp-sent-icon i {
+    font-size: 36px;
+    color: white;
+}
+
+.otp-sent-message h3 {
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.otp-sent-message p {
+    color: var(--text-secondary, #64748b);
+    margin: 8px 0;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.otp-note {
+    font-size: 13px !important;
+    color: var(--text-tertiary, #94a3b8) !important;
+    font-style: italic;
+}
+
+.otp-actions {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.login-btn-secondary {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-btn-secondary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.login-btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.login-btn-outline {
+    width: 100%;
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--primary-color, #3b82f6);
+    border: 2px solid var(--primary-color, #3b82f6);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-btn-outline:hover:not(:disabled) {
+    background: var(--primary-color, #3b82f6);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.login-btn-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.login-link-secondary {
+    color: var(--text-secondary, #64748b);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login-link-secondary:hover {
+    color: var(--primary-color, #3b82f6);
+}
+
+/* OTP Input Container */
+.otp-info {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.otp-email {
+    color: var(--text-primary, #1e293b);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.otp-timer {
+    color: var(--text-secondary, #64748b);
+    font-size: 14px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.otp-timer.timer-warning {
+    color: #f59e0b;
+}
+
+.otp-timer.timer-expired {
+    color: #ef4444;
+}
+
+.otp-timer .expired-text {
+    font-weight: 600;
+}
+
+.otp-input-container {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.otp-input {
+    width: 60px;
+    height: 70px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary, #1e293b);
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.otp-input:focus {
+    border-color: var(--primary-color, #3b82f6);
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: scale(1.05);
+}
+
+.otp-input:invalid {
+    border-color: #ef4444;
+}
+
+/* OTP Verified Message */
+.otp-verified-message {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.otp-verified-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    animation: scaleIn 0.5s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.otp-verified-icon i {
+    font-size: 36px;
+    color: white;
+}
+
+.otp-verified-message h3 {
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.otp-verified-message p {
+    color: var(--text-secondary, #64748b);
+    margin: 8px 0;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* Reset Password Styles */
+.reset-info {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.reset-email {
+    color: var(--text-primary, #1e293b);
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.password-strength-indicator {
+    margin-bottom: 20px;
+}
+
+.strength-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-fill {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    border-radius: 2px;
+}
+
+.strength-fill.weak {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.strength-fill.medium {
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.strength-fill.strong {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.password-strength-indicator small {
+    font-size: 13px;
+    display: block;
+    text-align: center;
+}
+
+.password-strength-indicator small.weak {
+    color: #ef4444;
+}
+
+.password-strength-indicator small.medium {
+    color: #f59e0b;
+}
+
+.password-strength-indicator small.strong {
+    color: #10b981;
+}
+
+.password-mismatch-warning {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.password-mismatch-warning i {
+    font-size: 16px;
+}
+
+/* Reset Success Message */
+.reset-success-message {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.reset-success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    animation: scaleIn 0.5s ease-out;
+}
+
+.reset-success-icon i {
+    font-size: 36px;
+    color: white;
+}
+
+.reset-success-message h3 {
+    color: var(--text-primary, #1e293b);
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.reset-success-message p {
+    color: var(--text-secondary, #64748b);
+    margin: 8px 0;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.reset-success-actions {
+    margin-top: 25px;
+}
+
+/* Footer Links */
+.login-footer-links {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    .otp-input-container {
+        gap: 8px;
+    }
+    
+    .otp-input {
+        width: 50px;
+        height: 60px;
+        font-size: 28px;
+    }
+    
+    .login-glass-container {
+        padding: 30px 25px;
+    }
+}
+

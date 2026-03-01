@@ -1,0 +1,333 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Thống kê Lớp Chủ nhiệm"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Filter Bar -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Năm học</label>
+                            <select ng-model="filters.schoolYearId" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">{{sy.yearCode}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Học kỳ</label>
+                            <select ng-model="filters.semester" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="s in semesters" value="{{s}}">Học kỳ {{s}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Lớp chủ nhiệm *</label>
+                            <select ng-model="filters.classId" class="filter-select" ng-change="loadReports()" required>
+                                <option value="">-- Chọn lớp chủ nhiệm --</option>
+                                <option ng-repeat="c in classes" value="{{c.adminClassId}}">{{c.classCode}} - {{c.className}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button ng-click="exportExcel()" class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="alert alert-info" style="margin-top: 12px;">
+                        <i class="fas fa-info-circle"></i>
+                        <small>Vui lòng chọn lớp chủ nhiệm để xem thống kê</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center" style="padding: 60px;">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Đang tải thống kê...</p>
+            </div>
+
+            <!-- Report Content -->
+            <div ng-if="!loading && !error && filters.classId">
+                
+                <!-- 1. Điểm danh sinh viên lớp chủ nhiệm (Card) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-calendar-check"></i>
+                            Điểm danh sinh viên lớp chủ nhiệm
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.attendanceStats.totalStudents || 0}}</h3>
+                                    <p>Tổng số sinh viên</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.attendanceStats.averageAttendanceRate || 0}}%</h3>
+                                    <p>Tỷ lệ điểm danh trung bình</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.attendanceStats.goodAttendance || 0}}</h3>
+                                    <p>Điểm danh tốt (>= 80%)</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.attendanceStats.poorAttendance || 0}}</h3>
+                                    <p>Điểm danh kém (< 50%)</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phân bố trạng thái điểm danh -->
+                        <div style="margin-top: 24px;">
+                            <h4>Phân bố trạng thái điểm danh</h4>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Trạng thái</th>
+                                            <th>Số lượng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Có mặt</td>
+                                            <td>{{reports.attendanceStats.byStatus.present || 0}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Vắng</td>
+                                            <td>{{reports.attendanceStats.byStatus.absent || 0}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Đi muộn</td>
+                                            <td>{{reports.attendanceStats.byStatus.late || 0}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Có phép</td>
+                                            <td>{{reports.attendanceStats.byStatus.excused || 0}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Phân bố GPA sinh viên trong lớp (Biểu đồ) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Phân bố GPA sinh viên trong lớp
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.excellent || 0}}</h3>
+                                    <p>Giỏi (>= 3.5) - {{getGpaPercentage('excellent')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.good || 0}}</h3>
+                                    <p>Khá (3.0 - 3.49) - {{getGpaPercentage('good')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-minus-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.average || 0}}</h3>
+                                    <p>Trung bình (2.0 - 2.99) - {{getGpaPercentage('average')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.weak || 0}}</h3>
+                                    <p>Yếu (< 2.0) - {{getGpaPercentage('weak')}}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Simple bar chart representation -->
+                        <div style="margin-top: 24px; padding: 20px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                            <h4>Biểu đồ phân bố GPA</h4>
+                            <div style="display: flex; align-items: flex-end; gap: 10px; height: 200px; margin-top: 20px;">
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--success-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGpaPercentage('excellent') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">Giỏi</small>
+                                    <small style="color: var(--text-secondary);">{{getGpaPercentage('excellent')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--primary-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGpaPercentage('good') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">Khá</small>
+                                    <small style="color: var(--text-secondary);">{{getGpaPercentage('good')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--warning-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGpaPercentage('average') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">Trung bình</small>
+                                    <small style="color: var(--text-secondary);">{{getGpaPercentage('average')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--danger-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGpaPercentage('weak') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">Yếu</small>
+                                    <small style="color: var(--text-secondary);">{{getGpaPercentage('weak')}}%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Tín chỉ còn nợ (Card + Bảng) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-credit-card"></i>
+                            Tín chỉ còn nợ của sinh viên
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.creditDebtStats.total || 0}}</h3>
+                                    <p>Số SV còn nợ tín chỉ</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.creditDebtStats.averageDebt || 0}}</h3>
+                                    <p>Tín chỉ nợ trung bình</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phân bố theo khoảng -->
+                        <div ng-if="reports.creditDebtStats.byRange.length > 0" style="margin-top: 24px;">
+                            <h4>Phân bố theo khoảng nợ tín chỉ</h4>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Khoảng nợ tín chỉ</th>
+                                            <th>Số lượng sinh viên</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="item in reports.creditDebtStats.byRange">
+                                            <td>{{item.range}} tín chỉ</td>
+                                            <td>{{item.count}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Bảng sinh viên điểm danh thấp -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list-ol"></i>
+                            Sinh viên điểm danh thấp
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div ng-if="reports.lowAttendanceStudents.length === 0" class="text-center" style="padding: 40px;">
+                            <i class="fas fa-inbox fa-3x" style="color: var(--text-light); opacity: 0.5;"></i>
+                            <p>Không có sinh viên nào điểm danh thấp</p>
+                        </div>
+                        <div ng-if="reports.lowAttendanceStudents.length > 0" class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ tên</th>
+                                        <th>Tỷ lệ điểm danh</th>
+                                        <th>Số buổi vắng</th>
+                                        <th>GPA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="student in reports.lowAttendanceStudents">
+                                        <td>{{$index + 1}}</td>
+                                        <td>{{student.studentCode}}</td>
+                                        <td>{{student.fullName}}</td>
+                                        <td>
+                                            <span ng-if="student.attendanceRate < 50" class="badge badge-danger">{{student.attendanceRate || 0}}%</span>
+                                            <span ng-if="student.attendanceRate >= 50 && student.attendanceRate < 80" class="badge badge-warning">{{student.attendanceRate || 0}}%</span>
+                                            <span ng-if="student.attendanceRate >= 80" class="badge badge-success">{{student.attendanceRate || 0}}%</span>
+                                        </td>
+                                        <td>{{student.absentCount || 0}}</td>
+                                        <td>{{student.cumulativeGpa || '—'}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty state when no class selected -->
+            <div ng-if="!loading && !error && !filters.classId" class="text-center" style="padding: 60px;">
+                <i class="fas fa-info-circle fa-3x" style="color: var(--text-light); opacity: 0.5; margin-bottom: 20px;"></i>
+                <p>Vui lòng chọn lớp chủ nhiệm để xem thống kê</p>
+            </div>
+        </div>
+    </div>
+</div>
+

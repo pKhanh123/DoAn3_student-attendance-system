@@ -1,0 +1,405 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Thời khóa biểu"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Toolbar Section -->
+            <div class="timetable-admin-toolbar card">
+                <div class="timetable-admin-toolbar-header">
+                    <div class="timetable-admin-toolbar-title">
+                        <h3>Tuần {{week}} / Năm học {{year}}</h3>
+                        <!-- Thêm thông tin lớp nếu đã chọn -->
+                        <div ng-if="selectedClassInfo" class="timetable-admin-class-info">
+                            <span class="badge badge-primary">{{selectedClassInfo.classCode}}</span>
+                            <span>{{selectedClassInfo.className}}</span>
+                            <small class="text-muted" ng-if="selectedClassInfo.subjectName || selectedClassInfo.lecturerName">
+                                | 
+                                <span ng-if="selectedClassInfo.subjectName">{{selectedClassInfo.subjectName}}</span>
+                                <span ng-if="selectedClassInfo.lecturerName"> - GV: {{selectedClassInfo.lecturerName}}</span>
+                                <span ng-if="selectedClassInfo.semester"> - HK{{selectedClassInfo.semester}}</span>
+                            </small>
+                        </div>
+                    </div>
+                    <div class="timetable-admin-toolbar-actions">
+                        <!-- Class Selector với Search -->
+                        <div class="timetable-admin-class-selector">
+                            <!-- Filter checkbox -->
+                            <div class="timetable-admin-class-filter-options">
+                                <label class="timetable-admin-filter-checkbox">
+                                    <input type="checkbox" 
+                                           ng-model="showOnlyActive" 
+                                           ng-change="filterClasses()">
+                                    <span>Chỉ hiển thị lớp đang hoạt động</span>
+                                </label>
+                            </div>
+                            
+                            <!-- Input tìm kiếm -->
+                            <div class="timetable-admin-class-search-wrapper">
+                                <input type="text" 
+                                       ng-model="classSearchText" 
+                                       placeholder="🔍 Tìm kiếm lớp (mã, tên, môn học, giảng viên)..."
+                                       class="form-control timetable-admin-class-search"
+                                       ng-focus="showClassDropdown = true">
+                                <span class="timetable-admin-search-count" 
+                                      ng-if="classSearchText && filteredClasses.length > 0">
+                                    Tìm thấy {{filteredClasses.length}} lớp
+                                </span>
+                                <span class="timetable-admin-search-count text-warning" 
+                                      ng-if="classSearchText && filteredClasses.length === 0">
+                                    Không tìm thấy lớp nào
+                                </span>
+                            </div>
+                            
+                            <!-- Dropdown với filtered classes -->
+                            <select ng-model="selectedClassId" 
+                                    ng-change="onClassChange()" 
+                                    class="form-control timetable-admin-class-select">
+                                <option value="">-- Chọn lớp học phần --</option>
+                                <option ng-repeat="c in filteredClasses" 
+                                        value="{{c.classId || c.class_id}}"
+                                        title="{{getClassFullTitle(c)}}">
+                                    {{getClassDisplayText(c)}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <button ng-click="prevWeek()" class="btn btn-outline timetable-admin-btn-nav">
+                            <i class="fas fa-chevron-left"></i> Tuần trước
+                        </button>
+                        <button ng-click="nextWeek()" class="btn btn-outline timetable-admin-btn-nav">
+                            Tuần sau <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button ng-click="openCreateForm()" 
+                                class="btn btn-primary timetable-admin-btn-create"
+                                ng-disabled="!selectedClassId">
+                            <i class="fas fa-plus"></i> Tạo phiên học
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Guidance message khi chưa chọn lớp -->
+            <div ng-if="!selectedClassId" class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Hướng dẫn:</strong> Vui lòng chọn một lớp học phần để xem và quản lý lịch học trong tuần.
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="timetable-admin-alert alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Form Create/Edit Session -->
+            <div ng-if="showForm" class="timetable-admin-form card">
+                <div class="timetable-admin-form-header">
+                    <h3>{{editMode ? 'Sửa' : 'Tạo'}} phiên học</h3>
+                    <button ng-click="resetForm()" class="btn btn-sm btn-outline timetable-admin-btn-close">
+                        <i class="fas fa-times"></i> Đóng
+                    </button>
+                </div>
+                <div class="timetable-admin-form-body">
+                    <form class="timetable-admin-form-content">
+                        <div class="timetable-admin-form-grid">
+                            <div class="timetable-admin-form-field">
+                                <label>Lớp học <span class="timetable-admin-required">*</span></label>
+                                <select ng-model="form.classId" 
+                                        class="form-control" 
+                                        required
+                                        ng-disabled="selectedClassId">
+                                    <option value="">-- Chọn lớp --</option>
+                                    <option ng-repeat="c in classes" value="{{c.classId || c.class_id}}">
+                                        {{c.classCode || c.class_code}} - {{c.className || c.class_name}}
+                                    </option>
+                                </select>
+                                <small ng-if="selectedClassId" class="text-muted">
+                                    Lớp đã được chọn từ danh sách trên
+                                </small>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Môn học <span class="timetable-admin-required">*</span></label>
+                                <select ng-model="form.subjectId" class="form-control" required>
+                                    <option value="">-- Chọn môn --</option>
+                                    <option ng-repeat="s in subjects" value="{{s.subjectId}}">{{s.subjectCode}} - {{s.subjectName}}</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Giảng viên</label>
+                                <select ng-model="form.lecturerId" class="form-control">
+                                    <option value="">-- Chọn giảng viên --</option>
+                                    <option ng-repeat="l in lecturers" value="{{l.lecturerId}}">{{l.fullName}}</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Phòng học</label>
+                                <select ng-model="form.roomId" class="form-control">
+                                    <option value="">-- Chọn phòng --</option>
+                                    <option ng-repeat="r in rooms" value="{{r.roomId}}">{{r.roomCode}} ({{r.building}})</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Năm học</label>
+                                <select ng-model="form.schoolYearId" class="form-control">
+                                    <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">{{sy.schoolYearCode}}</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Tuần <span class="timetable-admin-required">*</span></label>
+                                <input type="number" ng-model="form.weekNo" min="1" max="53" class="form-control" required>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Thứ <span class="timetable-admin-required">*</span></label>
+                                <select ng-model="form.weekday" class="form-control" required>
+                                    <option value="1">Thứ 2</option>
+                                    <option value="2">Thứ 3</option>
+                                    <option value="3">Thứ 4</option>
+                                    <option value="4">Thứ 5</option>
+                                    <option value="5">Thứ 6</option>
+                                    <option value="6">Thứ 7</option>
+                                    <option value="7">Chủ nhật</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Giờ bắt đầu <span class="timetable-admin-required">*</span></label>
+                                <input type="text" 
+                                       ng-model="form.startTime" 
+                                       ng-model-options="{ updateOn: 'blur' }"
+                                       placeholder="HH:mm (VD: 07:00)"
+                                       pattern="^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control" 
+                                       required>
+                                <small class="text-muted">Định dạng: HH:mm (24 giờ)</small>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Giờ kết thúc <span class="timetable-admin-required">*</span></label>
+                                <input type="text" 
+                                       ng-model="form.endTime" 
+                                       ng-model-options="{ updateOn: 'blur' }"
+                                       placeholder="HH:mm (VD: 09:00)"
+                                       pattern="^([0-1][0-9]|2[0-3]):[0-5][0-9]$"
+                                       class="form-control" 
+                                       required>
+                                <small class="text-muted">Định dạng: HH:mm (24 giờ)</small>
+                            </div>
+                            <!-- ✅ CẬP NHẬT: Period Selector với dropdown -->
+                            <div class="timetable-admin-form-field">
+                                <label>Tiết bắt đầu</label>
+                                <select ng-model="form.periodFrom" class="form-control">
+                                    <option value="">-- Chọn tiết --</option>
+                                    <option ng-repeat="p in [1,2,3,4,5,6,7,8,9,10,11,12]" value="{{p}}">Tiết {{p}}</option>
+                                </select>
+                                <small class="text-muted" ng-if="form.periodFrom && form.periodTo && periodTimeDisplay">
+                                    Thời gian: {{periodTimeDisplay}}
+                                </small>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Tiết kết thúc</label>
+                                <select ng-model="form.periodTo" class="form-control">
+                                    <option value="">-- Chọn tiết --</option>
+                                    <option ng-repeat="p in [1,2,3,4,5,6,7,8,9,10,11,12]" value="{{p}}">Tiết {{p}}</option>
+                                </select>
+                                <small class="text-muted" ng-if="form.periodFrom && form.periodTo">
+                                    (Tự động cập nhật giờ bắt đầu/kết thúc)
+                                </small>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Lặp lại</label>
+                                <select ng-model="form.recurrence" class="form-control">
+                                    <option value="once">Một lần</option>
+                                    <option value="weekly">Hàng tuần</option>
+                                    <option value="biweekly">Hai tuần một lần</option>
+                                </select>
+                            </div>
+                            <div class="timetable-admin-form-field">
+                                <label>Trạng thái</label>
+                                <select ng-model="form.status" class="form-control">
+                                    <option value="active">Hoạt động</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                    <option value="postponed">Hoãn</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="timetable-admin-form-field-full">
+                            <label>Ghi chú</label>
+                            <textarea ng-model="form.notes" class="form-control timetable-admin-textarea" rows="2" placeholder="Ghi chú (tùy chọn)"></textarea>
+                        </div>
+                        
+                        <!-- Conflict Check Result -->
+                        <div ng-if="conflictResult" class="timetable-admin-conflict">
+                            <h4 class="timetable-admin-conflict-title">Kết quả kiểm tra xung đột:</h4>
+                            <div ng-if="conflictResult.lecturerConflicts && conflictResult.lecturerConflicts.length > 0" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Xung đột giảng viên:</strong>
+                                <ul>
+                                    <li ng-repeat="c in conflictResult.lecturerConflicts">{{c.message}}</li>
+                                </ul>
+                            </div>
+                            <div ng-if="conflictResult.roomConflicts && conflictResult.roomConflicts.length > 0" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Xung đột phòng:</strong>
+                                <ul>
+                                    <li ng-repeat="c in conflictResult.roomConflicts">{{c.message}}</li>
+                                </ul>
+                            </div>
+                            <div ng-if="conflictResult.studentConflicts && conflictResult.studentConflicts.length > 0" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Xung đột sinh viên:</strong>
+                                <ul>
+                                    <li ng-repeat="c in conflictResult.studentConflicts">{{c.message}}</li>
+                                </ul>
+                            </div>
+                            <div ng-if="conflictResult.isOverCapacity" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Phòng quá tải:</strong> Số sinh viên đăng ký ({{conflictResult.enrolled}}) vượt quá sức chứa phòng.
+                            </div>
+                            <!-- ✅ THÊM: Period Conflicts -->
+                            <div ng-if="conflictResult.periodConflicts && conflictResult.periodConflicts.length > 0" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Xung đột tiết học:</strong>
+                                <ul>
+                                    <li ng-repeat="c in conflictResult.periodConflicts">
+                                        <span ng-if="c.type === 'LECTURER_PERIOD'">
+                                            Giảng viên đã có lịch ở Tiết {{c.periodFrom}}-{{c.periodTo}} (Lớp: {{c.classCode}})
+                                        </span>
+                                        <span ng-if="c.type === 'ROOM_PERIOD'">
+                                            Phòng học đã được sử dụng ở Tiết {{c.periodFrom}}-{{c.periodTo}} (Lớp: {{c.classCode}})
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!-- ✅ THÊM: Errors -->
+                            <div ng-if="conflictResult.errors && conflictResult.errors.length > 0" class="timetable-admin-conflict-item timetable-admin-conflict-error">
+                                <strong>⚠️ Lỗi validation:</strong>
+                                <ul>
+                                    <li ng-repeat="err in conflictResult.errors">{{err}}</li>
+                                </ul>
+                            </div>
+                            <div ng-if="conflictResult.lecturerConflicts.length === 0 && conflictResult.roomConflicts.length === 0 && conflictResult.studentConflicts.length === 0 && !conflictResult.isOverCapacity && (!conflictResult.periodConflicts || conflictResult.periodConflicts.length === 0) && (!conflictResult.errors || conflictResult.errors.length === 0)" class="timetable-admin-conflict-item timetable-admin-conflict-success">
+                                <strong>✅ Không có xung đột</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="timetable-admin-form-actions">
+                            <button ng-click="checkConflicts()" class="btn btn-outline timetable-admin-btn-check" ng-disabled="checkingConflicts || loading">
+                                <i class="fas fa-search" ng-if="!checkingConflicts"></i>
+                                <i class="fas fa-spinner fa-spin" ng-if="checkingConflicts"></i>
+                                {{checkingConflicts ? 'Đang kiểm tra...' : 'Kiểm tra xung đột'}}
+                            </button>
+                            <button ng-if="!editMode" ng-click="createSession()" class="btn btn-primary timetable-admin-btn-save" ng-disabled="loading || !conflictResult">
+                                <i class="fas fa-save"></i> Tạo phiên học
+                            </button>
+                            <button ng-if="editMode" ng-click="updateSession()" class="btn btn-primary timetable-admin-btn-save" ng-disabled="loading">
+                                <i class="fas fa-save"></i> Cập nhật
+                            </button>
+                            <button ng-click="resetForm()" class="btn btn-outline timetable-admin-btn-cancel">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Timetable Grid -->
+            <div class="timetable-admin-grid card">
+                <div class="timetable-admin-grid-header">
+                    <h3>Danh sách phiên học tuần {{week}}</h3>
+                </div>
+                <div class="timetable-admin-grid-body">
+                    <div ng-if="allSessions.length === 0" class="timetable-admin-empty">
+                        <i class="fas fa-calendar-times timetable-admin-empty-icon"></i>
+                        <p>Chưa có phiên học nào trong tuần này</p>
+                    </div>
+                    <div ng-if="allSessions.length > 0" class="timetable-admin-table-wrapper">
+                        <table class="table timetable-admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Loại</th>
+                                    <th>Thứ</th>
+                                    <th>Giờ</th>
+                                    <th>Lớp</th>
+                                    <th>Môn</th>
+                                    <th>GV</th>
+                                    <th>Phòng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="s in allSessions | orderBy:['weekday', 'startTime']" 
+                                    ng-class="{'exam-row': s.type === 'exam', 'session-row': s.type === 'session'}">
+                                    <!-- ✅ Label phân loại ở đầu dòng -->
+                                    <td>
+                                        <span ng-if="s.type === 'exam'" class="badge badge-danger">
+                                            <i class="fas fa-clipboard-list"></i> LỊCH THI
+                                        </span>
+                                        <span ng-if="s.type === 'session' || !s.type" class="badge badge-primary">
+                                            <i class="fas fa-book"></i> LỊCH HỌC
+                                        </span>
+                                    </td>
+                                    <td>Thứ {{s.weekday}}</td>
+                                    <td>
+                                        <span ng-if="s.periodFrom && s.periodTo">
+                                            <strong>Tiết {{s.periodFrom}}-{{s.periodTo}}</strong><br>
+                                            <small class="text-muted">{{s.startTime}} - {{s.endTime}}</small>
+                                        </span>
+                                        <span ng-if="!s.periodFrom || !s.periodTo">
+                                            {{s.startTime}} - {{s.endTime}}
+                                        </span>
+                                        <!-- Thêm thông tin ca thi nếu là exam -->
+                                        <span ng-if="s.type === 'exam' && s.sessionNo" class="text-muted">
+                                            <br><small>Ca thi {{s.sessionNo}}</small>
+                                        </span>
+                                    </td>
+                                    <td>{{s.classCode}}</td>
+                                    <td>
+                                        {{s.subjectName}}
+                                        <!-- Thêm loại thi nếu là exam -->
+                                        <span ng-if="s.type === 'exam'">
+                                            <br>
+                                            <small class="text-muted">
+                                                <span ng-if="s.examType === 'GIỮA_HỌC_PHẦN'">(Thi giữa)</span>
+                                                <span ng-if="s.examType === 'KẾT_THÚC_HỌC_PHẦN'">(Thi cuối)</span>
+                                            </small>
+                                        </span>
+                                    </td>
+                                    <td>{{s.lecturerName || '—'}}</td>
+                                    <td>{{s.roomCode || '—'}}</td>
+                                    <td>
+                                        <!-- Status cho sessions -->
+                                        <span ng-if="s.type === 'session' || !s.type">
+                                            <span ng-if="s.status === 'active'" class="badge badge-success">Hoạt động</span>
+                                            <span ng-if="s.status === 'cancelled'" class="badge badge-danger">Đã hủy</span>
+                                            <span ng-if="s.status === 'postponed'" class="badge badge-warning">Hoãn</span>
+                                        </span>
+                                        <!-- Status cho exams -->
+                                        <span ng-if="s.type === 'exam'">
+                                            <span ng-if="s.status === 'PLANNED'" class="badge badge-info">Đã lên kế hoạch</span>
+                                            <span ng-if="s.status === 'CONFIRMED'" class="badge badge-success">Đã xác nhận</span>
+                                            <span ng-if="s.status === 'COMPLETED'" class="badge badge-secondary">Đã hoàn thành</span>
+                                            <span ng-if="s.status === 'CANCELLED'" class="badge badge-danger">Đã hủy</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="timetable-admin-actions">
+                                            <!-- Chỉ show edit/delete cho sessions -->
+                                            <button ng-if="s.type === 'session' || !s.type" 
+                                                    ng-click="openEditForm(s)" 
+                                                    class="btn btn-sm btn-outline timetable-admin-btn-edit">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button ng-if="s.type === 'session' || !s.type" 
+                                                    ng-click="deleteSession(s.sessionId)" 
+                                                    class="btn btn-sm btn-danger timetable-admin-btn-delete">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                            <!-- Link đến quản lý exam schedule nếu là exam -->
+                                            <a ng-if="s.type === 'exam'" 
+                                               href="#/advisor/exam-schedules" 
+                                               class="btn btn-sm btn-info"
+                                               title="Xem chi tiết lịch thi">
+                                                <i class="fas fa-calendar-alt"></i> Chi tiết
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

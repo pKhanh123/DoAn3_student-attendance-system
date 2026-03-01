@@ -1,0 +1,222 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Kết quả học tập"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Loading -->
+            <div ng-if="loading" class="card">
+                <div class="card-body text-center" style="padding: 60px 20px;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <p style="font-size: 16px; color: var(--text-secondary);">Đang tải dữ liệu điểm...</p>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- GPA Summary Cards -->
+            <div ng-if="!loading && summary" class="grades-gpa-summary">
+                <div class="gpa-card gpa-card-primary">
+                    <div class="gpa-card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="gpa-card-content">
+                        <div class="gpa-card-value">{{summary.currentGPA | number:2}}</div>
+                        <div class="gpa-card-label">GPA Hiện tại</div>
+                    </div>
+                </div>
+                <div class="gpa-card gpa-card-success">
+                    <div class="gpa-card-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="gpa-card-content">
+                        <div class="gpa-card-value">{{summary.cumulativeGPA | number:2}}</div>
+                        <div class="gpa-card-label">GPA Tích lũy</div>
+                    </div>
+                </div>
+                <div class="gpa-card gpa-card-info">
+                    <div class="gpa-card-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="gpa-card-content">
+                        <div class="gpa-card-value">{{summary.totalCredits}}/{{summary.requiredCredits}}</div>
+                        <div class="gpa-card-label">Tín chỉ</div>
+                    </div>
+                </div>
+                <div class="gpa-card gpa-card-rank" ng-class="{
+                    'gpa-card-excellent': summary.rank === 'Xuất sắc' || summary.rank === 'Giỏi',
+                    'gpa-card-good': summary.rank === 'Khá',
+                    'gpa-card-average': summary.rank === 'Trung bình',
+                    'gpa-card-weak': summary.rank === 'Yếu' || summary.rank === 'Kém'
+                }">
+                    <div class="gpa-card-icon">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <div class="gpa-card-content">
+                        <div class="gpa-card-value">{{summary.rank || '—'}}</div>
+                        <div class="gpa-card-label">Xếp loại</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter and Actions Card -->
+            <div class="card grades-filter-card">
+                <div class="card-header grades-filter-header">
+                    <div class="filter-header-title">
+                        <i class="fas fa-filter"></i>
+                        <h2>Lọc kết quả</h2>
+                    </div>
+                    <div class="filter-header-actions">
+                        <button class="btn btn-sm btn-outline grades-action-btn" 
+                                ng-click="refreshGrades()" 
+                                ng-disabled="loading"
+                                title="Làm mới">
+                            <i class="fas fa-sync-alt"></i>
+                            <span class="btn-text">Làm mới</span>
+                        </button>
+                        <button class="btn btn-sm btn-primary grades-action-btn"
+                                ng-click="recalculateGPA()"
+                                ng-disabled="loading || !selectedSchoolYear"
+                                title="Tính lại GPA">
+                            <i class="fas fa-calculator"></i>
+                            <span class="btn-text">Tính lại GPA</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="grades-filter-row">
+                        <div class="grades-filter-group">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Năm học
+                            </label>
+                            <select class="form-control" 
+                                    ng-model="selectedSchoolYear" 
+                                    ng-change="onFilterChange()">
+                                <option value="">-- Chọn năm học --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                    {{sy.yearCode}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="grades-filter-group">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-week"></i> Học kỳ
+                            </label>
+                            <select class="form-control" 
+                                    ng-model="selectedSemester" 
+                                    ng-change="onFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option value="1">Học kỳ 1</option>
+                                <option value="2">Học kỳ 2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grades Table -->
+            <div ng-if="!loading && grades.length > 0" class="card grades-table-card">
+                <div class="card-header">
+                    <h2>
+                        <i class="fas fa-table"></i>
+                        {{selectedSchoolYear ? (schoolYears | filter:{schoolYearId:selectedSchoolYear})[0].yearCode : 'Bảng điểm'}}
+                        <span ng-if="selectedSemester" class="grades-semester-badge">Học kỳ {{selectedSemester}}</span>
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table grades-table">
+                            <thead>
+                                <tr>
+                                    <th class="grade-col-code">Mã MH</th>
+                                    <th class="grade-col-subject">Tên môn học</th>
+                                    <th class="grade-col-credits">TC</th>
+                                    <th class="grade-col-midterm">Giữa kỳ</th>
+                                    <th class="grade-col-final">Cuối kỳ</th>
+                                    <th class="grade-col-total">Tổng kết</th>
+                                    <th class="grade-col-letter">Điểm chữ</th>
+                                    <th class="grade-col-status">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="grade in grades" 
+                                    class="grade-row"
+                                    ng-class="{'grade-row-failed': (grade.totalScore !== null && grade.totalScore !== undefined) && (grade.totalScore < 5.0 || grade.letterGrade === 'F')}">
+                                    <td class="grade-col-code">
+                                        <strong>{{grade.classCode}}</strong>
+                                    </td>
+                                    <td class="grade-col-subject">{{grade.subjectName}}</td>
+                                    <td class="grade-col-credits text-center">{{grade.credits || '—'}}</td>
+                                    <td class="grade-col-midterm text-center">{{grade.midtermScore ? (grade.midtermScore | number:1) : '—'}}</td>
+                                    <td class="grade-col-final text-center">{{grade.finalScore ? (grade.finalScore | number:1) : '—'}}</td>
+                                    <td class="grade-col-total text-center">
+                                        <span ng-if="grade.totalScore" 
+                                              class="grade-total-score" 
+                                              ng-class="{
+                                                  'grade-excellent': grade.totalScore >= 8,
+                                                  'grade-good': grade.totalScore >= 6.5 && grade.totalScore < 8,
+                                                  'grade-average': grade.totalScore >= 5 && grade.totalScore < 6.5,
+                                                  'grade-weak': grade.totalScore < 5
+                                              }">
+                                            {{grade.totalScore | number:1}}
+                                        </span>
+                                        <span ng-if="!grade.totalScore">—</span>
+                                    </td>
+                                    <td class="grade-col-letter text-center">
+                                        <span ng-if="grade.letterGrade" 
+                                              class="grade-letter-badge" 
+                                              ng-class="{
+                                                  'badge-excellent': grade.letterGrade === 'A' || grade.letterGrade === 'B+',
+                                                  'badge-good': grade.letterGrade === 'B' || grade.letterGrade === 'C+',
+                                                  'badge-average': grade.letterGrade === 'C' || grade.letterGrade === 'D+',
+                                                  'badge-weak': grade.letterGrade === 'D' || grade.letterGrade === 'F'
+                                              }">
+                                            {{grade.letterGrade}}
+                                        </span>
+                                        <span ng-if="!grade.letterGrade">—</span>
+                                    </td>
+                                    <td class="grade-col-status text-center">
+                                        <!-- Kiểm tra trượt: totalScore < 5.0 hoặc letterGrade là F -->
+                                        <span ng-if="grade.totalScore !== null && grade.totalScore !== undefined">
+                                            <span ng-if="grade.totalScore < 5.0 || grade.letterGrade === 'F'" 
+                                                  class="badge badge-danger" 
+                                                  style="font-size: 12px; padding: 4px 8px; font-weight: 600;">
+                                                <i class="fas fa-times-circle"></i> Trượt
+                                            </span>
+                                            <span ng-if="grade.totalScore >= 5.0 && grade.letterGrade !== 'F'" 
+                                                  class="badge badge-success" 
+                                                  style="font-size: 12px; padding: 4px 8px; font-weight: 600;">
+                                                <i class="fas fa-check-circle"></i> Đạt
+                                            </span>
+                                        </span>
+                                        <span ng-if="grade.totalScore === null || grade.totalScore === undefined" class="text-muted">
+                                            <small>Chưa có điểm</small>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div ng-if="!loading && grades.length === 0 && selectedSchoolYear" class="card">
+                <div class="card-body text-center" style="padding: 60px 20px;">
+                    <i class="fas fa-clipboard-list fa-4x" style="color: var(--text-light); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Chưa có điểm</h3>
+                    <p style="color: var(--text-secondary);">Năm học này chưa có điểm số được cập nhật.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,150 @@
+<div class="admin-layout" ng-controller="StudentRetakeRegisterController">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Đăng ký lớp học lại"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Header -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h4 class="mb-3">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Danh sách môn trượt
+                    </h4>
+                    
+                    <!-- Filter -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label>Năm học</label>
+                            <select class="form-control" ng-model="selectedSchoolYear" ng-change="applyFilter()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="year in academicYears" value="{{year.academicYearId}}">
+                                    {{year.yearName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Học kỳ</label>
+                            <select class="form-control" ng-model="selectedSemester" ng-change="applyFilter()">
+                                <option value="">Tất cả</option>
+                                <option value="1">Học kỳ 1</option>
+                                <option value="2">Học kỳ 2</option>
+                                <option value="3">Học kỳ 3 (Hè)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center p-5">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Đang tải danh sách môn trượt...</p>
+            </div>
+            
+            <!-- Failed Subjects List -->
+            <div ng-if="!loading && failedSubjects.length === 0" class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Bạn không có môn nào cần học lại.
+            </div>
+            
+            <div ng-if="!loading && failedSubjects.length > 0">
+                <div class="card mb-3" ng-repeat="subject in failedSubjects">
+                    <div class="card-header" 
+                         style="cursor: pointer;"
+                         ng-click="loadRetakeClasses(subject.subjectId)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="fas" ng-class="isSubjectExpanded(subject.subjectId) ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </h5>
+                                <small class="text-muted">
+                                    Lớp trượt: {{subject.failedClassCode}} - {{subject.failedClassName}} | 
+                                    Lý do: {{getReasonText(subject.reason)}} |
+                                    {{subject.schoolYearCode}} - {{formatSemester(subject.semester)}}
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge" ng-class="getStatusBadge(subject.retakeStatus)">
+                                    {{getStatusText(subject.retakeStatus)}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Retake Classes (expanded) -->
+                    <div class="card-body" ng-if="isSubjectExpanded(subject.subjectId)">
+                        <div ng-if="!subject.canRegister" class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Bạn chưa được duyệt học lại cho môn này. Vui lòng liên hệ cố vấn học tập.
+                        </div>
+                        
+                        <div ng-if="subject.canRegister">
+                            <h6 class="mb-3">Danh sách lớp học lại:</h6>
+                            
+                            <div ng-if="loadingClasses" class="text-center p-3">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                            </div>
+                            
+                            <div ng-if="!loadingClasses && retakeClasses.length === 0" class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Không có lớp học lại nào cho môn này trong đợt đăng ký hiện tại.
+                            </div>
+                            
+                            <div ng-if="!loadingClasses && retakeClasses.length > 0" class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã lớp</th>
+                                            <th>Tên lớp</th>
+                                            <th>Giảng viên</th>
+                                            <th>Lịch học</th>
+                                            <th>Phòng</th>
+                                            <th>Số lượng</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="class in retakeClasses">
+                                            <td>{{class.classCode}}</td>
+                                            <td>{{class.className}}</td>
+                                            <td>{{class.lecturerName || 'Chưa phân công'}}</td>
+                                            <td>{{class.scheduleInfo || 'Chưa có lịch'}}</td>
+                                            <td>
+                                                <span ng-if="class.roomCode">{{class.roomCode}}</span>
+                                                <span ng-if="class.building" class="text-muted">({{class.building}})</span>
+                                                <span ng-if="!class.roomCode">-</span>
+                                            </td>
+                                            <td>
+                                                <span ng-class="{'text-danger': class.isFull, 'text-success': !class.isFull}">
+                                                    {{class.currentEnrollment}}/{{class.maxStudents || '∞'}}
+                                                </span>
+                                                <span ng-if="class.isFull" class="badge badge-danger ml-1">Đã đầy</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" 
+                                                        ng-click="registerForClass(class.classId, subject.subjectName, class.className)"
+                                                        ng-disabled="class.isRegistered || class.isFull"
+                                                        title="{{class.isRegistered ? 'Đã đăng ký' : (class.isFull ? 'Lớp đã đầy' : 'Đăng ký')}}">
+                                                    <i class="fas" ng-class="class.isRegistered ? 'fa-check' : 'fa-plus'"></i>
+                                                    {{class.isRegistered ? 'Đã đăng ký' : 'Đăng ký'}}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <toast-container></toast-container>
+</div>
+

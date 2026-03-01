@@ -1,0 +1,493 @@
+<!-- =======================================================
+    QUẢN LÝ ĐÀO TẠO - Khoa, Bộ môn, Ngành, Môn học (gom chung)
+    ======================================================= -->
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Quản lý Đào tạo"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="container-fluid">
+            <!-- Tab Navigation -->
+            <ul class="nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{active: activeTab === 'faculties'}" ng-click="switchTab('faculties')">
+                        <i class="fas fa-building"></i> Khoa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{active: activeTab === 'majors'}" ng-click="switchTab('majors')">
+                        <i class="fas fa-graduation-cap"></i> Ngành học
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{active: activeTab === 'departments'}" ng-click="switchTab('departments')">
+                        <i class="fas fa-layer-group"></i> Bộ môn
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{active: activeTab === 'subjects'}" ng-click="switchTab('subjects')">
+                        <i class="fas fa-book"></i> Môn học
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- ===========================
+                     TAB 1: KHOA (FACULTIES)
+                     =========================== -->
+                <div id="tab-faculties" class="tab-pane" ng-show="activeTab === 'faculties'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-building"></i> Danh sách Khoa
+                            </h3>
+                            <div class="card-tools">
+                                <button class="btn btn-primary btn-sm" ng-click="openFacultyModal()">
+                                    <i class="fas fa-plus"></i> Thêm Khoa mới
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- ✅ Search Box -->
+                            <search-bar 
+                                search-term="facultyPagination.searchTerm" 
+                                on-search="loadFaculties()" 
+                                placeholder="Tìm kiếm theo mã hoặc tên khoa...">
+                            </search-bar>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 100px;">Mã Khoa</th>
+                                            <th>Tên Khoa</th>
+                                            <th style="width: 120px;">Số Bộ môn</th>
+                                            <th style="width: 120px;">Số Ngành</th>
+                                            <th style="width: 100px;">Trạng thái</th>
+                                            <th style="width: 150px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="faculty in faculties">
+                                            <td><strong>{{faculty.facultyCode}}</strong></td>
+                                            <td>{{faculty.facultyName}}</td>
+                                            <td class="text-center">
+                                                <span class="badge badge-info">{{faculty.departmentCount || 0}}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge badge-info">{{faculty.majorCount || 0}}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success" ng-if="faculty.isActive">
+                                                    Hoạt động
+                                                </span>
+                                                <span class="badge badge-secondary" ng-if="!faculty.isActive">
+                                                    Ngưng
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" ng-click="editFaculty(faculty)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" ng-click="deleteFaculty(faculty.facultyId)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="faculties.length === 0">
+                                            <td colspan="6" class="text-center text-muted">Chưa có dữ liệu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- ✅ Pagination Component -->
+                            <pagination 
+                                pagination="facultyPagination" 
+                                on-page-change="loadFaculties()">
+                            </pagination>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===========================
+                     TAB 2: BỘ MÔN (DEPARTMENTS)
+                     =========================== -->
+                <div id="tab-departments" class="tab-pane" ng-show="activeTab === 'departments'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-layer-group"></i> Danh sách Bộ môn
+                            </h3>
+                            <div class="card-tools">
+                                <select class="form-control form-control-sm d-inline-block" style="width: 200px;" 
+                                        ng-model="filterDepartmentByFaculty" 
+                                        ng-init="filterDepartmentByFaculty = filterDepartmentByFaculty || ''"
+                                        ng-change="loadDepartmentsByFaculty()"
+                                        ng-options="f.facultyId as f.facultyName for f in faculties">
+                                    <option value="">-- Tất cả các Khoa --</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm ml-2" ng-click="openDepartmentModal()">
+                                    <i class="fas fa-plus"></i> Thêm Bộ môn
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 100px;">Mã BM</th>
+                                            <th>Tên Bộ môn</th>
+                                            <th style="width: 200px;">Thuộc Khoa</th>
+                                            <th style="width: 100px;">Số môn học</th>
+                                            <th style="width: 100px;">Số GV</th>
+                                            <th style="width: 150px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="dept in departments">
+                                            <td><strong>{{dept.departmentCode}}</strong></td>
+                                            <td>{{dept.departmentName}}</td>
+                                            <td>
+                                                <span class="badge badge-primary">{{dept.facultyName}}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge badge-info">{{dept.subjectCount || 0}}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge badge-success">{{dept.lecturerCount || 0}}</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" ng-click="editDepartment(dept)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" ng-click="deleteDepartment(dept.departmentId)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="departments.length === 0">
+                                            <td colspan="6" class="text-center text-muted">Chưa có dữ liệu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===========================
+                     TAB 3: NGÀNH (MAJORS)
+                     =========================== -->
+                <div id="tab-majors" class="tab-pane" ng-show="activeTab === 'majors'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-graduation-cap"></i> Danh sách Ngành học
+                            </h3>
+                            <div class="card-tools">
+                                <select class="form-control form-control-sm d-inline-block" style="width: 200px;" 
+                                        ng-model="filterMajorByFaculty" 
+                                        ng-init="filterMajorByFaculty = filterMajorByFaculty || ''"
+                                        ng-change="loadMajorsByFaculty()"
+                                        ng-options="f.facultyId as f.facultyName for f in faculties">
+                                    <option value="">-- Tất cả các Khoa --</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm ml-2" ng-click="openMajorModal()">
+                                    <i class="fas fa-plus"></i> Thêm Ngành
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 100px;">Mã Ngành</th>
+                                            <th>Tên Ngành</th>
+                                            <th style="width: 200px;">Thuộc Khoa</th>
+                                            <th style="width: 150px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="major in majors">
+                                            <td><strong>{{major.majorCode}}</strong></td>
+                                            <td>{{major.majorName}}</td>
+                                            <td>
+                                                <span class="badge badge-primary">{{major.facultyName}}</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" ng-click="editMajor(major)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" ng-click="deleteMajor(major.majorId)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="majors.length === 0">
+                                            <td colspan="4" class="text-center text-muted">Chưa có dữ liệu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===========================
+                     TAB 4: MÔN HỌC (SUBJECTS)
+                     =========================== -->
+                <div id="tab-subjects" class="tab-pane" ng-show="activeTab === 'subjects'">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-book"></i> Danh sách Môn học
+                            </h3>
+                            <div class="card-tools">
+                                <select class="form-control form-control-sm d-inline-block" style="width: 200px;" 
+                                        ng-model="filterSubjectByDepartment" 
+                                        ng-init="filterSubjectByDepartment = filterSubjectByDepartment || ''"
+                                        ng-change="loadSubjectsByDepartment()"
+                                        ng-options="d.departmentId as d.departmentName for d in departments">
+                                    <option value="">-- Tất cả Bộ môn --</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm ml-2" ng-click="openSubjectModal()">
+                                    <i class="fas fa-plus"></i> Thêm Môn học
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 100px;">Mã MH</th>
+                                            <th>Tên Môn học</th>
+                                            <th style="width: 200px;">Thuộc Bộ môn</th>
+                                            <th style="width: 80px;">Số TC</th>
+                                            <th style="width: 150px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="subject in subjects">
+                                            <td><strong>{{subject.subjectCode}}</strong></td>
+                                            <td>{{subject.subjectName}}</td>
+                                            <td>
+                                                <span class="badge badge-primary">{{subject.departmentName}}</span>
+                                            </td>
+                                            <td class="text-center">{{subject.credits}}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" ng-click="editSubject(subject)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" ng-click="deleteSubject(subject.subjectId)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="subjects.length === 0">
+                                            <td colspan="5" class="text-center text-muted">Chưa có dữ liệu</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Overlay - Chỉ hiện khi có modal active -->
+<div id="modal-overlay" class="modal-overlay" style="display: none;"></div>
+
+<!-- Avatar Modal -->
+<div ng-include="'views/partials/avatar-modal.html'"></div>
+
+<!-- Modals -->
+
+<!-- Modal: Faculty Form -->
+<div class="modal" id="facultyModal">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-building"></i> 
+                    {{facultyForm.facultyId ? 'Cập nhật Khoa' : 'Thêm Khoa mới'}}
+                </h5>
+                <button type="button" class="modal-close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form name="formFaculty" novalidate>
+                    <div class="form-group">
+                        <label>Mã Khoa <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="facultyForm.facultyCode" 
+                               placeholder="VD: CS, ENG" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Khoa <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="facultyForm.facultyName" 
+                               placeholder="VD: Công nghệ thông tin" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả</label>
+                        <textarea class="form-control" ng-model="facultyForm.description" rows="3" 
+                                  placeholder="Nhập mô tả về khoa..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" ng-click="saveFaculty()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+</div>
+
+<!-- Modal: Department Form -->
+<div class="modal" id="departmentModal">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-layer-group"></i> 
+                    {{departmentForm.departmentId ? 'Cập nhật Bộ môn' : 'Thêm Bộ môn mới'}}
+                </h5>
+                <button type="button" class="modal-close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form name="formDepartment" novalidate>
+                    <div class="form-group">
+                        <label>Thuộc Khoa <span class="text-danger">*</span></label>
+                        <select class="form-control" ng-model="departmentForm.facultyId" 
+                                ng-options="f.facultyId as f.facultyName for f in faculties" required>
+                            <option value="">-- Chọn Khoa --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" ng-if="departmentForm.departmentId">
+                        <label>Mã Bộ môn</label>
+                        <input type="text" class="form-control" ng-model="departmentForm.departmentCode" 
+                               disabled>
+                        <small class="form-text text-muted">Mã được tự động sinh khi tạo mới</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Bộ môn <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="departmentForm.departmentName" 
+                               placeholder="VD: Công nghệ phần mềm" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả</label>
+                        <textarea class="form-control" ng-model="departmentForm.description" rows="3" 
+                                  placeholder="Nhập mô tả về bộ môn..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-info" ng-click="saveDepartment()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+</div>
+
+<!-- Modal: Major Form -->
+<div class="modal" id="majorModal">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-graduation-cap"></i> 
+                    {{majorForm.majorId ? 'Cập nhật Ngành' : 'Thêm Ngành mới'}}
+                </h5>
+                <button type="button" class="modal-close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form name="formMajor" novalidate>
+                    <div class="form-group">
+                        <label>Thuộc Khoa <span class="text-danger">*</span></label>
+                        <select class="form-control" ng-model="majorForm.facultyId" 
+                                ng-options="f.facultyId as f.facultyName for f in faculties" required>
+                            <option value="">-- Chọn Khoa --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mã Ngành <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="majorForm.majorCode" 
+                               placeholder="VD: SE" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Ngành <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="majorForm.majorName" 
+                               placeholder="VD: Kỹ thuật phần mềm" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" ng-click="saveMajor()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+</div>
+
+<!-- Modal: Subject Form -->
+<div class="modal" id="subjectModal">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-book"></i> 
+                    {{subjectForm.subjectId ? 'Cập nhật Môn học' : 'Thêm Môn học mới'}}
+                </h5>
+                <button type="button" class="modal-close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form name="formSubject" novalidate>
+                    <div class="form-group">
+                        <label>Thuộc Bộ môn <span class="text-danger">*</span></label>
+                        <select class="form-control" ng-model="subjectForm.departmentId" 
+                                ng-options="d.departmentId as d.departmentName for d in departments" required>
+                            <option value="">-- Chọn Bộ môn --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mã Môn học <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="subjectForm.subjectCode" 
+                               placeholder="VD: IT101" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Môn học <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" ng-model="subjectForm.subjectName" 
+                               placeholder="VD: Lập trình cơ bản" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Số tín chỉ <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" ng-model="subjectForm.credits" 
+                               placeholder="VD: 3" min="1" max="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả</label>
+                        <textarea class="form-control" ng-model="subjectForm.description" rows="3" 
+                                  placeholder="Nhập mô tả về môn học..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" ng-click="saveSubject()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+</div>
+

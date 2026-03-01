@@ -1,0 +1,314 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Danh sách sinh viên"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Filter Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc tìm kiếm</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline" ng-click="clearFilters()" ng-disabled="loadingStudents">
+                            <i class="fas fa-times"></i> Xóa bộ lọc
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Show All Toggle -->
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" 
+                                   class="form-check-input" 
+                                   id="showAllToggle"
+                                   ng-model="showAll" 
+                                   ng-change="onShowAllToggle()">
+                            <label class="form-check-label" for="showAllToggle">
+                                <strong><i class="fas fa-list"></i> Hiển thị toàn bộ sinh viên</strong>
+                                <small class="text-muted d-block">Bỏ qua bộ lọc và hiển thị tất cả sinh viên (có phân trang)</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Show All Active Notice -->
+                    <div class="alert alert-info" ng-if="showAll">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Đang hiển thị toàn bộ sinh viên.</strong> 
+                        Bạn có thể bỏ chọn checkbox ở trên để sử dụng bộ lọc tìm kiếm.
+                    </div>
+                    
+                    <!-- Alert: Filter required -->
+                    <div class="alert alert-warning" ng-if="!hasFilter() && !showAll">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Lưu ý:</strong> Vui lòng chọn ít nhất một bộ lọc để tìm kiếm sinh viên, hoặc bật "Hiển thị toàn bộ sinh viên" để xem tất cả.
+                        Các bộ lọc có sẵn: Khoa, Ngành, Lớp, Khóa học, Tìm kiếm, Tình trạng cảnh báo, GPA, Tỷ lệ chuyên cần.
+                    </div>
+                    
+                    <!-- Filter fields (hidden when showAll is active) -->
+                    <div ng-if="!showAll">
+                    
+                    <!-- Filter Row 1: Basic Filters -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Tìm kiếm (MSSV, Tên)</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   ng-model="filters.search" 
+                                   ng-change="onSearchChange()"
+                                   placeholder="Nhập MSSV hoặc tên sinh viên">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Khoa</label>
+                            <select class="form-control" 
+                                    ng-model="filters.facultyId" 
+                                    ng-change="loadMajors()"
+                                    ng-disabled="loadingFilters">
+                                <option value="">-- Chọn khoa --</option>
+                                <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                    {{faculty.facultyName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Ngành</label>
+                            <select class="form-control" 
+                                    ng-model="filters.majorId" 
+                                    ng-change="loadClasses()"
+                                    ng-disabled="loadingFilters || !filters.facultyId">
+                                <option value="">-- Chọn ngành --</option>
+                                <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                    {{major.majorName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Lớp</label>
+                            <select class="form-control" 
+                                    ng-model="filters.classId" 
+                                    ng-disabled="loadingFilters || !filters.majorId">
+                                <option value="">-- Chọn lớp --</option>
+                                <option ng-repeat="class in classes" value="{{class.adminClassId}}">
+                                    {{class.className}}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Row 2: Advanced Filters -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Khóa học</label>
+                            <select class="form-control" ng-model="filters.cohortYear">
+                                <option value="">-- Chọn khóa học --</option>
+                                <option ng-repeat="year in cohortYears" value="{{year}}">
+                                    {{year}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Tình trạng cảnh báo</label>
+                            <select class="form-control" ng-model="filters.warningStatus">
+                                <option ng-repeat="option in warningStatusOptions" value="{{option.value}}">
+                                    {{option.label}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">GPA Tối thiểu</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   ng-model="filters.gpaMin" 
+                                   min="0" 
+                                   max="10" 
+                                   step="0.1"
+                                   placeholder="0.0">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">GPA Tối đa</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   ng-model="filters.gpaMax" 
+                                   min="0" 
+                                   max="10" 
+                                   step="0.1"
+                                   placeholder="10.0">
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Row 3: Attendance Filters -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Tỷ lệ chuyên cần tối thiểu (%)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   ng-model="filters.attendanceRateMin" 
+                                   min="0" 
+                                   max="100" 
+                                   step="0.1"
+                                   placeholder="0">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Tỷ lệ chuyên cần tối đa (%)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   ng-model="filters.attendanceRateMax" 
+                                   min="0" 
+                                   max="100" 
+                                   step="0.1"
+                                   placeholder="100">
+                        </div>
+                    </div>
+                    </div>
+                    <!-- End of filter fields -->
+                </div>
+            </div>
+            
+            <!-- Error Message -->
+            <div ng-if="errorStudents && !loadingStudents" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{errorStudents}}
+                <button class="btn btn-sm btn-danger ml-2" ng-click="loadStudents()" ng-if="hasFilter()">
+                    <i class="fas fa-redo"></i> Thử lại
+                </button>
+            </div>
+            
+            <!-- Loading -->
+            <div ng-if="loadingStudents" class="card">
+                <div class="card-body text-center" style="padding: 60px;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Đang tải danh sách sinh viên...</p>
+                </div>
+            </div>
+            
+            <!-- Students Table -->
+            <div ng-if="!loadingStudents && !errorStudents && students.length > 0" class="card">
+                <div class="card-header">
+                    <h3>
+                        <i class="fas fa-users"></i> Danh sách sinh viên
+                        <span class="badge badge-primary ml-2">{{pagination.totalCount}}</span>
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-primary" ng-click="loadStudents()" ng-disabled="loadingStudents">
+                            <i class="fas fa-sync-alt" ng-class="{'fa-spin': loadingStudents}"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 120px;">MSSV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Lớp</th>
+                                    <th>Khoa</th>
+                                    <th>Ngành</th>
+                                    <th>Khóa</th>
+                                    <th style="width: 100px;">GPA</th>
+                                    <th style="width: 120px;">Chuyên cần (%)</th>
+                                    <th style="width: 150px;">Cảnh báo</th>
+                                    <th style="width: 120px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="student in students">
+                                    <td><strong>{{student.studentCode}}</strong></td>
+                                    <td>{{student.fullName}}</td>
+                                    <td>{{student.className || 'N/A'}}</td>
+                                    <td>{{student.facultyName || 'N/A'}}</td>
+                                    <td>{{student.majorName || 'N/A'}}</td>
+                                    <td>{{student.cohortYear || 'N/A'}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="{
+                                            'badge-success': student.gpa && student.gpa >= 3.0,
+                                            'badge-warning': student.gpa && student.gpa >= 2.0 && student.gpa < 3.0,
+                                            'badge-danger': !student.gpa || student.gpa < 2.0
+                                        }">
+                                            {{student.gpa ? (student.gpa | number:2) : 'N/A'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{
+                                            'badge-danger': getAbsenceRate(student) >= 20,
+                                            'badge-warning': getAbsenceRate(student) >= 10 && getAbsenceRate(student) < 20,
+                                            'badge-success': getAbsenceRate(student) < 10
+                                        }">
+                                            {{student.attendanceRate ? (student.attendanceRate | number:1) + '%' : 'N/A'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getWarningBadgeClass(student.warningType)">
+                                            <i class="fas" ng-class="{
+                                                'fa-user-times': student.warningType === 'attendance',
+                                                'fa-chart-line': student.warningType === 'academic',
+                                                'fa-exclamation-circle': student.warningType === 'both',
+                                                'fa-check-circle': student.warningType === 'none'
+                                            }"></i>
+                                            {{getWarningText(student.warningType)}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" ng-click="viewStudentDetail(student.studentId)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div ng-if="pagination.totalPages > 1" class="pagination-container mt-3">
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" ng-class="{'disabled': pagination.page === 1}">
+                                    <a class="page-link" href="#" ng-click="loadStudents(pagination.page - 1)">Trước</a>
+                                </li>
+                                <li class="page-item" 
+                                    ng-repeat="n in getPageNumbers() track by $index" 
+                                    ng-class="{'active': n === pagination.page, 'disabled': n === '...'}">
+                                    <a class="page-link" href="#" ng-click="n !== '...' && loadStudents(n)" ng-if="n !== '...'">{{n}}</a>
+                                    <span class="page-link" ng-if="n === '...'">...</span>
+                                </li>
+                                <li class="page-item" ng-class="{'disabled': pagination.page === pagination.totalPages}">
+                                    <a class="page-link" href="#" ng-click="loadStudents(pagination.page + 1)">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <p class="text-center text-muted">
+                            Trang {{pagination.page}} / {{pagination.totalPages}} 
+                            (Tổng: {{pagination.totalCount}} sinh viên)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div ng-if="!loadingStudents && !errorStudents && students.length === 0 && hasFilter()" class="card">
+                <div class="card-body text-center text-muted" style="padding: 60px;">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>Không tìm thấy sinh viên nào với bộ lọc đã chọn.</p>
+                    <button class="btn btn-primary mt-2" ng-click="clearFilters()">
+                        <i class="fas fa-times"></i> Xóa bộ lọc và thử lại
+                    </button>
+                </div>
+            </div>
+            
+            <!-- No Filter State -->
+            <div ng-if="!loadingStudents && !errorStudents && students.length === 0 && !hasFilter()" class="card">
+                <div class="card-body text-center text-muted" style="padding: 60px;">
+                    <i class="fas fa-filter fa-3x mb-3"></i>
+                    <p>Vui lòng chọn ít nhất một bộ lọc để tìm kiếm sinh viên, hoặc bật "Xem tất cả" để hiển thị toàn bộ sinh viên.</p>
+                    <button class="btn btn-success mt-2" ng-click="showAll = true; toggleShowAll(); loadStudents()">
+                        <i class="fas fa-list"></i> Xem tất cả sinh viên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

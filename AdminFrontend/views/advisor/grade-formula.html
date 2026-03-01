@@ -1,0 +1,848 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Cấu hình công thức tính điểm"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="loading-overlay" ng-if="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Đang tải dữ liệu...</div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Action Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h2 style="margin: 0 0 10px 0;"><i class="fas fa-calculator"></i> Cấu hình công thức tính điểm</h2>
+                            <p style="margin: 0; color: #64748b; font-size: 14px;">
+                                <i class="fas fa-info-circle"></i> 
+                                Thiết lập công thức tính điểm tổng kết cho các môn học/lớp học. 
+                                Hệ thống sẽ tự động tính điểm khi giảng viên nhập điểm thành phần.
+                            </p>
+                        </div>
+                        <button class="btn btn-primary" ng-click="openCreateModal()" style="margin-left: 20px;">
+                            <i class="fas fa-plus"></i> Tạo cấu hình mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Guide -->
+            <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                <div class="card-body">
+                    <h4 style="color: white; margin-bottom: 15px;">
+                        <i class="fas fa-lightbulb"></i> Hướng dẫn sử dụng
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div>
+                            <strong><i class="fas fa-bullseye"></i> Phạm vi áp dụng:</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">
+                                Ưu tiên: Lớp > Môn học > Năm học > Mặc định. 
+                                Cấu hình cụ thể sẽ ghi đè cấu hình chung.
+                            </p>
+                        </div>
+                        <div>
+                            <strong><i class="fas fa-percentage"></i> Trọng số điểm:</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">
+                                Tổng trọng số phải ≤ 100%. Ví dụ: Giữa kỳ 30% + Cuối kỳ 70% = 100%.
+                            </p>
+                        </div>
+                        <div>
+                            <strong><i class="fas fa-calculator"></i> Công thức:</strong>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">
+                                Điểm tổng kết = (Giữa kỳ × trọng số) + (Cuối kỳ × trọng số) + ...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Môn học</label>
+                            <select class="form-control" ng-model="filters.subjectId" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Lớp</label>
+                            <select class="form-control" ng-model="filters.classId" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="class in classes" value="{{class.classId}}">
+                                    {{class.className || class.classCode}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Năm học</label>
+                            <select class="form-control" ng-model="filters.schoolYearId" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                    {{sy.yearCode}} - {{sy.yearName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Loại</label>
+                            <select class="form-control" ng-model="filters.isDefault" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="true">Mặc định</option>
+                                <option value="false">Cụ thể</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline" ng-click="clearFilters()" style="width: 100%;">
+                                <i class="fas fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configs List -->
+            <div class="card" ng-if="!loading && configs.length > 0">
+                <div class="card-header">
+                    <h3>Danh sách cấu hình ({{pagination.totalItems}})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Phạm vi</th>
+                                    <th>Trọng số</th>
+                                    <th style="width: 150px;">Làm tròn</th>
+                                    <th style="width: 100px;">Mặc định</th>
+                                    <th style="width: 150px;">Ngày tạo</th>
+                                    <th style="width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="config in configs">
+                                    <td>
+                                        <strong>{{getScopeDescription(config)}}</strong><br>
+                                        <small class="text-muted" ng-if="config.description">{{config.description}}</small>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 12px;">
+                                            <span ng-if="config.midtermWeight > 0">Giữa kỳ: {{(config.midtermWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.finalWeight > 0">Cuối kỳ: {{(config.finalWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.assignmentWeight > 0">Bài tập: {{(config.assignmentWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.quizWeight > 0">Kiểm tra: {{(config.quizWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.projectWeight > 0">Đồ án: {{(config.projectWeight * 100).toFixed(0)}}%</span>
+                                        </div>
+                                        <div ng-if="config.customFormula" class="text-muted" style="font-size: 11px; margin-top: 5px;">
+                                            <i class="fas fa-code"></i> {{config.customFormula}}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{config.roundingMethod || 'STANDARD'}}<br>
+                                        <small class="text-muted">{{config.decimalPlaces || 2}} chữ số</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{'badge-success': config.isDefault, 'badge-secondary': !config.isDefault}">
+                                            {{config.isDefault ? 'Có' : 'Không'}}
+                                        </span>
+                                    </td>
+                                    <td>{{config.createdAt | date:'dd/MM/yyyy'}}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" ng-click="openEditModal(config)" title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" ng-click="deleteConfig(config.configId)" title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <pagination 
+                        pagination="pagination"
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div ng-if="!loading && configs.length === 0" class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Chưa có cấu hình công thức nào</p>
+                    <button class="btn btn-primary" ng-click="openCreateModal()">
+                        <i class="fas fa-plus"></i> Tạo cấu hình đầu tiên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div ng-if="showFormModal" class="modal-overlay active" ng-click="closeFormModal()">
+    <div class="modal active" ng-click="$event.stopPropagation()" style="width: 1000px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-calculator"></i> 
+                {{editingConfig ? 'Sửa cấu hình công thức' : 'Tạo cấu hình công thức mới'}}
+            </h3>
+            <button class="modal-close" ng-click="closeFormModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Wizard Steps -->
+            <div class="wizard-steps">
+                <div class="wizard-step" ng-class="{'active': currentStep === 1, 'completed': currentStep > 1}">
+                    <div class="step-number">
+                        <span ng-if="currentStep > 1"><i class="fas fa-check"></i></span>
+                        <span ng-if="currentStep <= 1">1</span>
+                    </div>
+                    <div class="step-label" ng-class="{'text-primary': currentStep === 1, 'text-success': currentStep > 1}">
+                        Phạm vi áp dụng
+                    </div>
+                </div>
+                <div class="wizard-line" style="left: 20%; right: 20%;" ng-class="{'bg-success': currentStep > 1}"></div>
+                <div class="wizard-step" ng-class="{'active': currentStep === 2, 'completed': currentStep > 2}">
+                    <div class="step-number">
+                        <span ng-if="currentStep > 2"><i class="fas fa-check"></i></span>
+                        <span ng-if="currentStep <= 2">2</span>
+                    </div>
+                    <div class="step-label" ng-class="{'text-primary': currentStep === 2, 'text-success': currentStep > 2}">
+                        Trọng số điểm
+                    </div>
+                </div>
+                <div class="wizard-line" style="left: 45%; right: 45%;" ng-class="{'bg-success': currentStep > 2}"></div>
+                <div class="wizard-step" ng-class="{'active': currentStep === 3, 'completed': currentStep > 3}">
+                    <div class="step-number">
+                        <span ng-if="currentStep > 3"><i class="fas fa-check"></i></span>
+                        <span ng-if="currentStep <= 3">3</span>
+                    </div>
+                    <div class="step-label" ng-class="{'text-primary': currentStep === 3, 'text-success': currentStep > 3}">
+                        Tùy chọn nâng cao
+                    </div>
+                </div>
+                <div class="wizard-line" style="left: 70%; right: 20%;" ng-class="{'bg-success': currentStep > 3}"></div>
+                <div class="wizard-step" ng-class="{'active': currentStep === 4}">
+                    <div class="step-number">4</div>
+                    <div class="step-label" ng-class="{'text-primary': currentStep === 4}">
+                        Xem trước & Xác nhận
+                    </div>
+                </div>
+            </div>
+            <!-- Step 1: Scope Selection -->
+            <div ng-if="currentStep === 1" class="wizard-step-content">
+                <div class="card mb-3">
+                    <div class="card-header" style="background: #f8fafc;">
+                        <h4 style="margin: 0;">
+                            <i class="fas fa-bullseye text-primary"></i> Bước 1: Chọn phạm vi áp dụng
+                        </h4>
+                        <small class="text-muted">Xác định công thức này sẽ áp dụng cho đối tượng nào</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info" style="margin-bottom: 20px;">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý về ưu tiên:</strong> Hệ thống sẽ tìm cấu hình theo thứ tự: 
+                            <strong>Lớp cụ thể</strong> → <strong>Môn học</strong> → <strong>Năm học</strong> → <strong>Mặc định</strong>. 
+                            Cấu hình cụ thể hơn sẽ ghi đè cấu hình chung hơn.
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Lớp học phần 
+                                <span class="text-danger">*</span>
+                                <i class="fas fa-question-circle text-muted" 
+                                   style="cursor: help; margin-left: 5px;"
+                                   title="Chọn lớp cụ thể nếu muốn áp dụng công thức riêng cho lớp này. Ưu tiên cao nhất - sẽ ghi đè tất cả cấu hình khác."></i>
+                            </label>
+                            <select class="form-control" ng-model="formData.classId" ng-change="onScopeChange()">
+                                <option value="">-- Chọn lớp (tùy chọn) --</option>
+                                <option ng-repeat="class in classes" value="{{class.classId}}">
+                                    {{class.className || class.classCode}}
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Ưu tiên cao nhất:</strong> Nếu chọn lớp, công thức này sẽ chỉ áp dụng cho lớp đó, 
+                                bỏ qua tất cả cấu hình khác của môn học hoặc năm học.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                Môn học 
+                                <i class="fas fa-question-circle text-muted" 
+                                   style="cursor: help; margin-left: 5px;"
+                                   title="Chọn môn học nếu muốn áp dụng công thức cho tất cả các lớp của môn này. Chỉ áp dụng khi không có cấu hình cho lớp cụ thể."></i>
+                            </label>
+                            <select class="form-control" ng-model="formData.subjectId" ng-change="onScopeChange()">
+                                <option value="">-- Chọn môn học (tùy chọn) --</option>
+                                <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Ưu tiên thứ 2:</strong> Áp dụng cho tất cả các lớp của môn học này, 
+                                trừ khi có cấu hình riêng cho lớp cụ thể.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                Năm học 
+                                <i class="fas fa-question-circle text-muted" 
+                                   style="cursor: help; margin-left: 5px;"
+                                   title="Chọn năm học nếu muốn áp dụng công thức cho tất cả môn trong năm học này. Chỉ áp dụng khi không có cấu hình cho lớp hoặc môn học."></i>
+                            </label>
+                            <select class="form-control" ng-model="formData.schoolYearId" ng-change="onScopeChange()">
+                                <option value="">-- Chọn năm học (tùy chọn) --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                    {{sy.yearCode}} - {{sy.yearName}}
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Ưu tiên thứ 3:</strong> Áp dụng cho tất cả môn học trong năm học này, 
+                                trừ khi có cấu hình riêng cho lớp hoặc môn học.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="isDefaultCheck" ng-model="formData.isDefault" ng-change="onScopeChange()">
+                                <label class="custom-control-label" for="isDefaultCheck">
+                                    <strong>Đánh dấu là công thức mặc định</strong>
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Công thức mặc định sẽ được áp dụng khi không tìm thấy cấu hình nào phù hợp. Nên có ít nhất 1 công thức mặc định."></i>
+                                </label>
+                            </div>
+                            <small class="form-text text-muted" style="margin-top: 5px;">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Công thức mặc định:</strong> Sẽ được áp dụng khi không tìm thấy cấu hình cụ thể nào. 
+                                Nên tạo ít nhất 1 công thức mặc định để đảm bảo hệ thống luôn có công thức tính điểm.
+                            </small>
+                        </div>
+
+                        <div class="alert alert-warning" ng-if="!formData.classId && !formData.subjectId && !formData.schoolYearId && !formData.isDefault">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            <strong>Lưu ý:</strong> Bạn cần chọn ít nhất một phạm vi (Lớp, Môn học, Năm học) hoặc đánh dấu là Mặc định.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Weights -->
+            <div ng-if="currentStep === 2" class="wizard-step-content">
+                <div class="card mb-3">
+                    <div class="card-header" style="background: #f8fafc;">
+                        <h4 style="margin: 0;">
+                            <i class="fas fa-percentage text-primary"></i> Bước 2: Thiết lập trọng số điểm
+                        </h4>
+                        <small class="text-muted">Xác định tỷ lệ phần trăm của từng thành phần điểm</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Total Weight Indicator -->
+                        <div class="alert" ng-class="{'alert-danger': weightError, 'alert-success': !weightError && calculateTotalWeight() === 1.0, 'alert-warning': !weightError && calculateTotalWeight() < 1.0 && calculateTotalWeight() > 0}">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>Tổng trọng số: {{(calculateTotalWeight() * 100) | number:1}}%</strong>
+                                    <span ng-if="weightError" class="text-danger ml-2">
+                                        <i class="fas fa-times-circle"></i> {{weightError}}
+                                    </span>
+                                    <span ng-if="!weightError && calculateTotalWeight() === 1.0" class="text-success ml-2">
+                                        <i class="fas fa-check-circle"></i> Hợp lệ (100%)
+                                    </span>
+                                    <span ng-if="!weightError && calculateTotalWeight() < 1.0 && calculateTotalWeight() > 0" class="text-warning ml-2">
+                                        <i class="fas fa-exclamation-triangle"></i> Còn thiếu {{((1.0 - calculateTotalWeight()) * 100) | number:1}}%
+                                    </span>
+                                </div>
+                                <div style="width: 200px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div style="height: 100%; background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%); width: {{calculateTotalWeight() * 100}}%; transition: width 0.3s;"
+                                         ng-class="{'bg-danger': weightError, 'bg-success': !weightError && calculateTotalWeight() === 1.0, 'bg-warning': !weightError && calculateTotalWeight() < 1.0}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Templates -->
+                        <div class="mb-3" ng-if="!editingConfig">
+                            <label class="form-label" style="font-weight: 600; margin-bottom: 10px;">
+                                <i class="fas fa-magic"></i> Mẫu nhanh (click để áp dụng):
+                            </label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="applyTemplate('standard')">
+                                    <i class="fas fa-graduation-cap"></i> Chuẩn (30% GK + 70% CK)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="applyTemplate('balanced')">
+                                    <i class="fas fa-balance-scale"></i> Cân bằng (40% GK + 60% CK)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" ng-click="applyTemplate('practice')">
+                                    <i class="fas fa-laptop-code"></i> Thực hành (20% GK + 30% CK + 30% BT + 20% ĐA)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" ng-click="resetWeights()">
+                                    <i class="fas fa-redo"></i> Đặt lại
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Giữa kỳ (Midterm)
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Điểm thi giữa học phần. Nhập giá trị từ 0.00 đến 1.00 (tương đương 0% đến 100%). Ví dụ: 0.30 = 30%"></i>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="formData.midtermWeight" 
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           ng-change="calculateTotalWeight()"
+                                           placeholder="0.30"
+                                           style="padding-right: 60px;">
+                                    <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600;">
+                                        {{(formData.midtermWeight * 100) || 0 | number:0}}%
+                                    </span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Điểm thi giữa học phần. Ví dụ: <code>0.30</code> = 30%, <code>0.40</code> = 40%
+                                </small>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Cuối kỳ (Final)
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Điểm thi cuối học phần. Nhập giá trị từ 0.00 đến 1.00. Ví dụ: 0.70 = 70%"></i>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="formData.finalWeight" 
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           ng-change="calculateTotalWeight()"
+                                           placeholder="0.70"
+                                           style="padding-right: 60px;">
+                                    <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600;">
+                                        {{(formData.finalWeight * 100) || 0 | number:0}}%
+                                    </span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Điểm thi cuối học phần. Thường là thành phần quan trọng nhất.
+                                </small>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Bài tập (Assignment)
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Điểm bài tập về nhà, bài tập lớn. Nhập 0 nếu không sử dụng thành phần này."></i>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="formData.assignmentWeight" 
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           ng-change="calculateTotalWeight()"
+                                           placeholder="0.00"
+                                           style="padding-right: 60px;">
+                                    <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600;">
+                                        {{(formData.assignmentWeight * 100) || 0 | number:0}}%
+                                    </span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Điểm bài tập về nhà. Để <code>0</code> nếu không sử dụng.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Kiểm tra (Quiz)
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Điểm kiểm tra ngắn, kiểm tra 15 phút. Nhập 0 nếu không sử dụng."></i>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="formData.quizWeight" 
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           ng-change="calculateTotalWeight()"
+                                           placeholder="0.00"
+                                           style="padding-right: 60px;">
+                                    <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600;">
+                                        {{(formData.quizWeight * 100) || 0 | number:0}}%
+                                    </span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Điểm kiểm tra ngắn. Để <code>0</code> nếu không sử dụng.
+                                </small>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Đồ án (Project)
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Điểm đồ án, dự án cuối kỳ. Nhập 0 nếu không sử dụng."></i>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="formData.projectWeight" 
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           ng-change="calculateTotalWeight()"
+                                           placeholder="0.00"
+                                           style="padding-right: 60px;">
+                                    <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600;">
+                                        {{(formData.projectWeight * 100) || 0 | number:0}}%
+                                    </span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Điểm đồ án, dự án. Để <code>0</code> nếu không sử dụng.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Example Calculation -->
+                        <div class="card mt-3" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                            <div class="card-body">
+                                <h6 style="margin-bottom: 10px;">
+                                    <i class="fas fa-calculator text-primary"></i> Ví dụ tính điểm:
+                                </h6>
+                                <div style="font-size: 13px; line-height: 1.8;">
+                                    <div ng-if="formData.midtermWeight > 0">
+                                        <strong>Giữa kỳ:</strong> 8.0 × {{(formData.midtermWeight * 100) | number:0}}% = 
+                                        <strong>{{(8.0 * formData.midtermWeight) | number:2}}</strong>
+                                    </div>
+                                    <div ng-if="formData.finalWeight > 0">
+                                        <strong>Cuối kỳ:</strong> 9.0 × {{(formData.finalWeight * 100) | number:0}}% = 
+                                        <strong>{{(9.0 * formData.finalWeight) | number:2}}</strong>
+                                    </div>
+                                    <div ng-if="formData.assignmentWeight > 0">
+                                        <strong>Bài tập:</strong> 7.5 × {{(formData.assignmentWeight * 100) | number:0}}% = 
+                                        <strong>{{(7.5 * formData.assignmentWeight) | number:2}}</strong>
+                                    </div>
+                                    <div ng-if="formData.quizWeight > 0">
+                                        <strong>Kiểm tra:</strong> 8.5 × {{(formData.quizWeight * 100) | number:0}}% = 
+                                        <strong>{{(8.5 * formData.quizWeight) | number:2}}</strong>
+                                    </div>
+                                    <div ng-if="formData.projectWeight > 0">
+                                        <strong>Đồ án:</strong> 9.5 × {{(formData.projectWeight * 100) | number:0}}% = 
+                                        <strong>{{(9.5 * formData.projectWeight) | number:2}}</strong>
+                                    </div>
+                                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1;">
+                                        <strong>Điểm tổng kết = </strong>
+                                        <span ng-if="formData.midtermWeight > 0">{{(8.0 * formData.midtermWeight) | number:2}}</span>
+                                        <span ng-if="formData.midtermWeight > 0 && (formData.finalWeight > 0 || formData.assignmentWeight > 0 || formData.quizWeight > 0 || formData.projectWeight > 0)"> + </span>
+                                        <span ng-if="formData.finalWeight > 0">{{(9.0 * formData.finalWeight) | number:2}}</span>
+                                        <span ng-if="formData.finalWeight > 0 && (formData.assignmentWeight > 0 || formData.quizWeight > 0 || formData.projectWeight > 0)"> + </span>
+                                        <span ng-if="formData.assignmentWeight > 0">{{(7.5 * formData.assignmentWeight) | number:2}}</span>
+                                        <span ng-if="formData.assignmentWeight > 0 && (formData.quizWeight > 0 || formData.projectWeight > 0)"> + </span>
+                                        <span ng-if="formData.quizWeight > 0">{{(8.5 * formData.quizWeight) | number:2}}</span>
+                                        <span ng-if="formData.quizWeight > 0 && formData.projectWeight > 0"> + </span>
+                                        <span ng-if="formData.projectWeight > 0">{{(9.5 * formData.projectWeight) | number:2}}</span>
+                                        <strong> = {{calculateExampleScore() | number:2}}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Advanced Options -->
+            <div ng-if="currentStep === 3" class="wizard-step-content">
+                <div class="card mb-3">
+                    <div class="card-header" style="background: #f8fafc;">
+                        <h4 style="margin: 0;">
+                            <i class="fas fa-cog text-primary"></i> Bước 3: Tùy chọn nâng cao
+                        </h4>
+                        <small class="text-muted">Cấu hình làm tròn và công thức tùy chỉnh (tùy chọn)</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Công thức tùy chỉnh
+                                <i class="fas fa-question-circle text-muted" 
+                                   style="cursor: help; margin-left: 5px;"
+                                   title="Nhập công thức tính điểm tùy chỉnh bằng code. Nếu để trống, hệ thống sẽ tự động tính từ trọng số đã cấu hình."></i>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   ng-model="formData.customFormula"
+                                   placeholder="Ví dụ: midterm*0.3 + final*0.7 + assignment*0.1">
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Để trống</strong> để sử dụng công thức mặc định (tính từ trọng số). 
+                                Chỉ nhập nếu bạn muốn dùng công thức đặc biệt. 
+                                <strong>Biến có sẵn:</strong> <code>midterm</code>, <code>final</code>, <code>assignment</code>, <code>quiz</code>, <code>project</code>
+                            </small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Phương pháp làm tròn
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Chọn cách làm tròn điểm tổng kết. STANDARD: làm tròn chuẩn (0.5 làm tròn lên), CEILING: luôn làm tròn lên, FLOOR: luôn làm tròn xuống, NONE: giữ nguyên."></i>
+                                </label>
+                                <select class="form-control" ng-model="formData.roundingMethod">
+                                    <option value="STANDARD">Làm tròn chuẩn (0.5 → 1)</option>
+                                    <option value="CEILING">Làm tròn lên (luôn tăng)</option>
+                                    <option value="FLOOR">Làm tròn xuống (luôn giảm)</option>
+                                    <option value="NONE">Không làm tròn (giữ nguyên)</option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    <strong>Làm tròn chuẩn:</strong> 8.45 → 8.5, 8.44 → 8.4 (khuyến nghị)
+                                </small>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">
+                                    Số chữ số thập phân
+                                    <i class="fas fa-question-circle text-muted" 
+                                       style="cursor: help; margin-left: 5px;"
+                                       title="Số chữ số sau dấu phẩy của điểm tổng kết. Ví dụ: 2 chữ số = 8.75, 1 chữ số = 8.8, 0 chữ số = 9"></i>
+                                </label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       ng-model="formData.decimalPlaces" 
+                                       min="0" 
+                                       max="4">
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    <strong>Mặc định:</strong> 2 chữ số (ví dụ: 8.75). Khuyến nghị: 1-2 chữ số.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                Mô tả
+                                <i class="fas fa-question-circle text-muted" 
+                                   style="cursor: help; margin-left: 5px;"
+                                   title="Mô tả ngắn gọn về công thức này để dễ nhớ và quản lý. Ví dụ: 'Công thức cho môn lập trình - ưu tiên thực hành'"></i>
+                            </label>
+                            <textarea class="form-control" 
+                                      ng-model="formData.description" 
+                                      rows="2"
+                                      placeholder="Ví dụ: Công thức cho môn lập trình - ưu tiên thực hành và đồ án..."></textarea>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Mô tả ngắn gọn để dễ nhớ và quản lý công thức này.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Preview & Confirm -->
+            <div ng-if="currentStep === 4" class="wizard-step-content">
+                <div class="card mb-3">
+                    <div class="card-header" style="background: #f8fafc;">
+                        <h4 style="margin: 0;">
+                            <i class="fas fa-eye text-primary"></i> Bước 4: Xem trước & Xác nhận
+                        </h4>
+                        <small class="text-muted">Kiểm tra lại thông tin trước khi lưu</small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Scope Summary -->
+                        <div class="card mb-3" style="background: #f8fafc;">
+                            <div class="card-body">
+                                <h5 style="margin-bottom: 15px;">
+                                    <i class="fas fa-bullseye text-primary"></i> Phạm vi áp dụng
+                                </h5>
+                                <div style="line-height: 2;">
+                                    <div ng-if="formData.classId">
+                                        <strong>Lớp:</strong> 
+                                        <span ng-repeat="class in classes" ng-if="class.classId === formData.classId">
+                                            {{class.className || class.classCode}}
+                                        </span>
+                                        <span class="badge badge-primary ml-2">Ưu tiên cao nhất</span>
+                                    </div>
+                                    <div ng-if="!formData.classId && formData.subjectId">
+                                        <strong>Môn học:</strong> 
+                                        <span ng-repeat="subject in subjects" ng-if="subject.subjectId === formData.subjectId">
+                                            {{subject.subjectCode}} - {{subject.subjectName}}
+                                        </span>
+                                        <span class="badge badge-info ml-2">Ưu tiên thứ 2</span>
+                                    </div>
+                                    <div ng-if="!formData.classId && !formData.subjectId && formData.schoolYearId">
+                                        <strong>Năm học:</strong> 
+                                        <span ng-repeat="sy in schoolYears" ng-if="sy.schoolYearId === formData.schoolYearId">
+                                            {{sy.yearCode}} - {{sy.yearName}}
+                                        </span>
+                                        <span class="badge badge-secondary ml-2">Ưu tiên thứ 3</span>
+                                    </div>
+                                    <div ng-if="formData.isDefault">
+                                        <strong>Công thức mặc định:</strong> 
+                                        <span class="badge badge-success ml-2">Có</span>
+                                        <small class="text-muted ml-2">(Áp dụng khi không tìm thấy cấu hình cụ thể)</small>
+                                    </div>
+                                    <div ng-if="!formData.classId && !formData.subjectId && !formData.schoolYearId && !formData.isDefault" class="text-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> Chưa chọn phạm vi áp dụng!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formula Summary -->
+                        <div class="card mb-3" style="background: #f8fafc;">
+                            <div class="card-body">
+                                <h5 style="margin-bottom: 15px;">
+                                    <i class="fas fa-calculator text-primary"></i> Công thức tính điểm
+                                </h5>
+                                <div style="font-size: 16px; line-height: 2.5; font-family: 'Courier New', monospace; background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                    <strong>{{previewFormula()}}</strong>
+                                </div>
+                                
+                                <div style="margin-top: 20px;">
+                                    <h6 style="margin-bottom: 10px;">Chi tiết trọng số:</h6>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                                        <div ng-if="formData.midtermWeight > 0" style="padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                            <strong>Giữa kỳ:</strong> {{(formData.midtermWeight * 100) | number:1}}%
+                                        </div>
+                                        <div ng-if="formData.finalWeight > 0" style="padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #10b981;">
+                                            <strong>Cuối kỳ:</strong> {{(formData.finalWeight * 100) | number:1}}%
+                                        </div>
+                                        <div ng-if="formData.assignmentWeight > 0" style="padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                            <strong>Bài tập:</strong> {{(formData.assignmentWeight * 100) | number:1}}%
+                                        </div>
+                                        <div ng-if="formData.quizWeight > 0" style="padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                                            <strong>Kiểm tra:</strong> {{(formData.quizWeight * 100) | number:1}}%
+                                        </div>
+                                        <div ng-if="formData.projectWeight > 0" style="padding: 10px; background: white; border-radius: 6px; border-left: 3px solid #ef4444;">
+                                            <strong>Đồ án:</strong> {{(formData.projectWeight * 100) | number:1}}%
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 15px; padding: 10px; background: #10b981; color: white; border-radius: 6px; text-align: center; font-weight: 600;">
+                                        Tổng: {{(calculateTotalWeight() * 100) | number:1}}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options Summary -->
+                        <div class="card mb-3" style="background: #f8fafc;">
+                            <div class="card-body">
+                                <h5 style="margin-bottom: 15px;">
+                                    <i class="fas fa-cog text-primary"></i> Tùy chọn nâng cao
+                                </h5>
+                                <div style="line-height: 2;">
+                                    <div>
+                                        <strong>Làm tròn:</strong> 
+                                        <span ng-if="formData.roundingMethod === 'STANDARD'">Làm tròn chuẩn</span>
+                                        <span ng-if="formData.roundingMethod === 'CEILING'">Làm tròn lên</span>
+                                        <span ng-if="formData.roundingMethod === 'FLOOR'">Làm tròn xuống</span>
+                                        <span ng-if="formData.roundingMethod === 'NONE'">Không làm tròn</span>
+                                    </div>
+                                    <div>
+                                        <strong>Số chữ số thập phân:</strong> {{formData.decimalPlaces || 2}}
+                                    </div>
+                                    <div ng-if="formData.customFormula">
+                                        <strong>Công thức tùy chỉnh:</strong> 
+                                        <code style="background: white; padding: 2px 6px; border-radius: 4px;">{{formData.customFormula}}</code>
+                                    </div>
+                                    <div ng-if="formData.description">
+                                        <strong>Mô tả:</strong> {{formData.description}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation Summary -->
+                        <div class="alert" ng-class="{'alert-danger': weightError || !isStep4Valid(), 'alert-success': !weightError && isStep4Valid()}">
+                            <div ng-if="weightError || !isStep4Valid()">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>Có lỗi cần sửa:</strong>
+                                <ul style="margin: 10px 0 0 20px;">
+                                    <li ng-if="weightError">{{weightError}}</li>
+                                    <li ng-if="!formData.classId && !formData.subjectId && !formData.schoolYearId && !formData.isDefault">
+                                        Chưa chọn phạm vi áp dụng
+                                    </li>
+                                </ul>
+                            </div>
+                            <div ng-if="!weightError && isStep4Valid()">
+                                <i class="fas fa-check-circle"></i> 
+                                <strong>Tất cả thông tin đã hợp lệ!</strong> Bạn có thể lưu cấu hình này.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-top: 1px solid #e2e8f0;">
+            <div>
+                <button class="btn btn-secondary" ng-click="closeFormModal()" ng-disabled="saving">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline-primary" 
+                        ng-click="previousStep()" 
+                        ng-disabled="currentStep === 1 || saving"
+                        ng-if="currentStep > 1">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </button>
+                <button class="btn btn-primary" 
+                        ng-click="nextStep()" 
+                        ng-disabled="!canProceedToNextStep() || saving"
+                        ng-if="currentStep < 4">
+                    Tiếp theo <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="btn btn-success" 
+                        ng-click="saveConfig()" 
+                        ng-disabled="saving || weightError || !isStep4Valid()"
+                        ng-if="currentStep === 4">
+                    <i class="fas fa-save"></i> {{saving ? 'Đang lưu...' : (editingConfig ? 'Cập nhật cấu hình' : 'Tạo cấu hình')}}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

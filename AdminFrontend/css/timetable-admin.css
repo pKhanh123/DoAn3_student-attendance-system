@@ -1,0 +1,621 @@
+/* ==============================================
+   TIMETABLE ADMIN PAGE - SPECIFIC STYLES
+   Namespace: timetable-admin-*
+   Tránh conflict với các CSS khác
+   ⚠️ 100% CUSTOM CSS - KHÔNG DÙNG BOOTSTRAP
+   ============================================== */
+
+/* ==============================================
+   OVERRIDE CLASS CHUNG - TRÁNH XUNG ĐỘT
+   Override các styles từ enhanced-components.css
+   ============================================== */
+
+/* Override .card trong timetable admin context */
+.timetable-admin-toolbar.card,
+.timetable-admin-form.card,
+.timetable-admin-grid.card {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius); /* 8px thay vì 12px */
+    box-shadow: var(--box-shadow);
+    margin-bottom: 24px;
+    border: none; /* Remove border từ enhanced-components */
+}
+
+.timetable-admin-toolbar.card:hover,
+.timetable-admin-form.card:hover,
+.timetable-admin-grid.card:hover {
+    box-shadow: var(--box-shadow); /* Giữ shadow cũ, không dùng enhanced */
+    transform: none; /* Remove transform từ enhanced */
+}
+
+/* Override .btn trong timetable admin context */
+.timetable-admin-toolbar .btn,
+.timetable-admin-form .btn,
+.timetable-admin-grid .btn {
+    font-weight: 500;
+    border-radius: var(--border-radius); /* 8px */
+    box-shadow: var(--box-shadow); /* Shadow nhẹ hơn enhanced */
+    transition: all 0.2s;
+}
+
+.timetable-admin-toolbar .btn:hover:not(:disabled),
+.timetable-admin-form .btn:hover:not(:disabled),
+.timetable-admin-grid .btn:hover:not(:disabled) {
+    transform: none; /* Remove transform từ enhanced */
+    box-shadow: var(--box-shadow-md); /* Shadow vừa phải */
+}
+
+/* Override .form-control trong timetable admin context (ngoài form field) */
+.timetable-admin-toolbar .form-control,
+.timetable-admin-class-selector .form-control {
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.timetable-admin-toolbar .form-control:focus,
+.timetable-admin-class-selector .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Override .table trong timetable admin context */
+.timetable-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-primary);
+    margin: 0; /* Remove margin từ enhanced */
+    font-size: 14px;
+}
+
+.timetable-admin-table thead {
+    background-color: var(--bg-secondary); /* Solid color thay vì gradient */
+}
+
+.timetable-admin-table thead th {
+    padding: 12px 16px; /* Padding gốc, không dùng 16px từ enhanced */
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+/* Override .alert trong timetable admin context */
+.timetable-admin-alert.alert {
+    padding: 15px 20px; /* Padding gốc */
+    border-radius: var(--border-radius);
+    margin-bottom: 24px;
+    border-left: none; /* Remove border-left từ enhanced */
+    background-color: rgba(239, 68, 68, 0.1); /* Solid background thay vì gradient - sử dụng danger color */
+}
+
+.timetable-admin-alert.alert-info {
+    background-color: rgba(14, 165, 233, 0.1);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    color: var(--info-color);
+}
+
+/* Override .badge trong timetable admin context */
+.timetable-admin-class-info .badge,
+.timetable-admin-table .badge {
+    padding: 4px 10px; /* Padding gốc từ components.css */
+    border-radius: 12px;
+    border: none; /* Remove border từ enhanced */
+    background-color: rgba(37, 99, 235, 0.1); /* Solid background thay vì gradient */
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.timetable-admin-table .badge-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.timetable-admin-table .badge-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.timetable-admin-table .badge-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+/* ==============================================
+   END OVERRIDE CLASS CHUNG
+   ============================================== */
+
+/* Toolbar Section */
+.timetable-admin-toolbar {
+    margin-bottom: 24px;
+}
+
+.timetable-admin-toolbar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.timetable-admin-toolbar-title h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timetable-admin-toolbar-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.timetable-admin-btn-nav,
+.timetable-admin-btn-create {
+    white-space: nowrap;
+}
+
+/* Class selector với search */
+.timetable-admin-class-selector {
+    position: relative;
+    min-width: 300px;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.timetable-admin-class-filter-options {
+    margin-bottom: 8px;
+    padding: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.timetable-admin-filter-checkbox {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.timetable-admin-filter-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.timetable-admin-class-search-wrapper {
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.timetable-admin-class-search {
+    padding-left: 35px;
+    padding-right: 35px;
+}
+
+.timetable-admin-class-search-wrapper::before {
+    content: '\f002';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    z-index: 1;
+}
+
+.timetable-admin-search-count {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: white;
+    padding: 0 5px;
+    pointer-events: none;
+}
+
+.timetable-admin-class-select {
+    width: 100%;
+    max-width: 500px;
+}
+
+.timetable-admin-class-select option {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 8px 12px;
+}
+
+.timetable-admin-class-info {
+    margin-top: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.timetable-admin-class-info .badge {
+    margin-right: 5px;
+}
+
+/* Alert Section */
+.timetable-admin-alert {
+    margin-bottom: 24px;
+}
+
+/* Form Section */
+.timetable-admin-form {
+    margin-bottom: 24px;
+}
+
+.timetable-admin-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.timetable-admin-form-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timetable-admin-btn-close {
+    margin-left: auto;
+}
+
+.timetable-admin-form-body {
+    padding: 16px;
+}
+
+.timetable-admin-form-content {
+    width: 100%;
+}
+
+.timetable-admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.timetable-admin-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.timetable-admin-form-field label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.timetable-admin-required {
+    color: var(--danger-color);
+    margin-left: 2px;
+}
+
+.timetable-admin-form-field .form-control {
+    width: 100%;
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all 0.2s;
+    height: 32px;
+}
+
+.timetable-admin-form-field .form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.timetable-admin-form-field-full {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.timetable-admin-form-field-full label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.timetable-admin-textarea {
+    width: 100%;
+    padding: 4px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    resize: vertical;
+    min-height: 50px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.timetable-admin-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Conflict Check Result */
+.timetable-admin-conflict {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-secondary);
+}
+
+.timetable-admin-conflict-title {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timetable-admin-conflict-item {
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: var(--border-radius);
+}
+
+.timetable-admin-conflict-item:last-child {
+    margin-bottom: 0;
+}
+
+.timetable-admin-conflict-item strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.timetable-admin-conflict-item ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.timetable-admin-conflict-item li {
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.timetable-admin-conflict-error {
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.timetable-admin-conflict-success {
+    color: var(--success-color);
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Form Actions */
+.timetable-admin-form-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.timetable-admin-btn-check,
+.timetable-admin-btn-save,
+.timetable-admin-btn-cancel {
+    min-width: 120px;
+}
+
+/* Grid Section */
+.timetable-admin-grid {
+    margin-bottom: 24px;
+}
+
+.timetable-admin-grid-header {
+    margin-bottom: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.timetable-admin-grid-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.timetable-admin-grid-body {
+    padding: 24px;
+}
+
+/* Empty State */
+.timetable-admin-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-tertiary);
+}
+
+.timetable-admin-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    color: var(--text-light);
+    opacity: 0.5;
+}
+
+.timetable-admin-empty p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* Table Wrapper */
+.timetable-admin-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Table styles đã được định nghĩa ở trên (dòng 65-85) */
+.timetable-admin-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color-light);
+    color: var(--text-primary);
+}
+
+.timetable-admin-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.timetable-admin-table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+.timetable-admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Actions in Table */
+.timetable-admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.timetable-admin-btn-edit,
+.timetable-admin-btn-delete {
+    white-space: nowrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .timetable-admin-toolbar-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .timetable-admin-toolbar-actions {
+        width: 100%;
+    }
+
+    .timetable-admin-toolbar-actions .btn {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .timetable-admin-form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .timetable-admin-form-actions {
+        flex-direction: column;
+    }
+
+    .timetable-admin-form-actions .btn {
+        width: 100%;
+    }
+
+    .timetable-admin-table-wrapper {
+        overflow-x: scroll;
+    }
+
+    .timetable-admin-table {
+        min-width: 800px;
+    }
+
+    .timetable-admin-actions {
+        flex-direction: column;
+    }
+
+    .timetable-admin-actions .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .timetable-admin-form-body {
+        padding: 16px;
+    }
+
+    .timetable-admin-grid-body {
+        padding: 16px;
+    }
+
+    .timetable-admin-table th,
+    .timetable-admin-table td {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .timetable-admin-toolbar,
+    .timetable-admin-form,
+    .timetable-admin-actions {
+        display: none;
+    }
+
+    .timetable-admin-grid {
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+}
+
+/* ==============================================
+   EXAM VS SESSION ROW STYLING
+   Phân biệt style cho exam-row vs session-row
+   ============================================== */
+
+/* Exam row - Màu đỏ nhạt */
+.timetable-admin-table tbody tr.exam-row {
+    background-color: #fff5f5;
+    border-left: 3px solid #dc3545;
+}
+
+.timetable-admin-table tbody tr.exam-row:hover {
+    background-color: #ffe5e5;
+}
+
+/* Session row - Màu xanh nhạt */
+.timetable-admin-table tbody tr.session-row {
+    background-color: #f0f8ff;
+    border-left: 3px solid #007bff;
+}
+
+.timetable-admin-table tbody tr.session-row:hover {
+    background-color: #e0f0ff;
+}
+
+/* Badge phân loại */
+.timetable-admin-table .badge-danger {
+    background-color: #dc3545;
+    color: white;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+.timetable-admin-table .badge-primary {
+    background-color: #007bff;
+    color: white;
+    font-size: 11px;
+    padding: 4px 8px;
+}
+

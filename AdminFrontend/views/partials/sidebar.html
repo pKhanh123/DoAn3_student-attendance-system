@@ -1,0 +1,36 @@
+<!-- Sidebar Component - Dùng chung cho tất cả views -->
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <h2><i class="fas fa-graduation-cap"></i> {{currentUser.Role || currentUser.role || 'Admin'}} Panel</h2>
+        <p>Xin chào, {{currentUser.fullName || 'User'}}</p>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <ul class="sidebar-menu">
+            <!-- ✅ Menu động theo role từ RoleService với dropdown -->
+            <li class="menu-section" ng-repeat="section in menuSections track by $index">
+                <!-- Tất cả sections đều là dropdown -->
+                <div>
+                    <button type="button" class="menu-section-toggle" ng-click="toggleSection($index)">
+                        <span class="section-title">{{section.section}}</span>
+                        <i class="fas fa-chevron-right arrow" ng-class="{'open': isSectionOpen($index)}"></i>
+                    </button>
+                    <ul class="submenu" ng-class="{'open': isSectionOpen($index)}">
+                        <li ng-repeat="item in section.items">
+                            <a href="javascript:void(0)" 
+                               ng-click="navigateTo(item.path, $event); $event.stopPropagation();" 
+                               ng-class="{'active': isActive(item.path)}"
+                               ng-attr-data-label="{{item.label}}"
+                               ng-attr-data-path="{{item.path}}"
+                               style="cursor: pointer;">
+                                <i class="{{item.icon}}"></i>
+                                <span>{{item.label}}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </nav>
+</aside>
+

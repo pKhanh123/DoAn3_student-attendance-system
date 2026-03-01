@@ -1,0 +1,165 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <h1 class="page-title">Audit Log</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info" ng-init="currentUser = getCurrentUser()">
+                    <div class="user-avatar" ng-click="openAvatarModal()">
+                        <img ng-if="currentUser.avatarUrl" ng-src="{{currentUser.avatarUrl}}" alt="Avatar">
+                        <span ng-if="!currentUser.avatarUrl">{{currentUser.fullName ? currentUser.fullName.charAt(0) : 'U'}}</span>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">{{currentUser.fullName}}</span>
+                        <span class="user-role">{{currentUser.roleName || 'Admin'}}</span>
+                    </div>
+                </div>
+                <button ng-click="logout()" class="btn btn-outline">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </header>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Lịch sử thay đổi hệ thống</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-outline" ng-click="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <search-bar 
+                        search-term="pagination.searchTerm" 
+                        on-search="handleSearch()" 
+                        placeholder="Tìm kiếm theo người dùng, hành động, đối tượng...">
+                    </search-bar>
+                    
+                    <!-- Filters -->
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Hành động</label>
+                            <select ng-model="filters.action" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="type in actionTypes" value="{{type.value}}">
+                                    {{type.label}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Đối tượng</label>
+                            <select ng-model="filters.entityType" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="type in entityTypes" value="{{type.value}}">
+                                    {{type.label}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Từ ngày</label>
+                            <input type="date" 
+                                   ng-model="filters.dateFrom" 
+                                   ng-change="handleFilterChange()" 
+                                   class="filter-select">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Đến ngày</label>
+                            <input type="date" 
+                                   ng-model="filters.dateTo" 
+                                   ng-change="handleFilterChange()" 
+                                   class="filter-select">
+                        </div>
+                        
+                        <button ng-click="resetFilters()" class="btn btn-outline" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th sortable-header="createdAt" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Thời gian</th>
+                                    <th sortable-header="userName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Người dùng</th>
+                                    <th sortable-header="action" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Hành động</th>
+                                    <th sortable-header="entityType" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Đối tượng</th>
+                                    <th sortable-header="entityName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Tên</th>
+                                    <th>Chi tiết</th>
+                                    <th sortable-header="ipAddress" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loading && displayedLogs.length === 0">
+                                    <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="log in displayedLogs" ng-if="!loading">
+                                    <td>{{formatDate(log.createdAt)}}</td>
+                                    <td>{{log.userName}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="getActionClass(log.action)">
+                                            {{log.action}}
+                                        </span>
+                                    </td>
+                                    <td>{{log.entityType}}</td>
+                                    <td>{{log.entityName}}</td>
+                                    <td>
+                                        <small>{{log.details}}</small>
+                                    </td>
+                                    <td>{{log.ipAddress}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <pagination 
+                        pagination="pagination" 
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

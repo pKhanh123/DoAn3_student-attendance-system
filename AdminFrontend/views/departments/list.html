@@ -1,0 +1,79 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Bộ môn"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-sitemap"></i> Danh sách Bộ môn</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm Bộ môn
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div ng-if="loading" class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                    </div>
+                    
+                    <div ng-if="!loading && departments.length === 0" class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Chưa có bộ môn nào</p>
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Tạo bộ môn đầu tiên
+                        </button>
+                    </div>
+                    
+                    <table ng-if="!loading && departments.length > 0" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã bộ môn</th>
+                                <th>Tên bộ môn</th>
+                                <th>Thuộc khoa</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="dept in departments">
+                                <td><strong>{{dept.departmentCode}}</strong></td>
+                                <td>{{dept.departmentName}}</td>
+                                <td>
+                                    <span class="badge badge-info">
+                                        <i class="fas fa-building"></i> {{dept.facultyName}}
+                                    </span>
+                                </td>
+                                <td>{{dept.description || '-'}}</td>
+                                <td>
+                                    <span ng-if="dept.isActive" class="badge badge-success">
+                                        <i class="fas fa-check-circle"></i> Hoạt động
+                                    </span>
+                                    <span ng-if="!dept.isActive" class="badge badge-secondary">
+                                        <i class="fas fa-ban"></i> Ngưng
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-info" ng-click="goToEdit(dept.departmentId)" title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" ng-click="deleteDepartment(dept.departmentId, dept.departmentName)" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

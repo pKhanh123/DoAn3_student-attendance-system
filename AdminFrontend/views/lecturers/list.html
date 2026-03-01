@@ -1,0 +1,72 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Giảng viên"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách Giảng viên</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm giảng viên
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã GV</th>
+                                    <th>Họ tên</th>
+                                    <th>Học hàm</th>
+                                    <th>Học vị</th>
+                                    <th>Chuyên môn</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                                </tr>
+                                <tr ng-if="!loading && lecturers.length === 0">
+                                    <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="lecturer in lecturers" ng-if="!loading">
+                                    <td>{{lecturer.lecturerId}}</td>
+                                    <td>{{lecturer.fullName}}</td>
+                                    <td>{{lecturer.academicTitle}}</td>
+                                    <td>{{lecturer.degree}}</td>
+                                    <td>{{lecturer.specialization}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="lecturer.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{lecturer.isActive ? 'Đang làm việc' : 'Nghỉ việc'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(lecturer.lecturerId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteLecturer(lecturer.lecturerId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,465 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Đợt đăng ký học phần/học lại"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs" style="margin-bottom: 16px;" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{'active': activeTab === 'NORMAL'}" 
+                       ng-click="switchTab('NORMAL')" 
+                       href="javascript:void(0)">
+                        <i class="fas fa-calendar-alt"></i> Đợt đăng ký học phần
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{'active': activeTab === 'RETAKE'}" 
+                       ng-click="switchTab('RETAKE')" 
+                       href="javascript:void(0)">
+                        <i class="fas fa-redo"></i> Đợt đăng ký học lại
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Active Period Alert - Normal -->
+            <div class="alert alert-success" style="display: flex; align-items: center;" ng-if="activeTab === 'NORMAL' && hasOpenPeriod('NORMAL')">
+                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                <div>
+                    <strong>Đợt đăng ký học phần đang mở:</strong> 
+                    <span ng-repeat="period in periods | filter:{status:'OPEN'}" ng-if="$first">
+                        {{period.periodName}} 
+                        ({{period.startDate | date:'dd/MM/yyyy'}} - {{period.endDate | date:'dd/MM/yyyy'}})
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Active Period Alert - Retake -->
+            <div class="alert alert-success" style="display: flex; align-items: center;" ng-if="activeTab === 'RETAKE' && hasOpenPeriod('RETAKE')">
+                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                <div>
+                    <strong>Đợt đăng ký học lại đang mở:</strong> 
+                    <span ng-repeat="period in retakePeriods | filter:{status:'OPEN'}" ng-if="$first">
+                        {{period.periodName}} 
+                        ({{period.startDate | date:'dd/MM/yyyy'}} - {{period.endDate | date:'dd/MM/yyyy'}})
+                    </span>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning" style="display: flex; align-items: center;" ng-if="(activeTab === 'NORMAL' && !hasOpenPeriod('NORMAL')) || (activeTab === 'RETAKE' && !hasOpenPeriod('RETAKE'))">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                <div>Hiện tại không có đợt đăng ký nào đang mở</div>
+            </div>
+            
+            <!-- Tab Content: Normal Periods -->
+            <div class="card tab-content" ng-if="activeTab === 'NORMAL'">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title" style="margin-bottom: 0;">
+                        <i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>
+                        Danh sách Đợt đăng ký học phần
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm" ng-click="showCreateModal()">
+                            <i class="fas fa-plus" style="margin-right: 4px;"></i> Tạo đợt đăng ký học phần
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Loading -->
+                    <div class="text-center p-4" ng-if="loading">
+                        <div class="spinner" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">Đang tải dữ liệu...</p>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-responsive" ng-if="!loading">
+                        <table class="table table-hoverable">
+                            <thead class="table-header-light">
+                                <tr>
+                                    <th>Tên đợt</th>
+                                    <th>Năm học</th>
+                                    <th>Học kỳ</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th width="200">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="period in periods">
+                                    <td><strong>{{period.periodName}}</strong></td>
+                                    <td>{{period.academicYearName}}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{getSemesterName(period.semester)}}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{period.startDate | date:'dd/MM/yyyy'}} - 
+                                            {{period.endDate | date:'dd/MM/yyyy'}}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusBadge(period.status)">
+                                            {{period.status === 'OPEN' ? 'Đang mở' : 
+                                              period.status === 'CLOSED' ? 'Đã đóng' : 'Sắp mở'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-info" 
+                                                    ng-click="loadPeriodClasses(period.periodId)"
+                                                    title="Quản lý lớp trong đợt">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    ng-click="showEditModal(period)"
+                                                    ng-if="period.status !== 'CLOSED'"
+                                                    title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    ng-click="openPeriod(period.periodId)"
+                                                    ng-if="period.status !== 'OPEN'"
+                                                    title="Mở đợt">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    ng-click="closePeriod(period.periodId)"
+                                                    ng-if="period.status === 'OPEN'"
+                                                    title="Đóng đợt">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    ng-click="deletePeriod(period.periodId)"
+                                                    ng-if="period.status === 'UPCOMING'"
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center" style="padding: 32px;" ng-if="periods.length === 0 && !loading">
+                            <i class="fas fa-calendar-alt fa-3x" style="color: var(--text-secondary); margin-bottom: 16px;"></i>
+                            <h5 style="color: var(--text-secondary);">Chưa có đợt đăng ký học phần nào</h5>
+                            <p style="color: var(--text-secondary);">Hãy tạo đợt đăng ký đầu tiên để bắt đầu quản lý</p>
+                            <button class="btn btn-primary" ng-click="showCreateModal()">
+                                <i class="fas fa-plus" style="margin-right: 4px;"></i>
+                                Tạo đợt đăng ký học phần
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Retake Periods -->
+            <div class="card tab-content" ng-if="activeTab === 'RETAKE'">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title" style="margin-bottom: 0;">
+                        <i class="fas fa-redo" style="margin-right: 8px;"></i>
+                        Danh sách Đợt đăng ký học lại
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-sm" ng-click="showCreateModal()">
+                            <i class="fas fa-plus" style="margin-right: 4px;"></i> Tạo đợt đăng ký học lại
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Loading -->
+                    <div class="text-center p-4" ng-if="loading">
+                        <div class="spinner" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">Đang tải dữ liệu...</p>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-responsive" ng-if="!loading">
+                        <table class="table table-hoverable">
+                            <thead class="table-header-light">
+                                <tr>
+                                    <th>Tên đợt</th>
+                                    <th>Năm học</th>
+                                    <th>Học kỳ</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th width="200">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="period in retakePeriods">
+                                    <td><strong>{{period.periodName}}</strong></td>
+                                    <td>{{period.academicYearName}}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{getSemesterName(period.semester)}}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{period.startDate | date:'dd/MM/yyyy'}} - 
+                                            {{period.endDate | date:'dd/MM/yyyy'}}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusBadge(period.status)">
+                                            {{period.status === 'OPEN' ? 'Đang mở' : 
+                                              period.status === 'CLOSED' ? 'Đã đóng' : 'Sắp mở'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-info" 
+                                                    ng-click="loadPeriodClasses(period.periodId)"
+                                                    title="Quản lý lớp trong đợt">
+                                                <i class="fas fa-list"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    ng-click="showEditModal(period)"
+                                                    ng-if="period.status !== 'CLOSED'"
+                                                    title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    ng-click="openPeriod(period.periodId)"
+                                                    ng-if="period.status !== 'OPEN'"
+                                                    title="Mở đợt">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    ng-click="closePeriod(period.periodId)"
+                                                    ng-if="period.status === 'OPEN'"
+                                                    title="Đóng đợt">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    ng-click="deletePeriod(period.periodId)"
+                                                    ng-if="period.status === 'UPCOMING'"
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center" style="padding: 32px;" ng-if="retakePeriods.length === 0 && !loading">
+                            <i class="fas fa-redo fa-3x" style="color: var(--text-secondary); margin-bottom: 16px;"></i>
+                            <h5 style="color: var(--text-secondary);">Chưa có đợt đăng ký học lại nào</h5>
+                            <p style="color: var(--text-secondary);">Hãy tạo đợt đăng ký học lại đầu tiên để bắt đầu quản lý</p>
+                            <button class="btn btn-primary" ng-click="showCreateModal()">
+                                <i class="fas fa-plus" style="margin-right: 4px;"></i>
+                                Tạo đợt đăng ký học lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Overlay -->
+            <div id="modal-overlay" class="modal-overlay"></div>
+            
+            <!-- Create/Edit Modal -->
+            <div class="modal" id="periodModal">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h5 class="modal-title" style="margin-bottom: 0;">
+                        <i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>
+                        {{currentPeriod.periodId ? 'Sửa' : 'Tạo'}} đợt đăng ký
+                    </h5>
+                    <button type="button" class="modal-close" data-dismiss="modal" ng-click="closeModal()" aria-label="Đóng">
+                    <i class="fas fa-times"></i>
+                </button>
+                </div>
+                <div class="modal-body">
+                    <form name="periodForm">
+                        <div style="margin-bottom: 16px;">
+                            <label class="form-label">Tên đợt <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" 
+                                   ng-model="currentPeriod.periodName" required
+                                   placeholder="VD: Đăng ký học kỳ 1 năm 2024-2025">
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label class="form-label">Năm học <span class="text-danger">*</span></label>
+                            <select class="form-control" ng-model="currentPeriod.academicYearId" required>
+                                <option value="">Chọn năm học</option>
+                                <option ng-repeat="year in academicYears" value="{{year.academicYearId}}">
+                                    {{year.yearName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-row" style="gap: 12px; margin-bottom: 16px;">
+                            <div class="form-col form-col-half">
+                                <label class="form-label">Loại đợt đăng ký <span class="text-danger">*</span></label>
+                                <select class="form-control" ng-model="currentPeriod.periodType" required>
+                                    <option value="NORMAL">Đăng ký học phần</option>
+                                    <option value="RETAKE">Đăng ký học lại</option>
+                                </select>
+                            </div>
+                            <div class="form-col form-col-half">
+                                <label class="form-label">Học kỳ <span class="text-danger">*</span></label>
+                                <select class="form-control" ng-model="currentPeriod.semester" required>
+                                    <option value="">Chọn học kỳ</option>
+                                    <option value="1">Học kỳ 1</option>
+                                    <option value="2">Học kỳ 2</option>
+                                    <option value="3">Học kỳ 3 (Hè)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row" style="gap: 12px; margin-bottom: 16px;">
+                            <div class="form-col form-col-half">
+                                <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" 
+                                       ng-model="currentPeriod.startDate"
+                                       ng-model-options="{ timezone: 'UTC' }"
+                                       required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" 
+                                       ng-model="currentPeriod.endDate"
+                                       ng-model-options="{ timezone: 'UTC' }"
+                                       required>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" ng-model="currentPeriod.description" rows="3" placeholder="Nhập mô tả cho đợt đăng ký (tùy chọn)"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" ng-click="closeModal()">
+                        <i class="fas fa-times" style="margin-right: 4px;"></i> Hủy
+                    </button>
+                    <button type="button" class="btn btn-primary" 
+                            ng-click="savePeriod()" 
+                            ng-disabled="periodForm.$invalid">
+                        <i class="fas fa-save" style="margin-right: 4px;"></i> Lưu
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Class Management Section -->
+            <div class="card" ng-if="selectedPeriod" style="margin-top: 24px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title" style="margin-bottom: 0;">
+                        <i class="fas fa-book" style="margin-right: 8px;"></i>
+                        Quản lý lớp trong đợt đăng ký
+                    </h3>
+                    <button class="btn btn-sm btn-outline-secondary" ng-click="selectedPeriod = null">
+                        <i class="fas fa-times" style="margin-right: 4px;"></i> Đóng
+                    </button>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Danh sách lớp đã thêm -->
+                    <h5 style="margin-bottom: 16px;">
+                        <i class="fas fa-list" style="margin-right: 8px;"></i>
+                        Danh sách lớp trong đợt
+                    </h5>
+                    <div class="table-responsive" style="margin-bottom: 24px;">
+                        <table class="table table-hoverable">
+                            <thead class="table-header-light">
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Môn học</th>
+                                    <th>Giảng viên</th>
+                                    <th width="100">Tín chỉ</th>
+                                    <th width="120">Còn trống</th>
+                                    <th width="100">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="pc in periodClasses">
+                                    <td>
+                                        <span class="badge bg-primary">{{pc.class_code}}</span>
+                                    </td>
+                                    <td><strong>{{pc.subject_name}}</strong></td>
+                                    <td>{{pc.lecturer_name || 'N/A'}}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{pc.credits}}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="pc.available_seats > 0 ? 'bg-success' : 'bg-danger'">
+                                            {{pc.available_seats}}/{{pc.max_students}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                ng-click="removeClassFromPeriod(pc.period_class_id)"
+                                                title="Xóa lớp khỏi đợt">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center" style="padding: 24px;" ng-if="periodClasses.length === 0">
+                            <i class="fas fa-inbox fa-2x" style="color: var(--text-secondary); margin-bottom: 8px;"></i>
+                            <p style="color: var(--text-secondary); margin-bottom: 0;">Chưa có lớp nào trong đợt</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Danh sách lớp có thể thêm -->
+                    <h5 style="margin-bottom: 16px;">
+                        <i class="fas fa-plus-circle" style="margin-right: 8px;"></i>
+                        Thêm lớp vào đợt đăng ký
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hoverable">
+                            <thead class="table-header-light">
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Môn học</th>
+                                    <th>Giảng viên</th>
+                                    <th width="100">Tín chỉ</th>
+                                    <th width="100">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="ac in availableClasses">
+                                    <td>
+                                        <span class="badge bg-primary">{{ac.class_code}}</span>
+                                    </td>
+                                    <td><strong>{{ac.subject_name}}</strong></td>
+                                    <td>{{ac.lecturer_name || 'N/A'}}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info">{{ac.credits}}</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success" 
+                                                ng-click="addClassToPeriod(ac.class_id)"
+                                                title="Thêm lớp vào đợt">
+                                            <i class="fas fa-plus" style="margin-right: 4px;"></i> Thêm
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center" style="padding: 24px;" ng-if="availableClasses.length === 0">
+                            <i class="fas fa-check-circle fa-2x" style="color: var(--success-color); margin-bottom: 8px;"></i>
+                            <p style="color: var(--text-secondary); margin-bottom: 0;">Không còn lớp nào có thể thêm</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <toast-container></toast-container>
+</div>
+

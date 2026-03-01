@@ -1,0 +1,211 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Điểm danh"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Loading State -->
+            <div ng-if="loading" class="card attendance-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary-color);"></i>
+                    <p style="color: var(--text-secondary); margin-top: 12px;">Đang tải dữ liệu điểm danh...</p>
+                </div>
+            </div>
+            
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 8px;">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <!-- Attendance Records -->
+            <div class="card attendance-card" ng-if="!loading && attendanceRecords.length > 0">
+                <div class="card-header attendance-header">
+                    <h3><i class="fas fa-clipboard-check"></i> Lịch sử điểm danh</h3>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="table-responsive">
+                        <table class="table attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Môn học</th>
+                                    <th>Lớp</th>
+                                    <th>Giảng viên</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="record in attendanceRecords">
+                                    <td style="font-weight: 500; color: var(--text-primary);">{{record.date | date:'dd/MM/yyyy'}}</td>
+                                    <td style="color: var(--text-primary);">{{record.subjectName}}</td>
+                                    <td style="color: var(--text-primary);">{{record.classCode}}</td>
+                                    <td style="color: var(--text-primary);">{{record.lecturerName}}</td>
+                                    <td>
+                                        <span class="badge attendance-badge" ng-class="getStatusBadge(record.status)">
+                                            {{getStatusText(record.status)}}
+                                        </span>
+                                    </td>
+                                    <td style="color: var(--text-secondary);">{{record.notes || '-'}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div ng-if="!loading && attendanceRecords.length === 0" class="card attendance-card">
+                <div class="card-body text-center" style="padding: 40px 20px;">
+                    <i class="fas fa-clipboard-list fa-3x mb-3" style="color: var(--text-tertiary);"></i>
+                    <p style="color: var(--text-secondary); font-size: 15px;">Chưa có dữ liệu điểm danh</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==============================================
+   ATTENDANCE FORM STYLES - Cải thiện độ tương phản
+   ============================================== */
+
+.attendance-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.attendance-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    padding: 18px 24px;
+    border-bottom: none;
+}
+
+.attendance-header h3 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.attendance-header i {
+    margin-right: 10px;
+    color: #ffffff;
+}
+
+.attendance-table {
+    background-color: #ffffff;
+}
+
+.attendance-table thead {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.attendance-table thead th {
+    background: transparent;
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 20px;
+    border-bottom: 2px solid #cbd5e1;
+    white-space: nowrap;
+}
+
+.attendance-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.attendance-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.attendance-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.attendance-table tbody td {
+    padding: 16px 20px;
+    color: #334155;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+/* Badge styles - Tăng độ tương phản */
+.attendance-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.attendance-badge.badge-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border-color: #059669;
+}
+
+.attendance-badge.badge-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
+.attendance-badge.badge-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    border-color: #d97706;
+}
+
+.attendance-badge.badge-info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.attendance-badge.badge-secondary {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    color: #ffffff;
+    border-color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .attendance-table thead th,
+    .attendance-table tbody td {
+        padding: 12px 15px;
+        font-size: 13px;
+    }
+    
+    .attendance-header {
+        padding: 15px 20px;
+    }
+    
+    .attendance-header h3 {
+        font-size: 16px;
+    }
+    
+    .attendance-badge {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}
+</style>
+

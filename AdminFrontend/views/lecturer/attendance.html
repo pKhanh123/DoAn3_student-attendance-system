@@ -1,0 +1,150 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Điểm danh lớp học"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <!-- Today's Classes List -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-calendar-day"></i> Lịch học hôm nay</h2>
+                </div>
+                <div class="card-body">
+                    <div ng-if="loading" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p style="margin-top: 10px;">Đang tải lịch học...</p>
+                    </div>
+                    
+                    <div ng-if="!loading && todaySessions.length === 0" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-calendar-times fa-3x" style="color: #ccc; margin-bottom: 15px;"></i>
+                        <p style="color: #666; font-size: 16px;">Không có lịch học hôm nay</p>
+                    </div>
+                    
+                    <!-- Session Cards -->
+                    <div ng-repeat="session in todaySessions" class="session-card" style="margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; padding: 20px; background: #fff;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">
+                                    <i class="fas fa-book"></i> {{session.subjectName}} - {{session.className}}
+                                </h3>
+                                <div style="color: #666; font-size: 14px; line-height: 1.8;">
+                                    <div><i class="fas fa-clock"></i> <strong>Thời gian:</strong> {{session.startTime}} - {{session.endTime}}</div>
+                                    <div ng-if="session.period"><i class="fas fa-list-ol"></i> <strong>Tiết:</strong> {{session.period}}</div>
+                                    <div><i class="fas fa-door-open"></i> <strong>Phòng:</strong> {{session.room}}</div>
+                                </div>
+                            </div>
+                            <div style="margin-left: 20px; text-align: right;">
+                                <span ng-if="session.attendanceSaved" class="badge badge-success" style="font-size: 14px; padding: 8px 15px;">
+                                    <i class="fas fa-check-circle"></i> Đã điểm danh
+                                </span>
+                                <button ng-if="!session.attendanceSaved && !session.showAttendanceForm" 
+                                        ng-click="openAttendanceForm(session)" 
+                                        class="btn btn-primary" style="padding: 8px 20px;">
+                                    <i class="fas fa-clipboard-check"></i> Điểm danh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Attendance Form (chỉ hiển thị khi click "Điểm danh" và chưa lưu) -->
+                        <div ng-if="session.showAttendanceForm && !session.attendanceSaved" 
+                             style="border-top: 2px solid #e9ecef; padding-top: 20px; margin-top: 20px;">
+                            
+                            <div ng-if="session.loadingStudents" class="text-center" style="padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải danh sách sinh viên...
+                            </div>
+                            
+                            <div ng-if="!session.loadingStudents && session.students && session.students.length > 0">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="margin: 0;"><i class="fas fa-users"></i> Danh sách điểm danh</h4>
+                                    <div>
+                                        <button ng-click="markAllPresent(session)" class="btn btn-sm btn-success" style="margin-right: 10px;">
+                                            <i class="fas fa-check-double"></i> Có mặt tất cả
+                                        </button>
+                                        <button ng-click="saveAttendance(session)" 
+                                                class="btn btn-sm btn-primary" 
+                                                ng-disabled="saving">
+                                            <i class="fas fa-save"></i> {{saving ? 'Đang lưu...' : 'Lưu điểm danh'}}
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr style="background: #f8f9fa;">
+                                                <th style="width: 60px;">STT</th>
+                                                <th>MSSV</th>
+                                                <th>Họ và tên</th>
+                                                <th style="width: 150px;">Trạng thái</th>
+                                                <th style="width: 300px;">Ghi chú</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="student in session.students">
+                                                <td>{{$index + 1}}</td>
+                                                <td>{{student.studentCode}}</td>
+                                                <td>{{student.fullName}}</td>
+                                                <td>
+                                                    <select class="form-control form-control-sm" 
+                                                            ng-model="student.status"
+                                                            ng-disabled="session.attendanceSaved">
+                                                        <option value="present">Có mặt</option>
+                                                        <option value="absent">Vắng mặt</option>
+                                                        <option value="late">Đi muộn</option>
+                                                        <option value="excused">Có phép</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="text" 
+                                                           class="form-control form-control-sm" 
+                                                           ng-model="student.note" 
+                                                           placeholder="Ghi chú (nếu có)"
+                                                           ng-disabled="session.attendanceSaved">
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Summary -->
+                                <div class="attendance-summary" style="margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 8px;">
+                                    <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">{{getCountByStatus(session, 'present')}}</div>
+                                            <div style="color: #64748b; font-size: 14px;">Có mặt</div>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">{{getCountByStatus(session, 'absent')}}</div>
+                                            <div style="color: #64748b; font-size: 14px;">Vắng mặt</div>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">{{getCountByStatus(session, 'late')}}</div>
+                                            <div style="color: #64748b; font-size: 14px;">Đi muộn</div>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">{{getCountByStatus(session, 'excused')}}</div>
+                                            <div style="color: #64748b; font-size: 14px;">Có phép</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div ng-if="!session.loadingStudents && (!session.students || session.students.length === 0)" 
+                                 class="text-center" style="padding: 20px; color: #666;">
+                                <i class="fas fa-info-circle"></i> Không có sinh viên trong lớp này
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

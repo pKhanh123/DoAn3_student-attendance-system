@@ -1,0 +1,134 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Công thức tính điểm"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="loading-overlay" ng-if="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Đang tải dữ liệu...</div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Info Message -->
+            <div class="alert alert-info" style="margin-bottom: 20px;">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Lưu ý:</strong> Đây là chế độ xem công thức điểm. Bạn chỉ có thể xem công thức đang áp dụng cho các lớp học của mình. 
+                Để chỉnh sửa công thức, vui lòng liên hệ quản trị viên hoặc cố vấn học tập.
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Môn học</label>
+                            <select class="form-control" ng-model="filters.subjectId" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Lớp</label>
+                            <select class="form-control" ng-model="filters.classId" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="class in classes" value="{{class.classId}}">
+                                    {{class.className || class.classCode}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline" ng-click="clearFilters()" style="width: 100%;">
+                                <i class="fas fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configs List -->
+            <div class="card" ng-if="!loading && configs.length > 0">
+                <div class="card-header">
+                    <h3>Danh sách công thức ({{pagination.totalCount}})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 150px;">Phạm vi</th>
+                                    <th>Trọng số</th>
+                                    <th style="width: 150px;">Làm tròn</th>
+                                    <th style="width: 100px;">Mặc định</th>
+                                    <th style="width: 150px;">Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="config in configs">
+                                    <td>
+                                        <strong>{{getScopeDescription(config)}}</strong><br>
+                                        <small class="text-muted" ng-if="config.description">{{config.description}}</small>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 12px;">
+                                            <span ng-if="config.midtermWeight > 0">Giữa kỳ: {{(config.midtermWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.finalWeight > 0">Cuối kỳ: {{(config.finalWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.assignmentWeight > 0">Bài tập: {{(config.assignmentWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.quizWeight > 0">Kiểm tra: {{(config.quizWeight * 100).toFixed(0)}}%</span><br>
+                                            <span ng-if="config.projectWeight > 0">Đồ án: {{(config.projectWeight * 100).toFixed(0)}}%</span>
+                                        </div>
+                                        <div ng-if="config.customFormula" class="text-muted" style="font-size: 11px; margin-top: 5px;">
+                                            <i class="fas fa-code"></i> {{config.customFormula}}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{config.roundingMethod || 'STANDARD'}}<br>
+                                        <small class="text-muted">{{config.decimalPlaces || 2}} chữ số</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{'badge-success': config.isDefault, 'badge-secondary': !config.isDefault}">
+                                            {{config.isDefault ? 'Có' : 'Không'}}
+                                        </span>
+                                    </td>
+                                    <td>{{config.createdAt | date:'dd/MM/yyyy'}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <pagination 
+                        current-page="pagination.page" 
+                        page-size="pagination.pageSize" 
+                        total-items="pagination.totalCount"
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div ng-if="!loading && configs.length === 0" class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Chưa có công thức nào được cấu hình</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

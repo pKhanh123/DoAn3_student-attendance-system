@@ -1,0 +1,165 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Dashboard Sinh viên"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Student Info Card -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="student-profile">
+                        <div class="student-avatar-large">
+                            {{studentInfo.fullName.charAt(0)}}
+                        </div>
+                        <div class="student-info-details">
+                            <h2>{{studentInfo.fullName}}</h2>
+                            <div class="info-grid">
+                                <div><strong>MSSV:</strong> {{studentInfo.studentCode}}</div>
+                                <div><strong>Lớp:</strong> {{studentInfo.className}}</div>
+                                <div><strong>Khoa:</strong> {{studentInfo.faculty}}</div>
+                                <div><strong>Niên khóa:</strong> {{studentInfo.academicYear}}</div>
+                            </div>
+                        </div>
+                        <div class="student-stats">
+                            <div class="stat-box">
+                                <div class="stat-value" ng-class="{
+                                    'text-success': studentInfo.gpa >= 3.0,
+                                    'text-warning': studentInfo.gpa >= 2.0 && studentInfo.gpa < 3.0,
+                                    'text-danger': studentInfo.gpa < 2.0
+                                }">{{studentInfo.gpa | number:2}}</div>
+                                <div class="stat-label">GPA</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">{{studentInfo.credits}}</div>
+                                <div class="stat-label">Tín chỉ tích lũy</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value" ng-class="{
+                                    'text-success': studentInfo.attendanceRate >= 90,
+                                    'text-warning': studentInfo.attendanceRate >= 80 && studentInfo.attendanceRate < 90,
+                                    'text-danger': studentInfo.attendanceRate < 80
+                                }">{{studentInfo.attendanceRate}}%</div>
+                                <div class="stat-label">Chuyên cần</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today's Schedule -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-calendar-day"></i> Lịch học hôm nay</h2>
+                </div>
+                <div class="card-body">
+                    <div ng-if="loading" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Đang tải lịch học...</p>
+                    </div>
+                    
+                    <div ng-if="!loading && todaySchedule.length === 0" class="text-center">
+                        <i class="fas fa-calendar-times fa-3x" style="color: #94a3b8;"></i>
+                        <p>Không có lịch học hôm nay</p>
+                    </div>
+                    
+                    <div ng-if="!loading && todaySchedule.length > 0" class="schedule-list">
+                        <div class="schedule-item" ng-repeat="schedule in todaySchedule">
+                            <div class="schedule-time">
+                                <div class="time-period" ng-if="schedule.period">Tiết {{schedule.period}}</div>
+                                <div class="time-period" ng-if="!schedule.period">Lịch học</div>
+                                <div class="time-range">{{schedule.startTime}} - {{schedule.endTime}}</div>
+                            </div>
+                            <div class="schedule-details">
+                                <h3>{{schedule.subjectName}}</h3>
+                                <div class="schedule-meta">
+                                    <span><i class="fas fa-chalkboard-teacher"></i> {{schedule.lecturerName}}</span>
+                                    <span><i class="fas fa-door-open"></i> Phòng {{schedule.room}}</span>
+                                </div>
+                            </div>
+                            <div class="schedule-status">
+                                <span class="badge" ng-class="{
+                                    'badge-success': schedule.status === 'completed',
+                                    'badge-warning': schedule.status === 'in_progress',
+                                    'badge-secondary': schedule.status === 'pending'
+                                }">
+                                    {{schedule.status === 'completed' ? 'Đã kết thúc' : 
+                                      schedule.status === 'in_progress' ? 'Đang diễn ra' : 'Sắp diễn ra'}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upcoming Schedule Notifications (2 ngày tiếp theo) -->
+            <div ng-if="!loading && upcomingSchedule.length > 0" class="card">
+                <div class="card-header bg-info text-white">
+                    <h2><i class="fas fa-bell"></i> Thông báo lịch học sắp tới</h2>
+                </div>
+                <div class="card-body">
+                    <div ng-repeat="day in upcomingSchedule" class="upcoming-day-section" style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e9ecef;" ng-if="!$last || $index === 0">
+                        <h4 style="color: #007bff; margin-bottom: 10px;">
+                            <i class="fas fa-calendar-check"></i> {{day.dayName}}
+                        </h4>
+                        <div class="schedule-list">
+                            <div class="schedule-item" ng-repeat="schedule in day.sessions" style="background: #f8f9fa; border-left: 3px solid #007bff; margin-bottom: 10px;">
+                                <div class="schedule-time">
+                                    <div class="time-period" ng-if="schedule.period">Tiết {{schedule.period}}</div>
+                                    <div class="time-period" ng-if="!schedule.period">Lịch học</div>
+                                    <div class="time-range">{{schedule.startTime}} - {{schedule.endTime}}</div>
+                                </div>
+                                <div class="schedule-details">
+                                    <h3 style="margin: 0; font-size: 16px;">{{schedule.subjectName}}</h3>
+                                    <div class="schedule-meta" style="font-size: 13px; color: #6c757d;">
+                                        <span><i class="fas fa-chalkboard-teacher"></i> {{schedule.lecturerName}}</span>
+                                        <span style="margin-left: 15px;"><i class="fas fa-door-open"></i> Phòng {{schedule.room}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-bolt"></i> Thao tác nhanh</h2>
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions">
+                        <a href="#!/student/timetable" class="quick-action-btn">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Thời khóa biểu</span>
+                        </a>
+                        <a href="#!/student/grades" class="quick-action-btn">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Bảng điểm</span>
+                        </a>
+                        <a href="#!/student/attendance" class="quick-action-btn">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Điểm danh</span>
+                        </a>
+                        <a href="#!/student/enrollments" class="quick-action-btn">
+                            <i class="fas fa-edit"></i>
+                            <span>Đăng ký học phần</span>
+                        </a>
+                        <a href="#!/student/profile" class="quick-action-btn">
+                            <i class="fas fa-user"></i>
+                            <span>Thông tin cá nhân</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Change Modal -->
+<div ng-include="'views/partials/avatar-modal.html'"></div>
+

@@ -1,0 +1,606 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Chi tiết sinh viên"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Loading Student -->
+            <div ng-if="loadingStudent" class="card">
+                <div class="card-body text-center" style="padding: 60px;">
+                    <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                    <p class="mt-3">Đang tải thông tin sinh viên...</p>
+                </div>
+            </div>
+            
+            <!-- Error Student -->
+            <div ng-if="errorStudent && !loadingStudent" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{errorStudent}}
+                <button class="btn btn-sm btn-danger ml-2" ng-click="loadStudentDetail()">
+                    <i class="fas fa-redo"></i> Thử lại
+                </button>
+            </div>
+            
+            <!-- Student Info Card -->
+            <div ng-if="!loadingStudent && !errorStudent && student" class="card mb-4">
+                <div class="card-body">
+                    <div class="student-profile-header">
+                        <div class="student-avatar-section">
+                            <div class="student-avatar-large">
+                                <span>{{student.fullName ? student.fullName.charAt(0).toUpperCase() : 'S'}}</span>
+                            </div>
+                            <div class="student-status-badge">
+                                <span class="badge" ng-class="{
+                                    'badge-success': student.isActive,
+                                    'badge-secondary': !student.isActive
+                                }">
+                                    {{student.isActive ? 'Đang học' : 'Nghỉ học'}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="student-info-main">
+                            <h2 class="student-name">{{student.fullName}}</h2>
+                            <div class="student-code">
+                                <i class="fas fa-id-card"></i> {{student.studentCode}}
+                            </div>
+                            <div class="student-meta">
+                                <span ng-if="student.className">
+                                    <i class="fas fa-users"></i> {{student.className}}
+                                </span>
+                                <span ng-if="student.facultyName">
+                                    <i class="fas fa-building"></i> {{student.facultyName}}
+                                </span>
+                                <span ng-if="student.majorName">
+                                    <i class="fas fa-graduation-cap"></i> {{student.majorName}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="student-stats-quick">
+                            <div class="stat-box">
+                                <div class="stat-value" ng-class="{
+                                    'text-success': student.cumulativeGpa >= 3.0,
+                                    'text-warning': student.cumulativeGpa >= 2.0 && student.cumulativeGpa < 3.0,
+                                    'text-danger': !student.cumulativeGpa || student.cumulativeGpa < 2.0
+                                }">
+                                    {{student.cumulativeGpa ? (student.cumulativeGpa | number:2) : 'N/A'}}
+                                </div>
+                                <div class="stat-label">GPA</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value" ng-class="{
+                                    'text-success': student.attendanceRate >= 90,
+                                    'text-warning': student.attendanceRate >= 80 && student.attendanceRate < 90,
+                                    'text-danger': !student.attendanceRate || student.attendanceRate < 80
+                                }">
+                                    {{student.attendanceRate ? (student.attendanceRate | number:1) + '%' : 'N/A'}}
+                                </div>
+                                <div class="stat-label">Chuyên cần</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">{{student.totalCreditsEarned || 0}}</div>
+                                <div class="stat-label">Tín chỉ</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning Badge & Actions -->
+                    <div style="margin-top: 20px;">
+                        <div ng-if="student.warningType && student.warningType !== 'none'" class="alert" ng-class="{
+                            'alert-warning': student.warningType === 'academic',
+                            'alert-danger': student.warningType === 'attendance' || student.warningType === 'both'
+                        }" style="margin-bottom: 10px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>{{getWarningText(student.warningType)}}</strong>
+                            <span ng-if="student.warningType === 'attendance' || student.warningType === 'both'">
+                                - Tỷ lệ vắng mặt cao
+                            </span>
+                            <span ng-if="student.warningType === 'academic' || student.warningType === 'both'">
+                                - GPA thấp (dưới 2.0)
+                            </span>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" ng-click="viewProgress()">
+                                <i class="fas fa-chart-line"></i> Xem tiến độ học tập
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Navigation -->
+            <div ng-if="!loadingStudent && !errorStudent && student" class="custom-tabs mb-4">
+                <div class="custom-tab-nav">
+                    <button class="custom-tab-button" 
+                            ng-class="{'active': activeTab === 'detail'}" 
+                            ng-click="switchTab('detail')">
+                        <i class="fas fa-user"></i> Thông tin cá nhân
+                    </button>
+                    <button class="custom-tab-button" 
+                            ng-class="{'active': activeTab === 'grades'}" 
+                            ng-click="switchTab('grades')">
+                        <i class="fas fa-chart-line"></i> Bảng điểm
+                    </button>
+                    <button class="custom-tab-button" 
+                            ng-class="{'active': activeTab === 'attendance'}" 
+                            ng-click="switchTab('attendance')">
+                        <i class="fas fa-clipboard-check"></i> Điểm danh
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Detail -->
+            <div ng-if="!loadingStudent && !errorStudent && student && activeTab === 'detail'" class="custom-tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-info-circle"></i> Thông tin cá nhân</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Mã sinh viên</label>
+                                <div>{{student.studentCode}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Họ và tên</label>
+                                <div>{{student.fullName}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Giới tính</label>
+                                <div>{{student.gender === 'M' ? 'Nam' : (student.gender === 'F' ? 'Nữ' : 'N/A')}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Ngày sinh</label>
+                                <div>{{student.dob ? formatDate(student.dob) : 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Email</label>
+                                <div>{{student.email || 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Số điện thoại</label>
+                                <div>{{student.phone || 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Khoa</label>
+                                <div>{{student.facultyName || 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Ngành</label>
+                                <div>{{student.majorName || 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Lớp</label>
+                                <div>{{student.className || 'N/A'}}</div>
+                            </div>
+                            <div class="info-item">
+                                <label>Niên khóa</label>
+                                <div>{{student.academicYearName || student.cohortYear || 'N/A'}}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Academic Summary -->
+                        <div class="academic-summary mt-4">
+                            <h4 class="mb-3"><i class="fas fa-chart-bar"></i> Tóm tắt học tập</h4>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon blue">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>{{student.cumulativeGpa ? (student.cumulativeGpa | number:2) : 'N/A'}}</h3>
+                                        <p>GPA tích lũy</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon green">
+                                        <i class="fas fa-percent"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>{{student.attendanceRate ? (student.attendanceRate | number:1) + '%' : 'N/A'}}</h3>
+                                        <p>Tỷ lệ chuyên cần</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon orange">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>{{student.totalCreditsEarned || 0}} / {{student.totalCreditsRegistered || 0}}</h3>
+                                        <p>Tín chỉ tích lũy / Đã đăng ký</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon purple">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h3>{{student.totalSubjects || 0}}</h3>
+                                        <p>Tổng số môn học</p>
+                                        <small>
+                                            Đã qua: {{student.passedSubjects || 0}} | 
+                                            Chưa qua: {{student.failedSubjects || 0}}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Grades -->
+            <div ng-if="!loadingStudent && !errorStudent && student && activeTab === 'grades'" class="custom-tab-content">
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-filter"></i> Lọc bảng điểm</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-outline" ng-click="clearGradesFilters()" ng-disabled="loadingGrades">
+                                <i class="fas fa-times"></i> Xóa bộ lọc
+                            </button>
+                            <button class="btn btn-sm btn-primary" ng-click="loadGrades()" ng-disabled="loadingGrades">
+                                <i class="fas fa-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Năm học <span class="text-danger">*</span></label>
+                                <select class="form-control" ng-model="gradesFilters.schoolYearId" ng-disabled="loadingFilters">
+                                    <option value="">-- Chọn năm học --</option>
+                                    <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                        {{sy.yearCode}} - {{sy.yearName}}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Học kỳ</label>
+                                <select class="form-control" ng-model="gradesFilters.semester">
+                                    <option value="">Tất cả</option>
+                                    <option value="1">Học kỳ 1</option>
+                                    <option value="2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Môn học</label>
+                                <select class="form-control" ng-model="gradesFilters.subjectId" ng-disabled="loadingFilters">
+                                    <option value="">Tất cả</option>
+                                    <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                        {{subject.subjectCode}} - {{subject.subjectName}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Vui lòng chọn ít nhất một bộ lọc (Năm học, Học kỳ, hoặc Môn học) để xem bảng điểm.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Error -->
+                <div ng-if="errorGrades" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> {{errorGrades}}
+                </div>
+                
+                <!-- Grades Summary -->
+                <div ng-if="!loadingGrades && !errorGrades && grades.length > 0" class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-bar"></i> Tóm tắt điểm</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="gpa-summary">
+                            <div class="gpa-item">
+                                <div class="gpa-value" ng-if="gradesSummary.semesterGpa">
+                                    {{gradesSummary.semesterGpa | number:2}}
+                                </div>
+                                <div class="gpa-value text-muted" ng-if="!gradesSummary.semesterGpa">
+                                    N/A
+                                </div>
+                                <div class="gpa-label">GPA Học kỳ</div>
+                            </div>
+                            <div class="gpa-item">
+                                <div class="gpa-value">{{gradesSummary.cumulativeGpa | number:2}}</div>
+                                <div class="gpa-label">GPA Tích lũy</div>
+                            </div>
+                            <div class="gpa-item">
+                                <div class="gpa-value">{{gradesSummary.totalCredits}}</div>
+                                <div class="gpa-label">Tổng tín chỉ</div>
+                            </div>
+                            <div class="gpa-item">
+                                <div class="gpa-value">
+                                    <span class="text-success">{{gradesSummary.passedSubjects}}</span> / 
+                                    <span class="text-danger">{{gradesSummary.failedSubjects}}</span>
+                                </div>
+                                <div class="gpa-label">Môn đậu / Rớt</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading -->
+                <div ng-if="loadingGrades" class="card">
+                    <div class="card-body text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Đang tải bảng điểm...</p>
+                    </div>
+                </div>
+                
+                <!-- Grades Table -->
+                <div ng-if="!loadingGrades && !errorGrades && grades.length > 0" class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Bảng điểm chi tiết</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mã môn</th>
+                                        <th>Tên môn học</th>
+                                        <th>TC</th>
+                                        <th>Năm học</th>
+                                        <th>HK</th>
+                                        <th>Giữa kỳ</th>
+                                        <th>Cuối kỳ</th>
+                                        <th>Tổng kết</th>
+                                        <th>Điểm chữ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="grade in grades">
+                                        <td><strong>{{grade.subjectCode}}</strong></td>
+                                        <td>{{grade.subjectName}}</td>
+                                        <td class="text-center">{{grade.credits || '-'}}</td>
+                                        <td>{{grade.schoolYearCode || '-'}}</td>
+                                        <td class="text-center">{{grade.semester || '-'}}</td>
+                                        <td class="text-center">{{grade.midtermScore ? (grade.midtermScore | number:1) : '-'}}</td>
+                                        <td class="text-center">{{grade.finalScore ? (grade.finalScore | number:1) : '-'}}</td>
+                                        <td class="text-center">
+                                            <strong ng-if="grade.totalScore" ng-class="{
+                                                'text-success': grade.totalScore >= 8,
+                                                'text-primary': grade.totalScore >= 6.5 && grade.totalScore < 8,
+                                                'text-warning': grade.totalScore >= 5 && grade.totalScore < 6.5,
+                                                'text-danger': grade.totalScore < 5
+                                            }">{{grade.totalScore | number:1}}</strong>
+                                            <span ng-if="!grade.totalScore">-</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span ng-if="grade.letterGrade" class="badge" ng-class="{
+                                                'badge-success': grade.letterGrade === 'A' || grade.letterGrade === 'B+',
+                                                'badge-primary': grade.letterGrade === 'B' || grade.letterGrade === 'C+',
+                                                'badge-warning': grade.letterGrade === 'C' || grade.letterGrade === 'D+',
+                                                'badge-danger': grade.letterGrade === 'D' || grade.letterGrade === 'F'
+                                            }">{{grade.letterGrade}}</span>
+                                            <span ng-if="!grade.letterGrade">-</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div ng-if="!loadingGrades && !errorGrades && grades.length === 0" class="card">
+                    <div class="card-body text-center text-muted" style="padding: 60px;">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Chưa có dữ liệu điểm. Vui lòng chọn bộ lọc và tìm kiếm.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab Content: Attendance -->
+            <div ng-if="!loadingStudent && !errorStudent && student && activeTab === 'attendance'" class="custom-tab-content">
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-filter"></i> Lọc điểm danh</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-outline" ng-click="clearAttendanceFilters()" ng-disabled="loadingAttendance">
+                                <i class="fas fa-times"></i> Xóa bộ lọc
+                            </button>
+                            <button class="btn btn-sm btn-primary" ng-click="loadAttendance()" ng-disabled="loadingAttendance">
+                                <i class="fas fa-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Năm học</label>
+                                <select class="form-control" ng-model="attendanceFilters.schoolYearId" ng-disabled="loadingFilters">
+                                    <option value="">-- Chọn năm học --</option>
+                                    <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                        {{sy.yearCode}} - {{sy.yearName}}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Học kỳ</label>
+                                <select class="form-control" ng-model="attendanceFilters.semester">
+                                    <option value="">Tất cả</option>
+                                    <option value="1">Học kỳ 1</option>
+                                    <option value="2">Học kỳ 2</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Môn học <span class="text-danger">*</span></label>
+                                <select class="form-control" ng-model="attendanceFilters.subjectId" ng-disabled="loadingFilters">
+                                    <option value="">-- Chọn môn học --</option>
+                                    <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                        {{subject.subjectCode}} - {{subject.subjectName}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Vui lòng chọn ít nhất một bộ lọc (Năm học, Học kỳ, hoặc Môn học) để xem điểm danh.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Error -->
+                <div ng-if="errorAttendance" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> {{errorAttendance}}
+                </div>
+                
+                <!-- Overall Summary -->
+                <div ng-if="!loadingAttendance && !errorAttendance && attendance.attendances.length > 0" class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Tổng quan điểm danh</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{attendance.overall.totalSessions || 0}}</h3>
+                                    <p>Tổng số buổi học</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{attendance.overall.presentCount || 0}}</h3>
+                                    <p>Có mặt</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{attendance.overall.absentCount || 0}}</h3>
+                                    <p>Vắng</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-percent"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{attendance.overall.attendanceRate | number:1}}%</h3>
+                                    <p>Tỷ lệ chuyên cần</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary by Subject -->
+                <div ng-if="!loadingAttendance && !errorAttendance && attendance.summaries.length > 0" class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Tóm tắt theo môn học</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Môn học</th>
+                                        <th>Tổng buổi</th>
+                                        <th>Có mặt</th>
+                                        <th>Vắng</th>
+                                        <th>Muộn</th>
+                                        <th>Có phép</th>
+                                        <th>Tỷ lệ (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="summary in attendance.summaries">
+                                        <td>
+                                            <strong>{{summary.subjectCode}}</strong><br>
+                                            <small>{{summary.subjectName}}</small>
+                                        </td>
+                                        <td class="text-center">{{summary.totalSessions}}</td>
+                                        <td class="text-center text-success">{{summary.presentCount}}</td>
+                                        <td class="text-center text-danger">{{summary.absentCount}}</td>
+                                        <td class="text-center text-warning">{{summary.lateCount}}</td>
+                                        <td class="text-center text-info">{{summary.excusedCount}}</td>
+                                        <td class="text-center">
+                                            <span class="badge" ng-class="{
+                                                'badge-success': summary.attendanceRate >= 90,
+                                                'badge-warning': summary.attendanceRate >= 80 && summary.attendanceRate < 90,
+                                                'badge-danger': summary.attendanceRate < 80
+                                            }">{{summary.attendanceRate | number:1}}%</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Loading -->
+                <div ng-if="loadingAttendance" class="card">
+                    <div class="card-body text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Đang tải điểm danh...</p>
+                    </div>
+                </div>
+                
+                <!-- Attendance Records -->
+                <div ng-if="!loadingAttendance && !errorAttendance && attendance.attendances.length > 0" class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-clipboard-list"></i> Chi tiết điểm danh</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày</th>
+                                        <th>Giờ</th>
+                                        <th>Môn học</th>
+                                        <th>Lớp</th>
+                                        <th>Phòng</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="att in attendance.attendances">
+                                        <td>{{formatDate(att.attendanceDate)}}</td>
+                                        <td>{{att.scheduleStartTime ? (att.scheduleStartTime | date:'HH:mm') : '-'}}</td>
+                                        <td>
+                                            <strong>{{att.subjectCode}}</strong><br>
+                                            <small>{{att.subjectName}}</small>
+                                        </td>
+                                        <td>{{att.className}}</td>
+                                        <td>{{att.room || '-'}}</td>
+                                        <td>
+                                            <span class="badge" ng-class="getAttendanceStatusBadge(att.status)">
+                                                {{getAttendanceStatusText(att.status)}}
+                                            </span>
+                                        </td>
+                                        <td>{{att.notes || '-'}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div ng-if="!loadingAttendance && !errorAttendance && attendance.attendances.length === 0" class="card">
+                    <div class="card-body text-center text-muted" style="padding: 60px;">
+                        <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                        <p>Chưa có dữ liệu điểm danh. Vui lòng chọn bộ lọc và tìm kiếm.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,307 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Thống kê & Báo cáo"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Filter Bar -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Năm học</label>
+                            <select ng-model="filters.schoolYearId" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">{{sy.yearCode}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Học kỳ</label>
+                            <select ng-model="filters.semester" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="s in semesters" value="{{s}}">Học kỳ {{s}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Khoa</label>
+                            <select ng-model="filters.facultyId" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="f in faculties" value="{{f.facultyId}}">{{f.facultyName}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Ngành</label>
+                            <select ng-model="filters.majorId" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="m in majors" value="{{m.majorId}}">{{m.majorName}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button ng-click="exportExcel()" class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger" style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: flex-start;">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 10px; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <strong>{{error}}</strong>
+                        <div ng-if="errorDetails" style="margin-top: 10px; font-size: 0.9em; opacity: 0.9;">
+                            <div><strong>Chi tiết lỗi:</strong></div>
+                            <div style="margin-top: 5px;">
+                                <div><strong>HTTP Status:</strong> {{errorDetails.status}} - {{errorDetails.statusText}}</div>
+                                <div ng-if="errorDetails.url"><strong>URL:</strong> {{errorDetails.url}}</div>
+                                <div ng-if="errorDetails.serverMessage"><strong>Thông báo từ server:</strong> {{errorDetails.serverMessage}}</div>
+                                <div ng-if="errorDetails.serverError"><strong>Lỗi chi tiết:</strong> {{errorDetails.serverError}}</div>
+                                <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 4px; font-family: monospace; font-size: 0.85em;">
+                                    <div><strong>Debug Info:</strong></div>
+                                    <div>Timestamp: {{errorDetails.timestamp}}</div>
+                                    <div>Method: {{errorDetails.method}}</div>
+                                    <div ng-if="errorDetails.url">Full URL: {{errorDetails.url}}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button class="btn btn-sm btn-outline-danger" ng-click="loadReports()">
+                                <i class="fas fa-redo"></i> Thử lại
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" ng-click="errorDetails = null; error = null;" style="margin-left: 10px;">
+                                <i class="fas fa-times"></i> Đóng
+                            </button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.85em; color: #666;">
+                            <strong>Hướng dẫn debug:</strong>
+                            <ol style="margin-top: 5px; padding-left: 20px;">
+                                <li>Mở Developer Console (F12) để xem chi tiết lỗi</li>
+                                <li>Kiểm tra tab Network để xem request/response</li>
+                                <li>Kiểm tra server logs để xem lỗi backend</li>
+                                <li>Xác nhận API endpoint đang hoạt động: {{errorDetails.url || 'N/A'}}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center" style="padding: 60px;">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Đang tải thống kê...</p>
+            </div>
+
+            <!-- Report Content -->
+            <div ng-if="!loading && !error">
+                
+                <!-- 1. Số sinh viên còn nợ tín chỉ (Card) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-credit-card"></i>
+                            Số sinh viên còn nợ tín chỉ
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.creditDebtStats.total || 0}}</h3>
+                                    <p>Tổng số sinh viên còn nợ tín chỉ</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bar Chart - Phân bố theo khoảng -->
+                        <div ng-if="reports.creditDebtStats.byRange.length > 0" style="margin-top: 24px;">
+                            <h4>Phân bố theo khoảng nợ tín chỉ</h4>
+                            <div style="position: relative; height: 300px; margin-top: 20px;">
+                                <canvas id="creditDebtChart"></canvas>
+                            </div>
+                            <div class="table-responsive" style="margin-top: 20px;">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Khoảng nợ tín chỉ</th>
+                                            <th>Số lượng sinh viên</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="item in reports.creditDebtStats.byRange">
+                                            <td>{{item.range}} tín chỉ</td>
+                                            <td>{{item.count}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Cảnh báo học tập (Card + Doughnut Chart) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Cảnh báo học tập
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.academicWarnings.total || 0}}</h3>
+                                    <p>Tổng số cảnh báo</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-chart-line-down"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.academicWarnings.lowGpa || 0}}</h3>
+                                    <p>GPA < 2.0</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon yellow">
+                                    <i class="fas fa-calendar-times"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.academicWarnings.poorAttendance || 0}}</h3>
+                                    <p>Điểm danh < 50%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.academicWarnings.both || 0}}</h3>
+                                    <p>GPA và điểm danh đều thấp</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Doughnut Chart -->
+                        <div ng-if="reports.academicWarnings.total > 0" style="margin-top: 24px;">
+                            <h4>Phân bố loại cảnh báo</h4>
+                            <div style="position: relative; height: 300px; margin-top: 20px;">
+                                <canvas id="academicWarningsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Phân bố GPA (Biểu đồ) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Phân bố GPA sinh viên
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.excellent || 0}}</h3>
+                                    <p>Giỏi (>= 3.5) - {{getGpaPercentage('excellent')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.good || 0}}</h3>
+                                    <p>Khá (3.0 - 3.49) - {{getGpaPercentage('good')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-minus-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.average || 0}}</h3>
+                                    <p>Trung bình (2.0 - 2.99) - {{getGpaPercentage('average')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gpaDistribution.weak || 0}}</h3>
+                                    <p>Yếu (< 2.0) - {{getGpaPercentage('weak')}}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pie Chart - Phân bố GPA -->
+                        <div style="margin-top: 24px;">
+                            <h4>Biểu đồ phân bố GPA</h4>
+                            <div style="position: relative; height: 350px; margin-top: 20px;">
+                                <canvas id="gpaChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Top 10 sinh viên nợ tín chỉ nhiều nhất (Bảng) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-list-ol"></i>
+                            Top 10 sinh viên nợ tín chỉ nhiều nhất
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div ng-if="reports.topCreditDebt.length === 0" class="text-center" style="padding: 40px;">
+                            <i class="fas fa-inbox fa-3x" style="color: var(--text-light); opacity: 0.5;"></i>
+                            <p>Chưa có dữ liệu</p>
+                        </div>
+                        <div ng-if="reports.topCreditDebt.length > 0" class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ tên</th>
+                                        <th>Khoa</th>
+                                        <th>Ngành</th>
+                                        <th>Số tín chỉ nợ</th>
+                                        <th>GPA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="student in reports.topCreditDebt | limitTo: 10">
+                                        <td>{{$index + 1}}</td>
+                                        <td>{{student.studentCode}}</td>
+                                        <td>{{student.fullName}}</td>
+                                        <td>{{student.facultyName || '—'}}</td>
+                                        <td>{{student.majorName || '—'}}</td>
+                                        <td><span class="badge badge-danger">{{student.creditDebt || 0}}</span></td>
+                                        <td>{{student.cumulativeGpa || '—'}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

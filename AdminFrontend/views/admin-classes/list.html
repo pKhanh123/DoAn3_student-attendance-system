@@ -1,0 +1,378 @@
+<div class="admin-layout" ng-controller="AdministrativeClassController">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Lớp hành chính"></app-topbar>
+        
+        <div class="content-body">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-users"></i>
+                        Danh sách Lớp hành chính
+                    </h3>
+                    <div class="card-actions" ng-if="isAdmin()">
+                        <button class="btn btn-primary" ng-click="showCreateModal()">
+                            <i class="fas fa-plus"></i> Thêm lớp
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- FILTERS -->
+                    <div class="section-zone filter-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title"><i class="fas fa-filter"></i> Bộ lọc</h4>
+                        </div>
+                        <div class="filters-bar">
+                            <div class="filter-group">
+                                <label>Tìm kiếm</label>
+                                <input type="text" class="form-control" 
+                                       ng-model="filters.search" 
+                                       placeholder="Tìm theo mã lớp, tên lớp...">
+                            </div>
+                            <div class="filter-group">
+                                <label>Chuyên ngành</label>
+                                <select class="form-control" ng-model="filters.majorId">
+                                    <option value="">Tất cả</option>
+                                    <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                        {{major.majorName}}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Năm tuyển sinh</label>
+                                <input type="number" class="form-control" 
+                                       ng-model="filters.cohortYear" 
+                                       placeholder="VD: 2023">
+                            </div>
+                            <div class="filter-group">
+                                <label>Cố vấn</label>
+                                <select class="form-control" ng-model="filters.advisorId">
+                                    <option value="">Tất cả</option>
+                                    <option ng-repeat="lecturer in lecturers" value="{{lecturer.lecturerId}}">
+                                        {{lecturer.fullName}}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <button class="btn btn-primary" ng-click="applyFilters()">
+                                    <i class="fas fa-search"></i> Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- TABLE -->
+                    <div class="table-responsive" ng-if="!loading">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Tên lớp</th>
+                                    <th>Chuyên ngành</th>
+                                    <th>Năm tuyển sinh</th>
+                                    <th>Cố vấn</th>
+                                    <th>Sĩ số</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="class in classes">
+                                    <td>{{class.classCode}}</td>
+                                    <td>{{class.className}}</td>
+                                    <td>{{class.majorName}}</td>
+                                    <td>{{class.cohortYear}}</td>
+                                    <td>{{class.advisorName || 'Chưa có'}}</td>
+                                    <td>
+                                        <span class="badge badge-info">
+                                            {{class.currentStudents}}/{{class.maxStudents}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" 
+                                                ng-click="viewDetail(class.adminClassId)"
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning" 
+                                                ng-click="showEditModal(class)"
+                                                ng-if="isAdmin()"
+                                                title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" 
+                                                ng-click="deleteClass(class.adminClassId)"
+                                                ng-if="isAdmin()"
+                                                title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-success" 
+                                                ng-click="showAssignModal(class)"
+                                                ng-if="isAdmin()"
+                                                title="Phân bổ SV">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-if="classes.length === 0">
+                                    <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- LOADING -->
+                    <div ng-if="loading" class="text-center p-5">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p>Đang tải...</p>
+                    </div>
+                    
+                    <!-- PAGINATION -->
+                    <div class="pagination-section" ng-if="pagination.totalPages > 1">
+                        <button class="btn btn-sm" 
+                                ng-click="changePage(pagination.page - 1)"
+                                ng-disabled="pagination.page === 1">
+                            <i class="fas fa-chevron-left"></i> Trước
+                        </button>
+                        <span class="pagination-info">
+                            Trang {{pagination.page}} / {{pagination.totalPages}}
+                        </span>
+                        <button class="btn btn-sm" 
+                                ng-click="changePage(pagination.page + 1)"
+                                ng-disabled="pagination.page === pagination.totalPages">
+                            Sau <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Overlay -->
+            <div class="modal-overlay" id="modal-overlay" ng-click="closeAllModals()"></div>
+            
+            <!-- Detail Modal -->
+            <div class="modal" id="detailModal">
+                <div class="modal-content" style="max-width: 98%; width: 1400px; max-height: 95vh;">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-users"></i> Chi tiết lớp: {{currentClass && currentClass.className || 'Đang tải...'}}
+                        </h5>
+                        <button type="button" class="modal-close" ng-click="closeDetailModal()" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" ng-if="currentClass" style="max-height: 85vh; overflow-y: auto;">
+                        <div ng-if="loading" class="text-center p-3">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                        <div ng-if="!loading">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <p><strong>Mã lớp:</strong> {{currentClass.classCode}}</p>
+                                    <p><strong>Tên lớp:</strong> {{currentClass.className}}</p>
+                                    <p><strong>Chuyên ngành:</strong> {{currentClass.majorName || 'Chưa có'}}</p>
+                                    <p><strong>Năm tuyển sinh:</strong> {{currentClass.cohortYear}}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Cố vấn:</strong> {{currentClass.advisorName || 'Chưa có'}}</p>
+                                    <p><strong>Sĩ số:</strong> 
+                                        <span class="badge badge-info">
+                                            {{currentClass.currentStudents || 0}}/{{currentClass.maxStudents || 0}}
+                                        </span>
+                                    </p>
+                                    <p><strong>Năm học:</strong> {{currentClass.academicYearName || 'Chưa có'}}</p>
+                                    <p><strong>Mô tả:</strong> {{currentClass.description || 'Không có'}}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <h5 class="mb-3">
+                                <i class="fas fa-user-graduate"></i> Danh sách sinh viên 
+                                <span class="badge badge-primary">{{students.length || 0}}</span>
+                            </h5>
+                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
+                                        <tr>
+                                            <th style="min-width: 100px;">Mã SV</th>
+                                            <th style="min-width: 200px;">Họ tên</th>
+                                            <th style="min-width: 200px;">Email</th>
+                                            <th style="min-width: 120px;">Điện thoại</th>
+                                            <th style="min-width: 250px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="student in students">
+                                            <td><strong>{{student.studentCode}}</strong></td>
+                                            <td>{{student.fullName}}</td>
+                                            <td>{{student.email || 'Chưa có'}}</td>
+                                            <td>{{student.phone || 'Chưa có'}}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning mr-1" 
+                                                        ng-click="showTransferModal(student)"
+                                                        title="Chuyển lớp"
+                                                        style="white-space: nowrap;">
+                                                    <i class="fas fa-exchange-alt"></i> Chuyển lớp
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" 
+                                                        ng-click="removeStudent(student.studentId)"
+                                                        title="Xóa khỏi lớp"
+                                                        style="white-space: nowrap;">
+                                                    <i class="fas fa-times"></i> Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr ng-if="students.length === 0">
+                                            <td colspan="5" class="text-center text-muted p-4">
+                                                <i class="fas fa-info-circle"></i> Chưa có sinh viên nào trong lớp này
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" ng-click="closeDetailModal()">
+                            <i class="fas fa-times"></i> Đóng
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transfer Student Modal -->
+            <div class="modal" id="transferModal">
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exchange-alt"></i> Chuyển lớp cho sinh viên
+                        </h5>
+                        <button type="button" class="modal-close" ng-click="closeTransferModal()" aria-label="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" ng-if="transferData.student">
+                        <div class="alert alert-info">
+                            <strong>Sinh viên:</strong> {{transferData.student.studentCode}} - {{transferData.student.fullName}}<br>
+                            <strong>Lớp hiện tại:</strong> {{currentClass.classCode}} - {{currentClass.className}}
+                        </div>
+                        <form name="transferForm">
+                            <div class="form-group">
+                                <label>Chọn lớp đích <span class="text-danger">*</span></label>
+                                <select class="form-control" 
+                                        ng-model="transferData.toClassId" 
+                                        required
+                                        ng-options="c.adminClassId as (c.classCode + ' - ' + c.className) for c in classes | filter: {adminClassId: '!' + currentClass.adminClassId}">
+                                    <option value="">-- Chọn lớp --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Lý do chuyển lớp <span class="text-danger">*</span></label>
+                                <textarea class="form-control" 
+                                          ng-model="transferData.transferReason" 
+                                          rows="4" 
+                                          required
+                                          placeholder="Nhập lý do chuyển lớp..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" ng-click="closeTransferModal()">Hủy</button>
+                        <button type="button" class="btn btn-primary" 
+                                ng-click="transferStudent()" 
+                                ng-disabled="transferForm.$invalid || transferring">
+                            <i class="fas fa-spinner fa-spin" ng-if="transferring"></i>
+                            <i class="fas fa-exchange-alt" ng-if="!transferring"></i>
+                            {{transferring ? 'Đang xử lý...' : 'Chuyển lớp'}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Create/Edit Modal -->
+            <div class="modal" id="classModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                {{currentClass.adminClassId ? 'Sửa' : 'Thêm'}} lớp hành chính
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form name="classForm">
+                                <div class="form-group">
+                                    <label>Mã lớp <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" 
+                                           ng-model="currentClass.classCode" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tên lớp <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" 
+                                           ng-model="currentClass.className" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Chuyên ngành</label>
+                                    <select class="form-control" ng-model="currentClass.majorId">
+                                        <option value="">Chọn chuyên ngành</option>
+                                        <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                            {{major.majorName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cố vấn</label>
+                                    <select class="form-control" ng-model="currentClass.advisorId">
+                                        <option value="">Chọn cố vấn</option>
+                                        <option ng-repeat="lecturer in lecturers" value="{{lecturer.lecturerId}}">
+                                            {{lecturer.fullName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Năm học</label>
+                                    <select class="form-control" ng-model="currentClass.academicYearId">
+                                        <option value="">Chọn năm học</option>
+                                        <option ng-repeat="year in academicYears" value="{{year.academicYearId}}">
+                                            {{year.yearName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Năm tuyển sinh <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" 
+                                                   ng-model="currentClass.cohortYear" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Sĩ số tối đa</label>
+                                            <input type="number" class="form-control" 
+                                                   ng-model="currentClass.maxStudents">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mô tả</label>
+                                    <textarea class="form-control" ng-model="currentClass.description" rows="3"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-primary" 
+                                    ng-click="saveClass()" 
+                                    ng-disabled="classForm.$invalid">Lưu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <toast-container></toast-container>
+</div>
+

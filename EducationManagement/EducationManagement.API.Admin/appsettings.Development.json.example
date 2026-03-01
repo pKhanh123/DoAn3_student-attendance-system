@@ -1,0 +1,11 @@
+{
+  "Email": {
+    "Username": "your-email@gmail.com",
+    "Password": "your-app-password",
+    "FromEmail": "your-email@gmail.com"
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=localhost\\SQLEXPRESS;Initial Catalog=EducationManagement;Integrated Security=True;Encrypt=True;Trust Server Certificate=True"
+  }
+}
+

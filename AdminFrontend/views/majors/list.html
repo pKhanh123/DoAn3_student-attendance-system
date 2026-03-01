@@ -1,0 +1,68 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Ngành học"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách Ngành học</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm ngành
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã ngành</th>
+                                    <th>Tên ngành</th>
+                                    <th>Khoa</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                                </tr>
+                                <tr ng-if="!loading && majors.length === 0">
+                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="major in majors" ng-if="!loading">
+                                    <td>{{major.majorCode}}</td>
+                                    <td>{{major.majorName}}</td>
+                                    <td>{{major.facultyName}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="major.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{major.isActive ? 'Hoạt động' : 'Không hoạt động'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(major.majorId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteMajor(major.majorId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,185 @@
+<style>
+    /* Hover effect cho button Xóa lọc - icon màu xanh dương */
+    .btn-outline-secondary:hover i.fa-redo {
+        color: #3b82f6 !important;
+        transition: color 0.3s ease;
+    }
+    
+    /* Hover effect cho button eye - icon màu xanh dương thay vì trắng */
+    .btn-outline-info:hover i.fa-eye {
+        color: #0ea5e9 !important;
+        transition: color 0.3s ease;
+    }
+    
+    /* Đảm bảo button có background khi hover */
+    .btn-outline-info:hover {
+        background-color: #e0f2fe !important;
+        border-color: #0ea5e9 !important;
+    }
+    
+    /* Làm đậm phần pagination - màu đen */
+    .d-flex.justify-content-between.align-items-center.mt-3 {
+        font-weight: 600;
+        color: #000000 !important;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mt-3 .text-muted {
+        font-weight: 600;
+        color: #000000 !important;
+    }
+    
+    .d-flex.justify-content-between.align-items-center.mt-3 .btn {
+        font-weight: 600;
+        color: #000000 !important;
+    }
+</style>
+
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Lớp học phần của tôi"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Alerts -->
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                        Danh sách Lớp học phần tôi đang giảng dạy
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Môn học</label>
+                            <select class="form-select" ng-model="filters.subjectId" ng-change="loadClasses()">
+                                <option value="">Tất cả môn học</option>
+                                <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Niên khóa</label>
+                            <select class="form-select" ng-model="filters.academicYearId" ng-change="loadClasses()">
+                                <option value="">Tất cả niên khóa</option>
+                                <option ng-repeat="year in academicYears" value="{{year.academicYearId}}">
+                                    {{year.yearCode || year.cohortCode}} - {{year.yearName || year.description || year.cohortCode}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Học kỳ</label>
+                            <select class="form-select" ng-model="filters.semester" ng-change="loadClasses()">
+                                <option value="">Tất cả học kỳ</option>
+                                <option ng-repeat="sem in semesters" value="{{sem.value}}">{{sem.label}}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary w-100" ng-click="resetFilters()">
+                                <i class="fas fa-redo me-1"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading -->
+                    <div class="text-center p-4" ng-if="loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Đang tải dữ liệu...</p>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="table-responsive" ng-if="!loading && !error">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="120">Mã lớp</th>
+                                    <th>Tên lớp</th>
+                                    <th>Môn học</th>
+                                    <th width="100">Học kỳ</th>
+                                    <th width="120">Niên khóa</th>
+                                    <th width="100">Số SV</th>
+                                    <th width="100">Tối đa</th>
+                                    <th width="120">Ngày tạo</th>
+                                    <th width="100">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="classItem in displayedClasses | limitTo: pagination.pageSize : ((pagination.currentPage - 1) * pagination.pageSize)">
+                                    <td>
+                                        <span class="badge bg-primary">{{classItem.classCode}}</span>
+                                    </td>
+                                    <td>
+                                        <strong>{{classItem.className}}</strong>
+                                    </td>
+                                    <td>{{classItem.subjectName || 'N/A'}}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{getSemesterLabel(classItem.semester)}}</span>
+                                    </td>
+                                    <td>{{classItem.academicYearName || 'N/A'}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="classItem.currentStudents >= classItem.maxStudents ? 'bg-danger' : 'bg-success'">
+                                            {{classItem.currentStudents || 0}}
+                                        </span>
+                                    </td>
+                                    <td>{{classItem.maxStudents}}</td>
+                                    <td>
+                                        <small class="text-muted">{{formatDate(classItem.createdAt)}}</small>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-info btn-sm" 
+                                                ng-click="viewClassDetails(classItem)" 
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Empty State -->
+                        <div class="text-center p-5" ng-if="displayedClasses.length === 0 && !loading">
+                            <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Chưa có lớp học phần nào</h5>
+                            <p class="text-muted">Bạn chưa được phân công giảng dạy lớp nào trong học kỳ này.</p>
+                        </div>
+                        
+                        <!-- Pagination - Đơn giản hóa -->
+                        <div class="d-flex justify-content-between align-items-center mt-3" ng-if="displayedClasses.length > 0">
+                            <div class="text-muted">
+                                Trang {{pagination.currentPage}} / {{pagination.totalPages}} 
+                                ({{pagination.totalCount}} lớp học)
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                        ng-click="changePage(pagination.currentPage - 1)" 
+                                        ng-disabled="pagination.currentPage === 1">
+                                    <i class="fas fa-chevron-left"></i> Trước
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                        ng-click="changePage(pagination.currentPage + 1)" 
+                                        ng-disabled="pagination.currentPage === pagination.totalPages">
+                                    Sau <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,132 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Người dùng"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách Người dùng</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm người dùng
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter -->
+                    <div class="filter-bar">
+                        <div class="filter-group" style="flex: 1;">
+                            <search-bar 
+                                search-term="searchText" 
+                                on-search="applyFilters()" 
+                                placeholder="Tìm kiếm theo tên, email, username...">
+                            </search-bar>
+                        </div>
+                        <div class="filter-group">
+                            <select class="form-control" ng-model="filterRole" ng-change="applyFilters()">
+                                <option value="">Tất cả vai trò</option>
+                                <option ng-repeat="role in roles" value="{{role.roleId}}">{{role.roleName}}</option>
+                            </select>
+                            <select class="form-control" ng-model="filterStatus" ng-change="applyFilters()">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Khóa</option>
+                            </select>
+                            <button class="btn btn-secondary" ng-click="resetFilters()">
+                                <i class="fas fa-redo"></i> Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Vai trò</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loading && filteredUsers.length === 0">
+                                    <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="user in filteredUsers | limitTo:pageSize:(currentPage-1)*pageSize" ng-if="!loading">
+                                    <td>{{user.username}}</td>
+                                    <td>{{user.fullName}}</td>
+                                    <td>{{user.email}}</td>
+                                    <td>{{user.phone}}</td>
+                                    <td>
+                                        <span class="badge badge-primary">{{user.roleName}}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="user.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{user.isActive ? 'Hoạt động' : 'Khóa'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(user.userId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteUser(user.userId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination-container" ng-if="!loading && filteredUsers.length > 0">
+                        <div class="pagination-info">
+                            Hiển thị {{(currentPage-1)*pageSize + 1}} - {{Math.min(currentPage*pageSize, filteredUsers.length)}} 
+                            trong tổng số {{filteredUsers.length}} người dùng
+                        </div>
+                        <div class="pagination">
+                            <button class="btn btn-sm" ng-click="previousPage()" ng-disabled="currentPage === 1">
+                                <i class="fas fa-chevron-left"></i> Trước
+                            </button>
+                            <span class="page-numbers">
+                                <button class="btn btn-sm" 
+                                        ng-repeat="page in getPages()" 
+                                        ng-class="{'btn-primary': page === currentPage, 'btn-outline': page !== currentPage}"
+                                        ng-click="goToPage(page)">
+                                    {{page}}
+                                </button>
+                            </span>
+                            <button class="btn btn-sm" ng-click="nextPage()" ng-disabled="currentPage === totalPages">
+                                Sau <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,884 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="{{isEditMode ? 'Sửa' : 'Thêm'}} Người dùng"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Alert Messages -->
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <!-- Main Form Card -->
+            <div class="user-form-container">
+                <div class="user-form-card">
+                    <!-- Card Header -->
+                    <div class="user-form-header">
+                        <div class="header-content">
+                            <div class="header-icon">
+                                <i class="fas fa-user-edit"></i>
+                            </div>
+                            <div class="header-text">
+                                <h2 class="form-title">{{isEditMode ? 'Sửa thông tin người dùng' : 'Thêm người dùng mới'}}</h2>
+                                <p class="form-subtitle">{{isEditMode ? 'Cập nhật thông tin tài khoản' : 'Tạo tài khoản mới cho hệ thống'}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Body -->
+                    <div class="user-form-body">
+                        <form name="userForm" ng-submit="saveUser()" novalidate class="user-form">
+                            <!-- Section 1: Thông tin đăng nhập -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="fas fa-key"></i>
+                                    </div>
+                                    <h3 class="section-title">Thông tin đăng nhập</h3>
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <div class="form-field">
+                                        <label class="field-label required">
+                                            <i class="fas fa-user field-icon"></i>
+                                            Tên đăng nhập
+                                        </label>
+                                        <input type="text" 
+                                               name="username"
+                                               class="field-input" 
+                                               ng-model="user.username" 
+                                               ng-disabled="isEditMode" 
+                                               ng-pattern="/^[a-zA-Z0-9_]{3,20}$/"
+                                               autocomplete="username"
+                                               placeholder="Nhập tên đăng nhập"
+                                               required
+                                               ng-class="{'is-invalid': userForm.username.$invalid && userForm.username.$touched}">
+                                        <div class="field-error" ng-show="userForm.username.$error.required && userForm.username.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Tên đăng nhập là bắt buộc
+                                        </div>
+                                        <div class="field-error" ng-show="userForm.username.$error.pattern && userForm.username.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Tên đăng nhập phải có 3-20 ký tự, chỉ bao gồm chữ, số và dấu gạch dưới
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-field" ng-if="!isEditMode">
+                                        <label class="field-label required">
+                                            <i class="fas fa-lock field-icon"></i>
+                                            Mật khẩu
+                                        </label>
+                                        <input type="password" 
+                                               name="password"
+                                               class="field-input" 
+                                               ng-model="user.password" 
+                                               ng-required="!isEditMode"
+                                               ng-minlength="6"
+                                               ng-pattern="/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/"
+                                               autocomplete="new-password"
+                                               placeholder="Nhập mật khẩu"
+                                               ng-class="{'is-invalid': userForm.password.$invalid && userForm.password.$touched}">
+                                        <div class="field-error" ng-show="userForm.password.$error.required && userForm.password.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Mật khẩu là bắt buộc
+                                        </div>
+                                        <div class="field-error" ng-show="userForm.password.$error.minlength && userForm.password.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Mật khẩu phải có ít nhất 6 ký tự
+                                        </div>
+                                        <div class="field-error" ng-show="userForm.password.$error.pattern && userForm.password.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 số
+                                        </div>
+                                        <div class="field-hint">
+                                            <i class="fas fa-info-circle"></i> Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Section 2: Thông tin cá nhân -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="fas fa-id-card"></i>
+                                    </div>
+                                    <h3 class="section-title">Thông tin cá nhân</h3>
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <div class="form-field">
+                                        <label class="field-label required">
+                                            <i class="fas fa-signature field-icon"></i>
+                                            Họ tên
+                                        </label>
+                                        <input type="text" 
+                                               name="fullName"
+                                               class="field-input" 
+                                               ng-model="user.fullName" 
+                                               ng-minlength="3"
+                                               ng-maxlength="100"
+                                               autocomplete="name"
+                                               placeholder="Nhập họ và tên"
+                                               required
+                                               ng-class="{'is-invalid': userForm.fullName.$invalid && userForm.fullName.$touched}">
+                                        <div class="field-error" ng-show="userForm.fullName.$error.required && userForm.fullName.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Họ tên là bắt buộc
+                                        </div>
+                                        <div class="field-error" ng-show="userForm.fullName.$error.minlength && userForm.fullName.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Họ tên phải có ít nhất 3 ký tự
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-field">
+                                        <label class="field-label required">
+                                            <i class="fas fa-envelope field-icon"></i>
+                                            Email
+                                        </label>
+                                        <input type="email" 
+                                               name="email"
+                                               class="field-input" 
+                                               ng-model="user.email" 
+                                               autocomplete="email"
+                                               placeholder="Nhập địa chỉ email"
+                                               required
+                                               ng-class="{'is-invalid': userForm.email.$invalid && userForm.email.$touched}">
+                                        <div class="field-error" ng-show="userForm.email.$error.required && userForm.email.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Email là bắt buộc
+                                        </div>
+                                        <div class="field-error" ng-show="userForm.email.$error.email && userForm.email.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Email không hợp lệ
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-field">
+                                        <label class="field-label">
+                                            <i class="fas fa-phone field-icon"></i>
+                                            Số điện thoại
+                                        </label>
+                                        <input type="tel" 
+                                               name="phone"
+                                               class="field-input" 
+                                               ng-model="user.phone"
+                                               autocomplete="tel"
+                                               placeholder="Nhập số điện thoại (10-11 chữ số)"
+                                               ng-pattern="/^[0-9]{10,11}$/"
+                                               ng-class="{'is-invalid': userForm.phone.$invalid && userForm.phone.$touched}">
+                                        <div class="field-error" ng-show="userForm.phone.$error.pattern && userForm.phone.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Số điện thoại phải có 10-11 chữ số
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Section 3: Phân quyền -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                    <h3 class="section-title">Phân quyền</h3>
+                                </div>
+                                
+                                <div class="form-grid">
+                                    <div class="form-field">
+                                        <label class="field-label required">
+                                            <i class="fas fa-user-tag field-icon"></i>
+                                            Vai trò
+                                        </label>
+                                        <select class="field-input field-select" 
+                                                name="roleId"
+                                                ng-model="user.roleId" 
+                                                required
+                                                ng-class="{'is-invalid': userForm.roleId.$invalid && userForm.roleId.$touched}">
+                                            <option value="">-- Chọn vai trò --</option>
+                                            <option ng-repeat="role in roles" value="{{role.roleId}}">
+                                                {{role.roleName}}
+                                            </option>
+                                        </select>
+                                        <div class="field-error" ng-show="userForm.roleId.$error.required && userForm.roleId.$touched">
+                                            <i class="fas fa-exclamation-circle"></i> Vui lòng chọn vai trò
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Section 4: Trạng thái (chỉ hiện khi edit) -->
+                            <div class="form-section toggle-section" ng-if="isEditMode">
+                                <div class="section-header">
+                                    <div class="section-icon">
+                                        <i class="fas fa-toggle-on"></i>
+                                    </div>
+                                    <h3 class="section-title">Trạng thái tài khoản</h3>
+                                </div>
+                                
+                                <div class="toggle-container">
+                                    <label class="status-toggle">
+                                        <input type="checkbox" ng-model="user.isActive" class="toggle-input">
+                                        <span class="toggle-track">
+                                            <span class="toggle-thumb"></span>
+                                        </span>
+                                        <span class="toggle-label">
+                                            <span class="toggle-status-text">{{ user.isActive ? 'Đang hoạt động' : 'Đã vô hiệu hóa' }}</span>
+                                            <span class="toggle-status-badge" ng-class="{'active': user.isActive, 'inactive': !user.isActive}">
+                                                <i class="fas" ng-class="user.isActive ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="form-actions">
+                                <button type="button" class="btn-action btn-cancel" ng-click="cancel()">
+                                    <i class="fas fa-times"></i>
+                                    <span>Hủy</span>
+                                </button>
+                                <button type="submit" class="btn-action btn-submit" ng-disabled="loading || userForm.$invalid">
+                                    <i class="fas" ng-class="loading ? 'fa-spinner fa-spin' : (isEditMode ? 'fa-save' : 'fa-plus')"></i>
+                                    <span>{{loading ? 'Đang xử lý...' : (isEditMode ? 'Cập nhật' : 'Thêm mới')}}</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Form Validation Warning -->
+                            <div ng-if="userForm.$submitted && userForm.$invalid" class="form-validation-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Vui lòng kiểm tra lại các trường đã nhập</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==============================================
+   USER FORM - REDESIGNED FROM SCRATCH
+   ============================================== */
+
+/* ✅ Đảm bảo sidebar không bị ảnh hưởng bởi CSS của form */
+.sidebar,
+.sidebar *,
+.sidebar-header,
+.sidebar-header *,
+.sidebar-nav,
+.sidebar-nav *,
+.sidebar-menu,
+.sidebar-menu *,
+.menu-section,
+.menu-section *,
+.submenu,
+.submenu * {
+    font-size: inherit !important;
+}
+
+.sidebar-header h2 {
+    font-size: 18px !important;
+}
+
+.sidebar-header p {
+    font-size: 12px !important;
+}
+
+.menu-section-toggle {
+    font-size: 12px !important;
+}
+
+.sidebar-menu a {
+    font-size: 14px !important;
+}
+
+.submenu li a {
+    font-size: 14px !important;
+}
+
+.user-form-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.user-form-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow-md);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.user-form-card:hover {
+    box-shadow: var(--box-shadow-lg);
+}
+
+/* ==============================================
+   HEADER
+   ============================================== */
+
+.user-form-header {
+    background: var(--gradient-primary);
+    padding: 32px 40px;
+    color: white;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    backdrop-filter: blur(10px);
+}
+
+.header-text {
+    flex: 1;
+}
+
+.form-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: white;
+}
+
+.form-subtitle {
+    font-size: 14px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
+}
+
+/* ==============================================
+   FORM BODY
+   ============================================== */
+
+.user-form-body {
+    padding: 40px;
+}
+
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* ==============================================
+   FORM SECTIONS
+   ============================================== */
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.section-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white !important;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* Override modal.css để đảm bảo icon trong section-icon không bị ảnh hưởng */
+.user-form .section-header .section-icon i {
+    color: white !important;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* ==============================================
+   FORM GRID
+   ============================================== */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+/* ==============================================
+   FORM FIELDS
+   ============================================== */
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.field-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+    font-weight: 700;
+}
+
+.field-icon {
+    color: var(--primary-color);
+    font-size: 14px;
+    width: 16px;
+    text-align: center;
+}
+
+.field-input {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    background-color: var(--bg-primary);
+}
+
+.field-input:disabled {
+    background-color: var(--bg-tertiary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.field-input.is-invalid {
+    border-color: var(--danger-color);
+    background-color: #fef2f2;
+}
+
+.field-input.is-invalid:focus {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.field-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.field-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
+}
+
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--danger-color);
+    margin-top: 4px;
+}
+
+.field-error i {
+    font-size: 12px;
+}
+
+.field-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+.field-hint i {
+    font-size: 12px;
+    color: var(--info-color);
+}
+
+/* ==============================================
+   TOGGLE SWITCH - REDESIGNED
+   ============================================== */
+
+.toggle-section {
+    background: var(--bg-secondary);
+    padding: 24px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.status-toggle {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    user-select: none;
+    padding: 16px 24px;
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+    min-width: 280px;
+    justify-content: space-between;
+}
+
+.status-toggle:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.toggle-input {
+    display: none;
+}
+
+.toggle-track {
+    position: relative;
+    width: 56px;
+    height: 32px;
+    background: #d1d5db;
+    border-radius: 999px;
+    transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-input:checked + .toggle-track {
+    background: var(--gradient-primary);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.toggle-input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(24px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.toggle-status-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.toggle-status-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.toggle-status-badge.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
+}
+
+.toggle-status-badge.inactive {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+/* ==============================================
+   FORM ACTIONS
+   ============================================== */
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 24px;
+    border-top: 2px solid var(--border-color);
+    margin-top: 8px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.btn-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--box-shadow);
+}
+
+.btn-submit {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.form-validation-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: var(--border-radius);
+    color: #92400e;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.form-validation-warning i {
+    color: #f59e0b;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (max-width: 768px) {
+    .user-form-container {
+        padding: 12px;
+    }
+    
+    .user-form-header {
+        padding: 24px 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+    
+    .header-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+    
+    .form-title {
+        font-size: 20px;
+    }
+    
+    .form-subtitle {
+        font-size: 13px;
+    }
+    
+    .user-form-body {
+        padding: 24px 20px;
+    }
+    
+    .user-form {
+        gap: 24px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .section-header {
+        flex-wrap: wrap;
+    }
+    
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+    }
+    
+    .toggle-container {
+        padding: 16px 0;
+    }
+    
+    .status-toggle {
+        min-width: 100%;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+    }
+    
+    .toggle-label {
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+    
+    .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-form-container {
+        padding: 8px;
+    }
+    
+    .user-form-header {
+        padding: 20px 16px;
+    }
+    
+    .user-form-body {
+        padding: 20px 16px;
+    }
+    
+    .form-title {
+        font-size: 18px;
+    }
+    
+    .field-input {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .toggle-track {
+        width: 52px;
+        height: 30px;
+    }
+    
+    .toggle-thumb {
+        width: 22px;
+        height: 22px;
+        top: 4px;
+        left: 4px;
+    }
+    
+    .toggle-input:checked + .toggle-track .toggle-thumb {
+        transform: translateX(22px);
+    }
+}
+
+/* ==============================================
+   ALERT STYLES (if not already defined)
+   ============================================== */
+
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.alert i {
+    font-size: 16px;
+}
+</style>

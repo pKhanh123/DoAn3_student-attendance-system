@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html ng-app="adminApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <title>Hệ thống Quản lý Điểm danh - Admin</title>
+    <!-- Favicon to prevent 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    
+    <!-- ⚠️ CUSTOM CSS - KHÔNG DÙNG BOOTSTRAP -->
+    <!-- Class names giống Bootstrap nhưng là CSS tự viết -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/enhanced-components.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/audit-log.css">
+    <link rel="stylesheet" href="css/timetable-admin.css">
+    <!-- Semantic Color System - Màu sắc logic theo nội dung -->
+    <link rel="stylesheet" href="css/semantic-colors.css">
+    
+    <!-- Google Fonts - Inter Professional Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <!-- Using local files to avoid tracking prevention warnings -->
+    <link rel="stylesheet" href="css/fontawesome/all.min.css">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.min.js"></script>
+    
+    <!-- AngularJS Date Format Fix - Must load after AngularJS but before app.js -->
+    <script src="js/angularDateFix.js"></script>
+    
+    <!-- SignalR Client - Using local file to avoid Tracking Prevention warnings -->
+    <script src="js/signalr.min.js"></script>
+    
+    <!-- SheetJS for Excel Import/Export (Local) -->
+    <script src="js/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- App Scripts -->
+    <script src="app.js"></script>
+    
+    <!-- Controllers -->
+    <script src="controllers/LoginController.js"></script>
+    <script src="controllers/AuthController.js"></script>
+    <script src="controllers/DashboardController.js"></script>
+    <script src="controllers/UserController.js"></script>
+    <script src="controllers/RoleController.js"></script>
+    <script src="controllers/FacultyController.js"></script>
+    <script src="controllers/MajorController.js"></script>
+    <script src="controllers/DepartmentController.js"></script>
+    <script src="controllers/SubjectController.js"></script>
+    <script src="controllers/AcademicYearController.js"></script>
+    <script src="controllers/SchoolYearController.js"></script>
+    <script src="controllers/StudentController.js"></script>
+    <script src="controllers/LecturerController.js"></script>
+    <script src="controllers/ClassController.js"></script>
+    <script src="controllers/RoomController.js"></script>
+    <script src="controllers/OrganizationController.js"></script>
+    <script src="controllers/LecturerManagementController.js"></script>
+    
+    <!-- Portal Controllers -->
+    <script src="controllers/LecturerDashboardController.js"></script>
+    <script src="controllers/LecturerAttendanceController.js"></script>
+    <script src="controllers/LecturerGradesController.js"></script>
+    <script src="controllers/LecturerGradeFormulaController.js"></script>
+    <script src="controllers/AdvisorDashboardController.js"></script>
+    <script src="controllers/AdvisorStudentController.js"></script>
+    <script src="controllers/AdvisorStudentListController.js"></script>
+    <script src="controllers/AdvisorProgressController.js"></script>
+    <script src="controllers/AdvisorWarningController.js"></script>
+    <script src="controllers/AdvisorGradeAppealController.js"></script>
+    <script src="controllers/AdvisorRetakeController.js"></script>
+    <script src="controllers/AdvisorGradeFormulaConfigController.js"></script>
+    <script src="controllers/AdvisorEnrollmentController.js"></script>
+    <script src="controllers/AdvisorEnrollmentApprovalController.js"></script>
+    <script src="controllers/StudentDashboardController.js"></script>
+    <!-- StudentScheduleController removed - functionality merged into StudentTimetableController -->
+    <script src="controllers/StudentGradesController.js"></script>
+    <script src="controllers/StudentTimetableController.js"></script>
+    <script src="controllers/StudentAttendanceController.js"></script>
+    <script src="controllers/StudentProfileController.js"></script>
+    <script src="controllers/StudentRetakeController.js"></script>
+    <script src="controllers/StudentGradeAppealController.js"></script>
+    <script src="controllers/LecturerTimetableController.js"></script>
+    <script src="controllers/AdminTimetableController.js"></script>
+    
+    <!-- Report Controllers -->
+    <script src="controllers/AdminReportController.js"></script>
+    <script src="controllers/AdvisorReportController.js"></script>
+    <script src="controllers/LecturerReportController.js"></script>
+    <script src="controllers/StudentReportController.js"></script>
+    <script src="controllers/LecturerClassController.js"></script>
+    
+    <!-- System Controllers -->
+    <script src="controllers/AuditLogController.js?v=2.1"></script>
+    <script src="controllers/NotificationController.js"></script>
+    
+    <!-- Phase 2: Enrollment System Controllers -->
+    <script src="controllers/AdministrativeClassController.js"></script>
+    <script src="controllers/RegistrationPeriodController.js"></script>
+    <script src="controllers/EnrollmentController.js"></script>
+    <script src="controllers/SubjectPrerequisiteController.js"></script>
+    
+    <!-- Exam Schedule Controllers -->
+    <script src="controllers/AdvisorExamScheduleController.js"></script>
+    <script src="controllers/AdvisorExamScoreController.js"></script>
+    <script src="controllers/StudentExamScheduleController.js"></script>
+    
+    <!-- Services -->
+    <script src="services/LoggerService.js"></script>
+    <script src="services/AuthService.js"></script>
+    <script src="services/CacheService.js"></script>
+    <script src="services/ApiService.js?v=2.1"></script>
+    <script src="services/UserService.js"></script>
+    <script src="services/FacultyService.js"></script>
+    <script src="services/MajorService.js"></script>
+    <script src="services/DepartmentService.js"></script>
+    <script src="services/SubjectService.js"></script>
+    <script src="services/AcademicYearService.js"></script>
+    <script src="services/SchoolYearService.js"></script>
+    <script src="services/CurrentSemesterHelper.js"></script>
+    <script src="services/StudentService.js"></script>
+    <script src="services/LecturerService.js"></script>
+    <script src="services/ClassService.js"></script>
+    <script src="services/RoomService.js"></script>
+    <script src="services/GradeDashboardService.js"></script>
+    <script src="services/LecturerSubjectService.js"></script>
+    <script src="services/GradeService.js"></script>
+    <script src="services/AdvisorService.js"></script>
+    
+    <!-- New Services - Foundation Features -->
+    <script src="services/PaginationService.js"></script>
+    <script src="services/ExportService.js"></script>
+    <script src="services/ImportService.js"></script>
+    <script src="services/AuditLogService.js"></script>
+    <script src="services/NotificationService.js"></script>
+    <script src="services/AvatarService.js"></script>
+    <script src="services/ToastService.js"></script>
+    <script src="services/GradeFormulaConfigService.js"></script>
+    <script src="services/GradeAppealService.js"></script>
+    <script src="services/RetakeService.js"></script>
+    <script src="services/SignalRService.js"></script>
+    <script src="services/RoleService.js"></script>
+    <script src="services/TimetableService.js"></script>
+    <script src="services/RoleManagementService.js"></script>
+    
+    <!-- Phase 2: Enrollment System Services -->
+    <script src="services/AdministrativeClassService.js"></script>
+    <script src="services/RegistrationPeriodService.js"></script>
+    <script src="services/EnrollmentService.js"></script>
+    <script src="services/SubjectPrerequisiteService.js"></script>
+    
+    <!-- Exam Schedule Services -->
+    <script src="services/ExamScheduleService.js"></script>
+    <script src="services/ExamScoreService.js"></script>
+    
+    <!-- Report Service -->
+    <script src="services/ReportService.js"></script>
+    
+    <!-- Directives -->
+    <script src="directives/routeGuard.js"></script>
+    <script src="directives/pagination.js"></script>
+    <script src="directives/searchBar.js"></script>
+    <script src="directives/sortableHeader.js"></script>
+    <script src="directives/fileUpload.js"></script>
+    <script src="directives/notificationBell.js"></script>
+    <script src="directives/dragDrop.js"></script>
+    <script src="directives/sidebar.js"></script>
+    <script src="directives/topbar.js"></script>
+    <script src="directives/toastContainer.js"></script>
+    <script src="directives/dateInput.js"></script>
+    
+    <!-- UI Scripts -->
+    <script src="js/sidebar.js"></script>
+    <script src="js/modal.js"></script>
+</head>
+<body>
+    <!-- Toast Notifications Container -->
+    <toast-container></toast-container>
+    
+    <!-- Main App View with animation -->
+    <div class="view-container" ng-view></div>
+</body>
+</html>
+
