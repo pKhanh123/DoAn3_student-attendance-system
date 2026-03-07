@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(GIT_AUTHOR_DATE=\"2026-03-20T14:50:00+07:00\" GIT_COMMITTER_DATE=\"2026-03-20T14:50:00+07:00\" git commit -m \"feat: xây dựng Login Page thực tế - Giai đoạn 2:*)",
+      "Bash(curl -s http://localhost:5173/src/pages/auth/ForgotPasswordPage.jsx)",
+      "Bash(npx vite:*)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api:*)",
+      "Bash(npx skills:*)"
+    ]
+  }
+}
