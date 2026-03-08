@@ -31,6 +31,7 @@ import SchoolYearFormPage from './pages/admin/school-years/SchoolYearFormPage'
 import RegistrationPeriodPage from './pages/admin/registration-periods/RegistrationPeriodPage'
 import SubjectPrerequisitePage from './pages/admin/subject-prerequisites/SubjectPrerequisitePage'
 import EnrollmentAdminPage from './pages/admin/enrollments/EnrollmentAdminPage'
+import AdvisorManagePage from './pages/admin/advisors/AdvisorManagePage'
 
 // Lecturer Pages
 import LecturerDashboardPage from './pages/lecturer/DashboardPage'
@@ -144,6 +145,7 @@ function App() {
         <Route path="students/new" element={<StudentFormPage />} />
         <Route path="students/:id/edit" element={<StudentFormPage />} />
         <Route path="lecturers" element={<LecturerManagePage />} />
+        <Route path="advisors" element={<AdvisorManagePage />} />
         <Route path="classes" element={<ClassListPage />} />
         <Route path="admin-classes" element={<AdminClassListPage />} />
         <Route path="rooms" element={<RoomListPage />} />

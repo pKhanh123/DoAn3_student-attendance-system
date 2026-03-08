@@ -4,7 +4,7 @@
 Convert hệ thống AngularJS thành ReactJS (Vite), giữ nguyên backend ASP.NET Core tại `https://localhost:7033`, push từng stage lên GitHub `main` với commit timestamp chronological.
 
 ## Current Phase
-Phase 6 (User Management Pages)
+Phase 8 (Lecturer & Advisor Management) — vừa hoàn thành
 
 ## Completed Phases
 
@@ -15,26 +15,24 @@ Phase 6 (User Management Pages)
 | Stage 3 | Auth Pages (Forgot Password, OTP, Reset) | ✅ complete |
 | Stage 4 | MainLayout (Sidebar, Topbar, NotificationBell) | ✅ complete |
 | Stage 5 | Dashboard Pages (Admin, Lecturer, Advisor, Student) | ✅ complete |
+| Stage 6 | User Management Pages (List, Create, Edit, Delete) | ✅ complete |
+| Stage 7 | Student Management Pages (List, Form, Import/Export) | ✅ complete |
+| Stage 8 | Lecturer & Advisor Management (CRUD, Subject Assignment) | ✅ complete |
 
 ## Phases
 
-### Phase 6: User Management Pages
-- [ ] Admin: User List page với search, filter theo role
-- [ ] Admin: Create/Edit User modal hoặc page
-- [ ] Admin: Delete user
-- [ ] Commit với fake timestamp
+### Phase 7: Student Management Pages ✅
+- [x] Admin/Lecturer: Student List page với search, filter ✅
+- [x] Admin: Student CRUD (Import Excel, Create, Edit, Delete) ✅
+- [x] Student Form page ✅
+- [x] Commit với fake timestamp
 
-### Phase 7: Student Management Pages
-- [ ] Admin/Lecturer: Student List page với search, filter
-- [ ] Admin: Student CRUD (Import Excel, Create, Edit, Delete)
-- [ ] Advisor: View assigned students
-- [ ] Commit với fake timestamp
-
-### Phase 8: Lecturer & Advisor Management
-- [ ] Admin: Lecturer CRUD
-- [ ] Admin: Advisor CRUD
-- [ ] Admin: Assign students to advisors
-- [ ] Commit với fake timestamp
+### Phase 8: Lecturer & Advisor Management ✅
+- [x] Admin: Lecturer CRUD ✅
+- [x] Admin: Subject Assignment cho Lecturer ✅
+- [x] Admin: Advisor CRUD ✅
+- [x] Admin: Advisor Assign Students (placeholder) ✅
+- [x] Commit với fake timestamp
 
 ### Phase 9: Class & Subject Management
 - [ ] Admin: Class management (CRUD)

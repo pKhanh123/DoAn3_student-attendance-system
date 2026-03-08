@@ -26,6 +26,7 @@ const MENU_BY_ROLE = {
       items: [
         { label: 'Sinh viên', icon: 'fas fa-user-graduate', path: '/admin/students' },
         { label: 'Giảng viên', icon: 'fas fa-chalkboard-teacher', path: '/admin/lecturers' },
+        { label: 'Cố vấn học tập', icon: 'fas fa-user-friends', path: '/admin/advisors' },
         { label: 'Lớp học', icon: 'fas fa-layer-group', path: '/admin/classes' },
         { label: 'Phòng máy', icon: 'fas fa-desktop', path: '/admin/rooms' },
         { label: 'Năm học', icon: 'fas fa-calendar-alt', path: '/admin/school-years' },
