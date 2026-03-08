@@ -4,7 +4,7 @@
 Convert hệ thống AngularJS thành ReactJS (Vite), giữ nguyên backend ASP.NET Core tại `https://localhost:7033`, push từng stage lên GitHub `main` với commit timestamp chronological.
 
 ## Current Phase
-Phase 9 (Class & Subject Management) — đang code xong, chờ commit
+Phase 10 (Attendance Management) — đang code xong, chờ commit
 
 ## Completed Phases
 
@@ -18,7 +18,8 @@ Phase 9 (Class & Subject Management) — đang code xong, chờ commit
 | Stage 6 | User Management Pages (List, Create, Edit, Delete) | ✅ complete |
 | Stage 7 | Student Management Pages (List, Form, Import/Export) | ✅ complete |
 | Stage 8 | Lecturer & Advisor Management (CRUD, Subject Assignment) | ✅ complete |
-| Stage 9 | Class & Subject Management (Class CRUD, Admin Class CRUD, Subject CRUD, lookupApi) | ✅ hoàn thành |
+| Stage 9 | Class & Subject Management (Class CRUD, Admin Class CRUD, Subject CRUD, lookupApi) | ✅ complete |
+| Stage 10 | Attendance Management (Lecturer take attendance, Student view attendance, APIs) | ✅ hoàn thành |
 
 ## Phases
 
@@ -42,7 +43,13 @@ Phase 9 (Class & Subject Management) — đang code xong, chờ commit
 - [x] lookupApi.js — shared dropdown data ✅
 - [ ] Commit với fake timestamp
 
-### Phase 10: Attendance Management
+### Phase 10: Attendance Management ✅
+- [x] Lecturer: Take attendance page (load today's sessions, mark per student, batch save) ✅
+- [x] Student: View own attendance (filter by month, status badges) ✅
+- [x] attendanceApi.js — attendance CRUD endpoints ✅
+- [x] timetableApi.js — timetable lookup ✅
+- [x] enrollmentApi.js — class roster ✅
+- [ ] Commit với fake timestamp
 - [ ] Lecturer: Take attendance page (scan/manual)
 - [ ] Lecturer: Attendance history per class
 - [ ] Student: View own attendance
