@@ -4,7 +4,7 @@
 Convert hệ thống AngularJS thành ReactJS (Vite), giữ nguyên backend ASP.NET Core tại `https://localhost:7033`, push từng stage lên GitHub `main` với commit timestamp chronological.
 
 ## Current Phase
-Phase 10 (Attendance Management) — đang code xong, chờ commit
+Phase 11 (Schedule & Room Management) — đang code xong, chờ commit
 
 ## Completed Phases
 
@@ -19,29 +19,10 @@ Phase 10 (Attendance Management) — đang code xong, chờ commit
 | Stage 7 | Student Management Pages (List, Form, Import/Export) | ✅ complete |
 | Stage 8 | Lecturer & Advisor Management (CRUD, Subject Assignment) | ✅ complete |
 | Stage 9 | Class & Subject Management (Class CRUD, Admin Class CRUD, Subject CRUD, lookupApi) | ✅ complete |
-| Stage 10 | Attendance Management (Lecturer take attendance, Student view attendance, APIs) | ✅ hoàn thành |
+| Stage 10 | Attendance Management (Lecturer take attendance, Student view attendance, APIs) | ✅ complete |
+| Stage 11 | Schedule & Room Management (Room CRUD, Timetable week grid, Schedule CRUD, check-conflicts) | ✅ hoàn thành |
 
 ## Phases
-
-### Phase 7: Student Management Pages ✅
-- [x] Admin/Lecturer: Student List page với search, filter ✅
-- [x] Admin: Student CRUD (Import Excel, Create, Edit, Delete) ✅
-- [x] Student Form page ✅
-- [x] Commit với fake timestamp
-
-### Phase 8: Lecturer & Advisor Management ✅
-- [x] Admin: Lecturer CRUD ✅
-- [x] Admin: Subject Assignment cho Lecturer ✅
-- [x] Admin: Advisor CRUD ✅
-- [x] Admin: Advisor Assign Students (placeholder) ✅
-- [x] Commit với fake timestamp
-
-### Phase 9: Class & Subject Management ✅
-- [x] Class Management Page (CRUD, filter by subject/lecturer/academic year) ✅
-- [x] Administrative Class Page (CRUD, view students, remove student) ✅
-- [x] Subject Management Page (CRUD, filter by department) ✅
-- [x] lookupApi.js — shared dropdown data ✅
-- [ ] Commit với fake timestamp
 
 ### Phase 10: Attendance Management ✅
 - [x] Lecturer: Take attendance page (load today's sessions, mark per student, batch save) ✅
@@ -49,15 +30,13 @@ Phase 10 (Attendance Management) — đang code xong, chờ commit
 - [x] attendanceApi.js — attendance CRUD endpoints ✅
 - [x] timetableApi.js — timetable lookup ✅
 - [x] enrollmentApi.js — class roster ✅
-- [ ] Commit với fake timestamp
-- [ ] Lecturer: Take attendance page (scan/manual)
-- [ ] Lecturer: Attendance history per class
-- [ ] Student: View own attendance
-- [ ] Commit với fake timestamp
+- [x] Commit với fake timestamp
 
-### Phase 11: Schedule & Room Management
-- [ ] Admin: Schedule management
-- [ ] Admin: Room management
+### Phase 11: Schedule & Room Management ✅
+- [x] Admin: Room Management (CRUD, stats, toggle active) ✅
+- [x] Admin: Timetable Management (week grid, CRUD sessions, check conflicts) ✅
+- [x] roomApi.js — room CRUD ✅
+- [x] scheduleApi.js — schedule CRUD + check-conflicts ✅
 - [ ] Commit với fake timestamp
 
 ### Phase 12: Reports & Export
