@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import MainLayout from './components/layout/MainLayout'
+import { ROLES } from './utils/constants'
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage'
@@ -72,40 +73,34 @@ import CourseRegisterPage from './pages/student/enrollment/CourseRegisterPage'
 import StudentProfilePage from './pages/student/profile/ProfilePage'
 import StudentReportPage from './pages/student/reports/ReportPage'
 
-import { ROLES } from './utils/constants'
-
-// Route guard component
-function ProtectedRoute({ children, allowedRoles }) {
+// Route guards
+function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, isAuthenticated } = useAuth()
 
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />
   }
 
-  return children
+  return <>{children}</>
 }
 
-// Redirect authenticated users away from login
-function PublicRoute({ children }) {
+function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
-
   if (isAuthenticated) {
     return <Navigate to="/" replace />
   }
-
-  return children
+  return <>{children}</>
 }
 
-// Role-based redirect on root
 function RootRedirect() {
   const { user } = useAuth()
 
   if (!user) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/auth/login" replace />
   }
 
   switch (user.role) {
@@ -122,19 +117,17 @@ function RootRedirect() {
   }
 }
 
-function App() {
+export default function App() {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Public */}
       <Route path="/auth/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/auth/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
       <Route path="/auth/verify-otp" element={<PublicRoute><VerifyOTPPage /></PublicRoute>} />
       <Route path="/auth/reset-password" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
-
-      {/* Root Redirect */}
       <Route path="/" element={<RootRedirect />} />
 
-      {/* Admin Routes */}
+      {/* Admin */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><MainLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="users" element={<UserListPage />} />
@@ -166,7 +159,7 @@ function App() {
         <Route path="notifications" element={<NotificationPage />} />
       </Route>
 
-      {/* Lecturer Routes */}
+      {/* Lecturer */}
       <Route path="/lecturer" element={<ProtectedRoute allowedRoles={[ROLES.LECTURER]}><MainLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<LecturerDashboardPage />} />
         <Route path="attendance" element={<AttendancePage />} />
@@ -178,7 +171,7 @@ function App() {
         <Route path="reports" element={<LecturerReportPage />} />
       </Route>
 
-      {/* Advisor Routes */}
+      {/* Advisor */}
       <Route path="/advisor" element={<ProtectedRoute allowedRoles={[ROLES.ADVISOR]}><MainLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<AdvisorDashboardPage />} />
         <Route path="students" element={<AdvisorStudentListPage />} />
@@ -195,7 +188,7 @@ function App() {
         <Route path="reports" element={<AdvisorReportPage />} />
       </Route>
 
-      {/* Student Routes */}
+      {/* Student */}
       <Route path="/student" element={<ProtectedRoute allowedRoles={[ROLES.STUDENT]}><MainLayout /></ProtectedRoute>}>
         <Route path="dashboard" element={<StudentDashboardPage />} />
         <Route path="timetable" element={<StudentTimetablePage />} />
@@ -210,10 +203,7 @@ function App() {
         <Route path="reports" element={<StudentReportPage />} />
       </Route>
 
-      {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
-
-export default App

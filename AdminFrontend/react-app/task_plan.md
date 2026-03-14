@@ -1,167 +1,91 @@
 # Task Plan: Migrate React/Vite JS → TypeScript
 
+## Quy tắc đặt tên file
+- **`.ts`** → Logic thuần (stores, hooks, api, types, utils)
+- **`.tsx`** → React component có JSX markup (pages, components, layouts, contexts)
+
 ## Mục tiêu
 Migrate toàn bộ source code từ JavaScript (.js/.jsx) sang TypeScript (.ts/.tsx)
 Giữ nguyên logic, UI, functionality — chỉ thêm type annotations.
 
-## Phạm vi (xác minh bằng scan thực tế)
-- Path: `d:/Khanh/BTL API/EducationManagement/student-attendance-system/AdminFrontend/react-app/`
-- Tổng: **80 files** cần migrate (xác nhận đúng)
-  - API files: **16** (authApi, userApi, studentApi, lecturerApi, advisorApi, classApi, adminClassApi, subjectApi, lookupApi, timetableApi, attendanceApi, enrollmentApi, roomApi, scheduleApi, reportApi, index.js)
-  - Page files: **57** (Admin 24 + Lecturer 8 + Advisor 12 + Student 11 + Auth 4)
-  - Component files: **5** (Sidebar, Topbar, MainLayout, PlaceholderPage, NotificationBell)
-  - Context: **1** (AuthContext)
-  - Utils: **1** (constants.js)
-  - Config: **2** (main.jsx, App.jsx)
-  - `.js` files: 1 (src/utils/constants.js)
-  - `.jsx` files: 79
-- Route verification: **100% match** — mọi import trong App.jsx đều có file tương ứng
-- Không có file `.ts`/`.tsx` nào tồn tại
+---
 
-## Quy tắc migrate
-- `.js` → `.ts` (không có JSX)
-- `.jsx` → `.tsx`
-- Props components → typed interface
-- API response → typed interfaces
-- useState → generic `useState<T>`
-- useQuery / useMutation → typed via queryFn return type
-- Axios response → typed
+## Phase 1: Setup TypeScript ✅
+- [x] `tsconfig.json`, `eslint.config.js`, `@typescript-eslint/parser`
+- [x] `vite.config.ts`
+- [x] Dependencies: `typescript`, `@typescript-eslint/*`
+
+## Phase 2: Shared Types & Interfaces ✅
+- [x] `src/types/index.ts` — Tất cả shared interfaces
+- [x] `src/api.ts` — Typed axios instance
+
+## Phase 3+4: Utils + API Layer ✅
+- [x] `src/utils/constants.ts`
+- [x] `src/api/*.ts` — 16 API files
 
 ---
 
-## Các Phase
+## Phase 5: Stores + Hooks + Core Components/Layout (IN PROGRESS)
+> Stores: `.ts` | Hooks: `.ts` | Contexts/Layouts/Components: `.tsx`
 
-### Phase 1: Setup TypeScript ✅ (pending)
-- [ ] Cài đặt dependencies: `typescript`, `@typescript-eslint/...`, `@types/*`
-- [ ] Tạo `tsconfig.json` (strict: false để dễ migrate dần)
-- [ ] Tạo `tsconfig.node.json` cho Vite
-- [ ] Rename vite.config.js → vite.config.ts
-- [ ] Update `index.html` reference nếu cần
-- [ ] Verify `npm run dev` chạy được
-- [ ] Verify `npm run build` không lỗi
+### 5.1 Stores (`.ts`)
+- [x] `src/stores/authStore.ts`
+- [x] `src/stores/appStore.ts`
+- [ ] `src/stores/sidebarStore.ts` — migrate từ `.js`
+- [ ] `src/stores/queryStore.ts` — migrate từ `.js`
+- [ ] `src/stores/userStore.ts` — migrate từ `.js`
 
-### Phase 2: Shared Types & Interfaces 🔲
-- [ ] Tạo `src/types/index.ts` — gom tất cả shared interfaces
-  - User, Student, Lecturer, Advisor, Admin
-  - Attendance, Schedule, Room, Subject, Class
-  - ApiResponse, PaginatedResponse, ApiError
-  - FormProps interfaces
-- [ ] Tạo `src/types/api.ts` — typed axios response wrappers
-- [ ] Export tất cả từ `src/types/index.ts`
+### 5.2 Hooks (`.ts`)
+- [x] `src/hooks/useAuth.ts`
+- [x] `src/hooks/useFormatters.ts`
+- [x] `src/hooks/useDebounce.ts`
+- [ ] `src/hooks/usePagination.ts` — migrate từ `.js`
+- [ ] `src/hooks/usePageTitle.ts` — migrate từ `.js`
+- [ ] `src/hooks/useExport.ts` — migrate từ `.js`
 
-### Phase 3: Utils & Constants 🔲
-- [ ] Migrate `src/utils/constants.js` → `src/utils/constants.ts`
+### 5.3 Contexts (`.tsx`)
+- [ ] `src/contexts/AuthContext.tsx` — migrate từ `.jsx`
 
-### Phase 4: API Layer 🔲
-- [ ] Migrate `src/api/index.ts` (apiClient axios instance)
-- [ ] Migrate 16 API files → .ts:
-  - authApi, userApi, studentApi, lecturerApi, advisorApi
-  - classApi, adminClassApi, subjectApi, lookupApi
-  - timetableApi, attendanceApi, enrollmentApi, roomApi
-  - scheduleApi, reportApi
+### 5.4 Layout Components (`.tsx`)
+- [ ] `src/components/layout/Sidebar.tsx`
+- [ ] `src/components/layout/Topbar.tsx`
+- [ ] `src/components/layout/MainLayout.tsx`
 
-### Phase 5: Context & Auth 🔲
-- [ ] Migrate `src/contexts/AuthContext.jsx` → `src/contexts/AuthContext.tsx`
-
-### Phase 6: Layout Components 🔲
-- [ ] Migrate `src/components/layout/Sidebar.tsx`
-- [ ] Migrate `src/components/layout/Topbar.tsx`
-- [ ] Migrate `src/components/layout/MainLayout.tsx`
-- [ ] Migrate `src/components/common/PlaceholderPage.tsx`
-- [ ] Migrate `src/components/common/NotificationBell.tsx`
-
-### Phase 7: Admin Pages (Phase A) — 10 files 🔲
-- [ ] DashboardPage
-- [ ] users: UserListPage, UserFormPage
-- [ ] students: StudentListPage, StudentFormPage
-- [ ] lecturers: LecturerManagePage
-- [ ] advisors: AdvisorManagePage
-- [ ] classes: ClassListPage, AdminClassListPage
-- [ ] subjects: SubjectListPage
-
-### Phase 8: Admin Pages (Phase B) — 14 files 🔲
-- [ ] academic-years: AcademicYearListPage, AcademicYearFormPage
-- [ ] school-years: SchoolYearListPage, SchoolYearFormPage
-- [ ] roles: RoleListPage
-- [ ] organization: OrganizationPage
-- [ ] audit-logs: AuditLogPage
-- [ ] notifications: NotificationPage
-- [ ] enrollments: EnrollmentAdminPage
-- [ ] registration-periods: RegistrationPeriodPage
-- [ ] subject-prerequisites: SubjectPrerequisitePage
-- [ ] timetable: AdminTimetablePage
-- [ ] reports: AdminReportPage
-
-### Phase 9: Lecturer Pages — 8 files 🔲
-- [ ] DashboardPage
-- [ ] classes: ClassListPage
-- [ ] timetable: TimetablePage
-- [ ] attendance: AttendancePage
-- [ ] grades: GradeEntryPage, GradeFormulaPage
-- [ ] appeals: GradeAppealPage
-- [ ] reports: ReportPage
-
-### Phase 10: Advisor Pages — 12 files 🔲
-- [ ] DashboardPage
-- [ ] students: StudentListPage, StudentDetailPage, StudentProgressPage
-- [ ] enrollment: EnrollmentPage, EnrollmentApprovalPage
-- [ ] exam-schedules: ExamSchedulePage, ExamScorePage
-- [ ] appeals: GradeAppealPage
-- [ ] grade-formula: GradeFormulaPage
-- [ ] retakes: RetakePage
-- [ ] warnings: WarningPage
-- [ ] reports: ReportPage
-
-### Phase 11: Student Pages — 11 files 🔲
-- [ ] DashboardPage
-- [ ] profile: ProfilePage
-- [ ] enrollment: CourseRegisterPage
-- [ ] attendance: AttendancePage
-- [ ] grades: GradesPage
-- [ ] exam-schedule: ExamSchedulePage
-- [ ] timetable: TimetablePage
-- [ ] appeals: GradeAppealPage
-- [ ] retakes: RetakePage, RetakeRegisterPage
-- [ ] reports: ReportPage
-
-### Phase 12: Auth Pages — 4 files 🔲
-- [ ] LoginPage
-- [ ] ForgotPasswordPage
-- [ ] VerifyOTPPage
-- [ ] ResetPasswordPage
-
-### Phase 13: App Entry Points 🔲
-- [ ] Migrate `src/main.jsx` → `src/main.tsx`
-- [ ] Migrate `src/App.jsx` → `src/App.tsx`
-- [ ] Update `index.html` (nếu cần)
-- [ ] Cleanup: xóa các .js/.jsx file gốc
-
-### Phase 14: Final Verification 🔲
-- [ ] Chạy `npm run build` — 0 error
-- [ ] Chạy `npm run dev` — dev server hoạt động
-- [ ] ESLint / TypeScript check không lỗi nghiêm trọng
-- [ ] Test nhanh các trang chính
+### 5.5 Common Components (`.tsx`)
+- [ ] `src/components/common/NotificationBell.tsx`
+- [ ] `src/components/common/PlaceholderPage.tsx`
 
 ---
 
-## Thứ tự ưu tiên migrate
-1. Setup TypeScript (Phase 1) → Cần xong trước
-2. Types/Interfaces (Phase 2) → Nền tảng cho tất cả
-3. Utils (Phase 3) → Dependencies nhỏ
-4. API (Phase 4) → Nhiều file, độc lập
-5. Context (Phase 5) → Phụ thuộc types
-6. Components → Phụ thuộc context & types
-7. Pages → Phụ thuộc components & api
-8. App entry → Cuối cùng
-9. Cleanup → Verify hoàn tất
+## Phase 6: Admin Pages (`.tsx`) — 24 files
+- [ ] Phase A: DashboardPage, UserListPage, UserFormPage, StudentListPage, StudentFormPage, LecturerManagePage, AdvisorManagePage, ClassListPage, AdminClassListPage, SubjectListPage (10 files)
+- [ ] Phase B: AcademicYearListPage, AcademicYearFormPage, SchoolYearListPage, SchoolYearFormPage, RoleListPage, OrganizationPage, AuditLogPage, NotificationPage, EnrollmentAdminPage, RegistrationPeriodPage, SubjectPrerequisitePage, AdminTimetablePage, AdminReportPage (14 files)
 
-## Migration Strategy
-- Strict mode: **OFF** ban đầu (để migrate nhanh)
-- eslint: `@typescript-eslint/strict` bật sau Phase 7
-- Mỗi phase: migrate xong → verify `npm run build`
-- Commit sau mỗi phase hoặc mỗi 2-3 phases
+## Phase 7: Lecturer Pages (`.tsx`) — 8 files
+- [ ] DashboardPage, ClassListPage, TimetablePage, AttendancePage, GradeEntryPage, GradeFormulaPage, GradeAppealPage, ReportPage
+
+## Phase 8: Advisor Pages (`.tsx`) — 12 files
+- [ ] DashboardPage, StudentListPage, StudentDetailPage, StudentProgressPage, EnrollmentPage, EnrollmentApprovalPage, ExamSchedulePage, ExamScorePage, GradeAppealPage, GradeFormulaPage, RetakePage, WarningPage, ReportPage
+
+## Phase 9: Student Pages (`.tsx`) — 11 files
+- [ ] DashboardPage, ProfilePage, CourseRegisterPage, AttendancePage, GradesPage, ExamSchedulePage, TimetablePage, GradeAppealPage, RetakePage, RetakeRegisterPage, ReportPage
+
+## Phase 10: Auth Pages (`.tsx`) — 4 files
+- [ ] LoginPage, ForgotPasswordPage, VerifyOTPPage, ResetPasswordPage
+
+## Phase 11: App Entry Points
+- [ ] `src/main.tsx` — migrate từ `.jsx`
+- [ ] `src/App.tsx` — migrate từ `.jsx`
+- [ ] Cleanup: xóa các `.js/.jsx` file gốc
+
+## Phase 12: Final Verification
+- [ ] `npm run build` — 0 error
+- [ ] `npm run dev` — dev server hoạt động
+- [ ] TypeScript check không lỗi nghiêm trọng
+
+---
 
 ## Errors Encountered
 | Error | Phase | Resolution |
-|-------|-------|------------|
-| — | — | — |
+|-------|-------|-----------|
+| User hiểu nhầm .ts vs .tsx | Plan | Giải thích: `.ts` = logic thuần, `.tsx` = có JSX |

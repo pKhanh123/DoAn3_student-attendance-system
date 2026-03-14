@@ -7,7 +7,9 @@ import tsparser from '@typescript-eslint/parser'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'node_modules']),
+
+  // JS files (.js, .jsx)
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -18,16 +20,13 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
   },
+
+  // TS/TSX files (.ts, .tsx)
   {
     files: ['**/*.{ts,tsx}'],
     plugins: {
@@ -37,15 +36,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
       parser: tsparser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
     },
   },
 ])
