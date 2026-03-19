@@ -3,7 +3,33 @@ import { Link } from 'react-router-dom'
 import apiClient from '../../api'
 import '../../assets/css/dashboard.css'
 
-const STAT_ICONS = {
+interface StatConfig {
+  icon: string
+  color: string
+  label: string
+}
+
+interface DashboardStats {
+  totalUsers?: number
+  totalStudents?: number
+  totalLecturers?: number
+  totalFaculties?: number
+  totalMajors?: number
+  totalSubjects?: number
+  totalAcademicYears?: number
+  error?: string
+}
+
+interface AuditLog {
+  id?: number
+  auditId?: number
+  entityType: string
+  description?: string
+  action: string
+  createdAt: string
+}
+
+const STAT_ICONS: Record<string, StatConfig> = {
   totalUsers: { icon: 'fa-users', color: 'blue', label: 'Tổng người dùng' },
   totalStudents: { icon: 'fa-user-graduate', color: 'green', label: 'Sinh viên' },
   totalLecturers: { icon: 'fa-chalkboard-teacher', color: 'orange', label: 'Giảng viên' },
@@ -13,25 +39,29 @@ const STAT_ICONS = {
   totalAcademicYears: { icon: 'fa-calendar-alt', color: 'indigo', label: 'Niên khóa' },
 }
 
-function timeAgo(dateStr) {
+const ACTION_ICONS: Record<string, string> = {
+  CREATE: 'fa-plus',
+  UPDATE: 'fa-edit',
+  DELETE: 'fa-trash',
+}
+
+function timeAgo(dateStr: string): string {
   if (!dateStr) return ''
-  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000)
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
   if (diff < 60) return `${diff} giây trước`
   if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`
   if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`
   return `${Math.floor(diff / 86400)} ngày trước`
 }
 
-const ACTION_ICONS = { CREATE: 'fa-plus', UPDATE: 'fa-edit', DELETE: 'fa-trash' }
-
 export default function DashboardPage() {
-  const { data: stats, isLoading: loadingStats } = useQuery({
+  const { data: stats, isLoading: loadingStats } = useQuery<DashboardStats>({
     queryKey: ['admin-dashboard-stats'],
     queryFn: () => apiClient.get('/dashboard/admin/stats').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: auditLogs, isLoading: loadingAudit } = useQuery({
+  const { data: auditLogs, isLoading: loadingAudit } = useQuery<AuditLog[]>({
     queryKey: ['admin-audit-logs'],
     queryFn: () => apiClient.get('/audit-logs/recent?pageSize=10').then((r) => r.data),
     staleTime: 30 * 1000,
@@ -39,14 +69,12 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Error */}
       {stats?.error && (
         <div className="alert alert-danger">
           <i className="fas fa-exclamation-circle"></i> {stats.error}
         </div>
       )}
 
-      {/* Stats Row 1 */}
       <div className="stats-grid">
         {[
           { key: 'totalUsers', value: stats?.totalUsers },
@@ -71,7 +99,6 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Stats Row 2 */}
       <div className="stats-grid">
         {[
           { key: 'totalMajors', value: stats?.totalMajors },
@@ -82,7 +109,7 @@ export default function DashboardPage() {
             value: [
               stats?.totalUsers, stats?.totalStudents, stats?.totalLecturers,
               stats?.totalFaculties, stats?.totalMajors, stats?.totalSubjects,
-            ].reduce((a, b) => a + (b || 0), 0),
+            ].reduce<number>((a, b) => a + (b || 0), 0),
             icon: 'fa-chart-line',
             color: 'gray',
             label: 'Tổng dữ liệu',
@@ -105,7 +132,6 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Quick Actions */}
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Thao tác nhanh</h3>
@@ -129,7 +155,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Audit Logs */}
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Hoạt động gần đây (Audit Log)</h3>

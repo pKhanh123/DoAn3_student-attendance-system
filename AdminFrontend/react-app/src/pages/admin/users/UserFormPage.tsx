@@ -1,30 +1,76 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import userApi from '../../../api/userApi'
 
-function validatePassword(pwd) {
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Role {
+  roleId: string | number
+  roleName: string
+}
+
+interface UserPayload {
+  username?: string
+  password?: string
+  fullName: string
+  email: string
+  phone?: string
+  roleId?: string | number
+  isActive: boolean
+  isEditMode?: boolean
+}
+
+interface FormErrors {
+  username?: string
+  password?: string
+  fullName?: string
+  email?: string
+  phone?: string
+  roleId?: string
+}
+
+interface TouchedFields {
+  username?: boolean
+  password?: boolean
+  fullName?: boolean
+  email?: boolean
+  phone?: boolean
+  roleId?: boolean
+}
+
+interface ApiError {
+  response?: {
+    status?: number
+    data?: {
+      message?: string
+      errors?: Record<string, string[]>
+    } | string
+  }
+}
+
+function validatePassword(pwd: string): string | null {
   if (!pwd) return 'Mật khẩu không được để trống'
   if (pwd.length < 6) return 'Mật khẩu phải có ít nhất 6 ký tự'
   return null
 }
 
-function validateUsername(u) {
+function validateUsername(u: string): string | null {
   if (!u) return 'Tên đăng nhập không được để trống'
   if (u.length < 3 || u.length > 20) return 'Tên đăng nhập từ 3-20 ký tự'
   if (!/^[a-zA-Z0-9_]+$/.test(u)) return 'Chỉ chứa chữ, số và dấu gạch dưới'
   return null
 }
 
-function validateForm(form) {
-  const errors = {}
+function validateForm(form: UserPayload): FormErrors {
+  const errors: FormErrors = {}
 
   if (!form.isEditMode) {
-    const uErr = validateUsername(form.username)
+    const uErr = validateUsername(form.username || '')
     if (uErr) errors.username = uErr
 
-    const pErr = validatePassword(form.password)
+    const pErr = validatePassword(form.password || '')
     if (pErr) errors.password = pErr
   }
 
@@ -47,12 +93,12 @@ function validateForm(form) {
   return errors
 }
 
-export default function UserFormPage() {
+export default function UserFormPage(): React.JSX.Element {
   const navigate = useNavigate()
-  const { id } = useParams()
+  const { id } = useParams<{ id?: string }>()
   const isEditMode = Boolean(id)
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<UserPayload>({
     isEditMode,
     username: '',
     password: '',
@@ -62,11 +108,11 @@ export default function UserFormPage() {
     roleId: '',
     isActive: true,
   })
-  const [errors, setErrors] = useState({})
-  const [touched, setTouched] = useState({})
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [touched, setTouched] = useState<TouchedFields>({})
 
   // Fetch roles
-  const { data: roles = [] } = useQuery({
+  const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ['roles'],
     queryFn: () => userApi.getRoles().then((r) => r.data),
     staleTime: 5 * 60 * 1000,
@@ -75,8 +121,8 @@ export default function UserFormPage() {
   // Fetch user for edit
   const { isLoading } = useQuery({
     queryKey: ['user', id],
-    queryFn: () => userApi.getById(id).then((r) => {
-      const u = r.data?.data || r.data
+    queryFn: () => userApi.getById(id!).then((r) => {
+      const u = (r.data as { data?: UserPayload } | UserPayload)?.data || (r.data as UserPayload)
       setForm((f) => ({
         ...f,
         username: u.username || '',
@@ -92,23 +138,23 @@ export default function UserFormPage() {
   })
 
   // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       const { isEditMode: _em, password: _pw, ...payload } = form
-      if (!isEditMode) payload.password = form.password
+      if (!isEditMode && form.password) (payload as UserPayload & { password: string }).password = form.password
       return isEditMode
-        ? userApi.update(id, payload)
-        : userApi.create(payload)
+        ? userApi.update(id!, payload as Omit<UserPayload, 'isEditMode'>)
+        : userApi.create(payload as Omit<UserPayload, 'isEditMode' | 'isActive'>)
     },
     onSuccess: () => {
       toast.success(`${isEditMode ? 'Cập nhật' : 'Thêm'} người dùng thành công!`)
       navigate('/admin/users')
     },
-    onError: (error) => {
+    onError: (error: ApiError) => {
       const data = error.response?.data
-      if (data?.message) {
+      if (typeof data === 'object' && data?.message) {
         toast.error(data.message)
-      } else if (data?.errors) {
+      } else if (typeof data === 'object' && data?.errors) {
         const msgs = Object.values(data.errors).flat().join('; ')
         toast.error(msgs)
       } else if (error.response?.status === 409) {
@@ -123,22 +169,21 @@ export default function UserFormPage() {
     },
   })
 
-  function handleChange(e) {
-    const { name, value, type, checked } = e.target
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
     setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
-    // Clear error on change
-    setErrors((err) => { const n = { ...err }; delete n[name]; return n })
+    setErrors((err) => { const n = { ...err }; delete n[name as keyof FormErrors]; return n })
   }
 
-  function handleBlur(e) {
+  function handleBlur(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>): void {
     const { name } = e.target
     setTouched((t) => ({ ...t, [name]: true }))
-    // Validate single field
     const errs = validateForm({ ...form })
-    setErrors((prev) => ({ ...prev, [name]: errs[name] }))
+    setErrors((prev) => ({ ...prev, [name]: errs[name as keyof FormErrors] }))
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault()
     const errs = validateForm(form)
     if (Object.keys(errs).length > 0) {
@@ -151,12 +196,12 @@ export default function UserFormPage() {
     saveMutation.mutate()
   }
 
-  const field = (name) => ({
+  const field = (name: keyof UserPayload) => ({
     name,
-    value: form[name],
+    value: form[name] ?? '',
     onChange: handleChange,
     onBlur: handleBlur,
-    className: `form-control${touched[name] && errors[name] ? ' is-invalid' : ''}`,
+    className: `form-control${touched[name as keyof TouchedFields] && errors[name as keyof FormErrors] ? ' is-invalid' : ''}`,
   })
 
   return (
@@ -246,7 +291,7 @@ export default function UserFormPage() {
                     <select {...field('roleId')}>
                       <option value="">-- Chọn vai trò --</option>
                       {roles.map((r) => (
-                        <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
+                        <option key={String(r.roleId)} value={String(r.roleId)}>{r.roleName}</option>
                       ))}
                     </select>
                     {touched.roleId && errors.roleId && (

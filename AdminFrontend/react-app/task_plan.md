@@ -25,39 +25,39 @@ Giữ nguyên logic, UI, functionality — chỉ thêm type annotations.
 
 ---
 
-## Phase 5: Stores + Hooks + Core Components/Layout (IN PROGRESS)
+## Phase 5: Stores + Hooks + Core Components/Layout ✅
 > Stores: `.ts` | Hooks: `.ts` | Contexts/Layouts/Components: `.tsx`
 
-### 5.1 Stores (`.ts`)
-- [x] `src/stores/authStore.ts`
+### 5.1 Stores (`.ts`/`.tsx`)
+- [x] `src/stores/authStore.tsx`
 - [x] `src/stores/appStore.ts`
-- [ ] `src/stores/sidebarStore.ts` — migrate từ `.js`
-- [ ] `src/stores/queryStore.ts` — migrate từ `.js`
-- [ ] `src/stores/userStore.ts` — migrate từ `.js`
+- [x] `src/stores/sidebarStore.tsx`
+- [x] `src/stores/queryStore.tsx`
+- [x] `src/stores/userStore.tsx`
 
-### 5.2 Hooks (`.ts`)
+### 5.2 Hooks (`.ts`/`.tsx`)
 - [x] `src/hooks/useAuth.ts`
 - [x] `src/hooks/useFormatters.ts`
 - [x] `src/hooks/useDebounce.ts`
-- [ ] `src/hooks/usePagination.ts` — migrate từ `.js`
-- [ ] `src/hooks/usePageTitle.ts` — migrate từ `.js`
-- [ ] `src/hooks/useExport.ts` — migrate từ `.js`
+- [x] `src/hooks/usePagination.tsx`
+- [x] `src/hooks/usePageTitle.tsx`
+- [x] `src/hooks/useExport.tsx`
 
 ### 5.3 Contexts (`.tsx`)
-- [ ] `src/contexts/AuthContext.tsx` — migrate từ `.jsx`
+- [x] `src/contexts/AuthContext.tsx`
 
 ### 5.4 Layout Components (`.tsx`)
-- [ ] `src/components/layout/Sidebar.tsx`
-- [ ] `src/components/layout/Topbar.tsx`
-- [ ] `src/components/layout/MainLayout.tsx`
+- [x] `src/components/layout/Sidebar.tsx`
+- [x] `src/components/layout/Topbar.tsx`
+- [x] `src/components/layout/MainLayout.tsx`
 
 ### 5.5 Common Components (`.tsx`)
-- [ ] `src/components/common/NotificationBell.tsx`
-- [ ] `src/components/common/PlaceholderPage.tsx`
+- [x] `src/components/common/NotificationBell.tsx`
+- [x] `src/components/common/PlaceholderPage.tsx`
 
 ---
 
-## Phase 6: Admin Pages (`.tsx`) — 24 files
+## Phase 6: Admin Pages (`.tsx`) — 24 files (CHƯA LÀM)
 - [ ] Phase A: DashboardPage, UserListPage, UserFormPage, StudentListPage, StudentFormPage, LecturerManagePage, AdvisorManagePage, ClassListPage, AdminClassListPage, SubjectListPage (10 files)
 - [ ] Phase B: AcademicYearListPage, AcademicYearFormPage, SchoolYearListPage, SchoolYearFormPage, RoleListPage, OrganizationPage, AuditLogPage, NotificationPage, EnrollmentAdminPage, RegistrationPeriodPage, SubjectPrerequisitePage, AdminTimetablePage, AdminReportPage (14 files)
 
@@ -73,13 +73,13 @@ Giữ nguyên logic, UI, functionality — chỉ thêm type annotations.
 ## Phase 10: Auth Pages (`.tsx`) — 4 files
 - [ ] LoginPage, ForgotPasswordPage, VerifyOTPPage, ResetPasswordPage
 
-## Phase 11: App Entry Points
-- [ ] `src/main.tsx` — migrate từ `.jsx`
-- [ ] `src/App.tsx` — migrate từ `.jsx`
-- [ ] Cleanup: xóa các `.js/.jsx` file gốc
+## Phase 11: App Entry Points ✅
+- [x] `src/main.tsx`
+- [x] `src/App.tsx`
+- [x] Cleanup: xóa các `.js/.jsx` file trùng lặp (17 files)
 
-## Phase 12: Final Verification
-- [ ] `npm run build` — 0 error
+## Phase 12: Final Verification ✅
+- [x] `npm run build` — ✅ 941 modules, 0 error
 - [ ] `npm run dev` — dev server hoạt động
 - [ ] TypeScript check không lỗi nghiêm trọng
 

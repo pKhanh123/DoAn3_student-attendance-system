@@ -3,68 +3,162 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import lecturerApi from '../../../api/lecturerApi'
 
-function getPages(currentPage, totalPages) {
-  const pages = []
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Lecturer {
+  lecturerId: string
+  lecturerCode?: string
+  fullName: string
+  email: string
+  phone?: string | null
+  departmentId?: string | number
+  departmentName?: string
+  joinDate?: string | null
+  isActive?: boolean
+  assignedLecturers?: AssignedLecturer[]
+}
+
+interface AssignedLecturer {
+  lecturerId?: string
+  lecturer?: { lecturerId?: string; fullName?: string }
+  fullName?: string
+  isPrimary?: boolean
+  LecturerSubject?: { isPrimary?: boolean }
+}
+
+interface Department {
+  departmentId: string | number
+  departmentName: string
+}
+
+interface Subject {
+  subjectId: string
+  subjectCode: string
+  subjectName: string
+  credits?: number
+  assignedLecturers?: AssignedLecturer[]
+}
+
+interface LecturerSubject {
+  lecturerSubjectId?: string
+  LecturerSubjectId?: string
+  subjectId?: string
+  subjectName?: string
+  subject?: { subjectName?: string }
+  isPrimary?: boolean
+}
+
+interface LecturerFormState {
+  fullName: string
+  email: string
+  phone: string
+  departmentId: string
+  joinDate: string
+  isActive: boolean
+}
+
+interface NewSubjectState {
+  subjectId: string
+  isPrimary: boolean
+  experienceYears: number
+  notes: string
+}
+
+interface FormErrors {
+  fullName?: string
+  email?: string
+  departmentId?: string
+}
+
+interface AssignSubjectPayload {
+  lecturerId: string
+  subjectId: string
+  isPrimary: boolean
+  experienceYears: number
+  notes: string
+  certifiedDate: string
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+    } | string
+  }
+}
+
+// ── Pagination helpers ─────────────────────────────────────────────────────────
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function LecturerManagePage() {
+export default function LecturerManagePage(): React.JSX.Element {
   const queryClient = useQueryClient()
 
-  const [activeTab, setActiveTab] = useState('lecturers')
-  const [search, setSearch] = useState('')
-  const [filterDept, setFilterDept] = useState('')
-  const [page, setPage] = useState(1)
+  const [activeTab, setActiveTab] = useState<string>('lecturers')
+  const [search, setSearch] = useState<string>('')
+  const [filterDept, setFilterDept] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
   // Lecturer modal
-  const [showLecturerModal, setShowLecturerModal] = useState(false)
-  const [editingLecturer, setEditingLecturer] = useState(null)
-  const [lecturerForm, setLecturerForm] = useState({
+  const [showLecturerModal, setShowLecturerModal] = useState<boolean>(false)
+  const [editingLecturer, setEditingLecturer] = useState<Lecturer | null>(null)
+  const [lecturerForm, setLecturerForm] = useState<LecturerFormState>({
     fullName: '', email: '', phone: '', departmentId: '', joinDate: '', isActive: true,
   })
-  const [formErrors, setFormErrors] = useState({})
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
   // Assign subject modal
-  const [showAssignModal, setShowAssignModal] = useState(false)
-  const [selectedLecturer, setSelectedLecturer] = useState(null)
-  const [lecturerSubjects, setLecturerSubjects] = useState([])
-  const [availableSubjects, setAvailableSubjects] = useState([])
-  const [newSubject, setNewSubject] = useState({ subjectId: '', isPrimary: false, experienceYears: 0, notes: '' })
+  const [showAssignModal, setShowAssignModal] = useState<boolean>(false)
+  const [selectedLecturer, setSelectedLecturer] = useState<Lecturer | null>(null)
+  const [lecturerSubjects, setLecturerSubjects] = useState<LecturerSubject[]>([])
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([])
+  const [newSubject, setNewSubject] = useState<NewSubjectState>({ subjectId: '', isPrimary: false, experienceYears: 0, notes: '' })
 
   // Fetch lecturers
-  const { data: lecturers = [], isLoading } = useQuery({
+  const { data: lecturers = [], isLoading } = useQuery<Lecturer[]>({
     queryKey: ['lecturers'],
-    queryFn: () => lecturerApi.getAll().then(r => r.data?.data || r.data || []),
+    queryFn: () => lecturerApi.getAll().then(r => {
+      const d = r.data as { data?: Lecturer[] } | Lecturer[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Lecturer[] }).data : d) || []
+    }),
     staleTime: 30 * 1000,
   })
 
   // Fetch departments
-  const { data: departments = [] } = useQuery({
+  const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['departments'],
-    queryFn: () => lecturerApi.getDepartments().then(r => r.data?.data || r.data || []),
+    queryFn: () => lecturerApi.getDepartments().then(r => {
+      const d = r.data as { data?: Department[] } | Department[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Department[] }).data : d) || []
+    }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Fetch all subjects
-  const { data: allSubjects = [] } = useQuery({
+  const { data: allSubjects = [] } = useQuery<Subject[]>({
     queryKey: ['subjects'],
     queryFn: () => lecturerApi.getSubjects().then(r => {
-      const d = r.data?.data || r.data?.items || r.data || []
-      return Array.isArray(d) ? d : []
+      const d = r.data as { data?: Subject[]; items?: Subject[] } | Subject[]
+      const raw = (typeof d === 'object' && !Array.isArray(d)
+        ? ((d as { data?: Subject[] }).data || (d as { items?: Subject[] }).items)
+        : d) || []
+      return Array.isArray(raw) ? raw : []
     }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Save lecturer mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       if (!lecturerForm.fullName || !lecturerForm.email || !lecturerForm.departmentId)
         throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc')
-      const method = editingLecturer ? 'update' : 'create'
       const payload = {
         ...lecturerForm,
         departmentId: lecturerForm.departmentId,
@@ -81,62 +175,83 @@ export default function LecturerManagePage() {
       setEditingLecturer(null)
       queryClient.invalidateQueries({ queryKey: ['lecturers'] })
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || error.message || 'Lỗi khi lưu giảng viên')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : null) ||
+        (error as Error).message ||
+        'Lỗi khi lưu giảng viên'
+      toast.error(msg as string)
     },
   })
 
   // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id) => lecturerApi.delete(id),
+  const deleteMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: (id: string) => lecturerApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa giảng viên thành công!')
       queryClient.invalidateQueries({ queryKey: ['lecturers'] })
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Không thể xóa giảng viên')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Không thể xóa giảng viên')
+      toast.error(msg as string)
     },
   })
 
   // Fetch lecturer subjects
-  const fetchLecturerSubjects = (lecturer) => {
+  const fetchLecturerSubjects = (lecturer: Lecturer): void => {
     lecturerApi.getLecturerSubjects(lecturer.lecturerId).then(r => {
-      const subs = r.data?.data || r.data || []
-      setLecturerSubjects(Array.isArray(subs) ? subs : [])
-      const assignedIds = subs.map(s => s.subjectId || s.SubjectId || s.subject?.subjectId)
+      const subs = (r.data as { data?: LecturerSubject[] } | LecturerSubject[])?.data || (r.data as LecturerSubject[]) || []
+      const normalized: LecturerSubject[] = Array.isArray(subs) ? subs : []
+      setLecturerSubjects(normalized)
+      const assignedIds = normalized
+        .map(s => s.subjectId || (s as unknown as { SubjectId?: string }).SubjectId || s.subject?.subjectId)
+        .filter(Boolean)
       setAvailableSubjects(allSubjects.filter(s => !assignedIds.includes(s.subjectId)))
     }).catch(() => setLecturerSubjects([]))
   }
 
   // Assign subject mutation
-  const assignMutation = useMutation({
-    mutationFn: (data) => lecturerApi.assignSubject(data),
+  const assignMutation = useMutation<unknown, ApiError, AssignSubjectPayload>({
+    mutationFn: (data: AssignSubjectPayload) => lecturerApi.assignSubject(data),
     onSuccess: () => {
       toast.success('Phân môn thành công!')
       if (selectedLecturer) fetchLecturerSubjects(selectedLecturer)
       setNewSubject({ subjectId: '', isPrimary: false, experienceYears: 0, notes: '' })
     },
-    onError: (error) => toast.error(error.response?.data?.message || 'Lỗi khi phân môn'),
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Lỗi khi phân môn')
+      toast.error(msg as string)
+    },
   })
 
   // Remove subject mutation
-  const removeMutation = useMutation({
-    mutationFn: (id) => lecturerApi.removeSubject(id),
+  const removeMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: (id: string) => lecturerApi.removeSubject(id),
     onSuccess: () => {
       toast.success('Đã bỏ môn học!')
       if (selectedLecturer) fetchLecturerSubjects(selectedLecturer)
     },
-    onError: (error) => toast.error(error.response?.data?.message || 'Lỗi khi bỏ môn'),
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Lỗi khi bỏ môn')
+      toast.error(msg as string)
+    },
   })
 
   // Filter
-  const filtered = lecturers.filter(l => {
+  const filtered = lecturers.filter((l: Lecturer) => {
     const s = search.toLowerCase()
     const matchSearch = !s ||
       (l.fullName || '').toLowerCase().includes(s) ||
       (l.email || '').toLowerCase().includes(s) ||
       (l.lecturerCode || '').toLowerCase().includes(s)
-    const matchDept = !filterDept || l.departmentId === filterDept
+    const matchDept = !filterDept || String(l.departmentId) === filterDept
     return matchSearch && matchDept
   })
 
@@ -144,15 +259,15 @@ export default function LecturerManagePage() {
   const safePage = Math.min(page, totalPages)
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  function openAddModal() {
+  function openAddModal(): void {
     setEditingLecturer(null)
     setLecturerForm({ fullName: '', email: '', phone: '', departmentId: '', joinDate: '', isActive: true })
     setFormErrors({})
     setShowLecturerModal(true)
   }
 
-  function openEditModal(lec) {
-    const fmt = (d) => {
+  function openEditModal(lec: Lecturer): void {
+    const fmt = (d: string | null | undefined): string => {
       if (!d) return ''
       try {
         const date = new Date(d)
@@ -165,7 +280,7 @@ export default function LecturerManagePage() {
       fullName: lec.fullName || '',
       email: lec.email || '',
       phone: lec.phone || '',
-      departmentId: lec.departmentId || '',
+      departmentId: lec.departmentId ? String(lec.departmentId) : '',
       joinDate: fmt(lec.joinDate),
       isActive: lec.isActive ?? true,
     })
@@ -173,8 +288,8 @@ export default function LecturerManagePage() {
     setShowLecturerModal(true)
   }
 
-  function validateForm() {
-    const errs = {}
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {}
     if (!lecturerForm.fullName) errs.fullName = 'Họ tên bắt buộc'
     if (!lecturerForm.email) errs.email = 'Email bắt buộc'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lecturerForm.email)) errs.email = 'Email không hợp lệ'
@@ -182,28 +297,28 @@ export default function LecturerManagePage() {
     return errs
   }
 
-  function handleSaveLecturer() {
+  function handleSaveLecturer(): void {
     const errs = validateForm()
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return }
     saveMutation.mutate()
   }
 
-  function handleDelete(id) {
+  function handleDelete(id: string): void {
     if (!window.confirm('Bạn có chắc muốn xóa giảng viên này?')) return
     deleteMutation.mutate(id)
   }
 
-  function openAssignModal(lec) {
+  function openAssignModal(lec: Lecturer): void {
     setSelectedLecturer(lec)
     fetchLecturerSubjects(lec)
     setNewSubject({ subjectId: '', isPrimary: false, experienceYears: 0, notes: '' })
     setShowAssignModal(true)
   }
 
-  function handleAssignSubject() {
+  function handleAssignSubject(): void {
     if (!newSubject.subjectId) { toast.error('Vui lòng chọn môn học'); return }
     assignMutation.mutate({
-      lecturerId: selectedLecturer.lecturerId,
+      lecturerId: selectedLecturer!.lecturerId,
       subjectId: newSubject.subjectId,
       isPrimary: newSubject.isPrimary,
       experienceYears: Number(newSubject.experienceYears) || 0,
@@ -212,7 +327,7 @@ export default function LecturerManagePage() {
     })
   }
 
-  function handleRemoveSubject(lsId) {
+  function handleRemoveSubject(lsId: string): void {
     if (!window.confirm('Bỏ môn học khỏi giảng viên này?')) return
     removeMutation.mutate(lsId)
   }
@@ -240,7 +355,7 @@ export default function LecturerManagePage() {
             <div className="filter-group">
               <select className="form-control" value={filterDept} onChange={e => { setFilterDept(e.target.value); setPage(1) }}>
                 <option value="">Tất cả bộ môn</option>
-                {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+                {departments.map(d => <option key={String(d.departmentId)} value={String(d.departmentId)}>{d.departmentName}</option>)}
               </select>
               <button className="btn btn-primary" onClick={openAddModal}>
                 <i className="fas fa-plus"></i> Thêm GV
@@ -259,9 +374,9 @@ export default function LecturerManagePage() {
                   </thead>
                   <tbody>
                     {isLoading ? (
-                      <tr><td colSpan="7" className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                      <tr><td colSpan={7} className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
                     ) : paginated.length === 0 ? (
-                      <tr><td colSpan="7" className="text-center">Không có dữ liệu</td></tr>
+                      <tr><td colSpan={7} className="text-center">Không có dữ liệu</td></tr>
                     ) : (
                       paginated.map(l => (
                         <tr key={l.lecturerId}>
@@ -339,7 +454,7 @@ export default function LecturerManagePage() {
                           <td>{s.subjectName}</td>
                           <td>{s.credits}</td>
                           <td>
-                            {s.assignedLecturers?.length > 0
+                            {s.assignedLecturers && s.assignedLecturers.length > 0
                               ? s.assignedLecturers.map((al, i) => (
                                   <span key={i} className="badge badge-info me-1">
                                     {al.fullName || al.lecturer?.fullName}
@@ -411,7 +526,7 @@ export default function LecturerManagePage() {
                   value={lecturerForm.departmentId}
                   onChange={e => setLecturerForm(f => ({ ...f, departmentId: e.target.value }))}>
                   <option value="">-- Chọn bộ môn --</option>
-                  {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+                  {departments.map(d => <option key={String(d.departmentId)} value={String(d.departmentId)}>{d.departmentName}</option>)}
                 </select>
                 {formErrors.departmentId && <div className="invalid-feedback d-block">{formErrors.departmentId}</div>}
               </div>
@@ -461,11 +576,11 @@ export default function LecturerManagePage() {
                   <thead className="table-light"><tr><th>Môn</th><th>Chính</th><th></th></tr></thead>
                   <tbody>
                     {lecturerSubjects.map(ls => (
-                      <tr key={ls.lecturerSubjectId || ls.LecturerSubjectId}>
+                      <tr key={ls.lecturerSubjectId || (ls as unknown as { LecturerSubjectId?: string }).LecturerSubjectId || ''}>
                         <td>{ls.subjectName || ls.subject?.subjectName}</td>
                         <td>{ls.isPrimary || ls.LecturerSubject?.isPrimary ? '★' : ''}</td>
                         <td>
-                          <button className="btn btn-sm btn-danger" onClick={() => handleRemoveSubject(ls.lecturerSubjectId || ls.LecturerSubjectId)}>
+                          <button className="btn btn-sm btn-danger" onClick={() => handleRemoveSubject(ls.lecturerSubjectId || (ls as unknown as { LecturerSubjectId: string }).LecturerSubjectId)}>
                             <i className="fas fa-times"></i>
                           </button>
                         </td>

@@ -6,69 +6,99 @@ import userApi from '../../../api/userApi'
 import { useAuth } from '../../../contexts/AuthContext'
 import { ROLES } from '../../../utils/constants'
 
-// ── Pagination helpers ──────────────────────────────────────────
-function getPages(currentPage, totalPages) {
-  const pages = []
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface User {
+  userId: string
+  username: string
+  fullName: string
+  email: string
+  phone?: string | null
+  roleId?: string | number
+  roleName?: string
+  isActive?: boolean
+}
+
+interface Role {
+  roleId: string | number
+  roleName: string
+}
+
+interface ApiError {
+  response?: {
+    status?: number
+    data?: {
+      message?: string
+    } | string
+  }
+}
+
+// ── Pagination helpers ─────────────────────────────────────────────────────────
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function UserListPage() {
+export default function UserListPage(): React.JSX.Element {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user: currentUser } = useAuth()
 
-  const [search, setSearch] = useState('')
-  const [filterRole, setFilterRole] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState<string>('')
+  const [filterRole, setFilterRole] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
   // Fetch users
-  const { data: users = [], isLoading } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: () => userApi.getAll().then((r) => r.data),
     staleTime: 30 * 1000,
   })
 
   // Fetch roles for filter dropdown
-  const { data: roles = [] } = useQuery({
+  const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ['roles'],
     queryFn: () => userApi.getRoles().then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
 
   // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id) => userApi.delete(id),
+  const deleteMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: (id: string) => userApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa người dùng thành công!')
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-    onError: (error) => {
-      const msg = error.response?.data?.message || error.response?.data || 'Không thể xóa người dùng.'
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Không thể xóa người dùng.')
       if (error.response?.status === 403) {
         toast.error('Bạn không có quyền xóa người dùng này.')
       } else if (error.response?.status === 409) {
         toast.error('Không thể xóa người dùng này vì có dữ liệu liên quan.')
       } else {
-        toast.error(msg)
+        toast.error(msg as string)
       }
     },
   })
 
   // Filtered + paginated users
-  const filtered = users.filter((u) => {
+  const filtered = users.filter((u: User) => {
     const s = search.toLowerCase()
     const matchSearch =
       !s ||
       (u.username || '').toLowerCase().includes(s) ||
       (u.fullName || '').toLowerCase().includes(s) ||
       (u.email || '').toLowerCase().includes(s)
-    const matchRole = !filterRole || u.roleId?.toString() === filterRole
-    const matchStatus = filterStatus === '' || (u.isActive?.toString() === filterStatus)
+    const matchRole = !filterRole || String(u.roleId) === filterRole
+    const matchStatus = filterStatus === '' || String(u.isActive) === filterStatus
     return matchSearch && matchRole && matchStatus
   })
 
@@ -76,14 +106,14 @@ export default function UserListPage() {
   const safePage = Math.min(page, totalPages)
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  function resetFilters() {
+  function resetFilters(): void {
     setSearch('')
     setFilterRole('')
     setFilterStatus('')
     setPage(1)
   }
 
-  function handleDelete(userId) {
+  function handleDelete(userId: string): void {
     if (userId === currentUser?.userId) {
       toast.error('Bạn không thể xóa tài khoản của chính mình!')
       return
@@ -109,7 +139,7 @@ export default function UserListPage() {
           <select className="form-control" value={filterRole} onChange={(e) => { setFilterRole(e.target.value); setPage(1) }}>
             <option value="">Tất cả vai trò</option>
             {roles.map((r) => (
-              <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
+              <option key={String(r.roleId)} value={String(r.roleId)}>{r.roleName}</option>
             ))}
           </select>
           <select className="form-control" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1) }}>
@@ -147,13 +177,13 @@ export default function UserListPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan="7" className="text-center">
+                    <td colSpan={7} className="text-center">
                       <i className="fas fa-spinner fa-spin"></i> Đang tải...
                     </td>
                   </tr>
                 ) : paginated.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="text-center">Không có dữ liệu</td>
+                    <td colSpan={7} className="text-center">Không có dữ liệu</td>
                   </tr>
                 ) : (
                   paginated.map((user) => (

@@ -4,94 +4,173 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import studentApi from '../../../api/studentApi'
 
-function getPages(currentPage, totalPages) {
-  const pages = []
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Student {
+  studentId: string
+  studentCode: string
+  fullName: string
+  email: string
+  phone?: string | null
+  facultyName?: string
+  majorName?: string
+  isActive?: boolean
+}
+
+interface Faculty {
+  facultyId: string | number
+  facultyName: string
+}
+
+interface Major {
+  majorId: string | number
+  majorName: string
+}
+
+interface PaginationMeta {
+  totalPages?: number
+  totalCount?: number
+}
+
+interface StudentsResponse {
+  data?: Student[] | { data?: Student[]; items?: Student[] }
+  items?: Student[]
+  pagination?: PaginationMeta
+}
+
+interface ImportRow {
+  row: number
+  code: string
+  errors: string[]
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+    } | string
+  }
+}
+
+// Declare xlsx on window for import/export
+declare global {
+  interface Window {
+    XLSX: {
+      read: (data: Uint8Array, opts: { type: string }) => { SheetNames: string[]; Sheets: Record<string, unknown> }
+      utils: {
+        sheet_to_json: (sheet: unknown, opts: { defval: string }) => Record<string, string>[]
+        aoa_to_sheet: (data: (string | null)[][]) => unknown
+        book_new: () => unknown
+        book_append_sheet: (wb: unknown, ws: unknown, name: string) => void
+        writeFile: (wb: unknown, filename: string) => void
+      }
+      writeFile: (wb: unknown, filename: string) => void
+    }
+  }
+}
+
+// ── Pagination helpers ─────────────────────────────────────────────────────────
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function StudentListPage() {
+export default function StudentListPage(): React.JSX.Element {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState('')
-  const [filterFaculty, setFilterFaculty] = useState('')
-  const [filterMajor, setFilterMajor] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState<string>('')
+  const [filterFaculty, setFilterFaculty] = useState<string>('')
+  const [filterMajor, setFilterMajor] = useState<string>('')
+  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
   // Import modal state
-  const [showImport, setShowImport] = useState(false)
-  const [importFile, setImportFile] = useState(null)
-  const [importPreview, setImportPreview] = useState([])
-  const [importErrors, setImportErrors] = useState([])
-  const [validCount, setValidCount] = useState(0)
-  const [errorCount, setErrorCount] = useState(0)
+  const [showImport, setShowImport] = useState<boolean>(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importPreview, setImportPreview] = useState<Record<string, string | null>[]>([])
+  const [importErrors, setImportErrors] = useState<ImportRow[]>([])
+  const [validCount, setValidCount] = useState<number>(0)
+  const [errorCount, setErrorCount] = useState<number>(0)
 
   // Fetch students
-  const { data: students = [], isLoading } = useQuery({
+  const { data: students = [], isLoading } = useQuery<StudentsResponse>({
     queryKey: ['students', page, search, filterFaculty, filterMajor, filterStatus],
     queryFn: () => {
-      const params = { page, pageSize }
+      const params: Record<string, string | number> = { page, pageSize }
       if (search) params.search = search
       if (filterFaculty) params.facultyId = filterFaculty
       if (filterMajor) params.majorId = filterMajor
-      return studentApi.getAll(params).then(r => {
-        const d = r.data?.data || r.data?.items || r.data || {}
-        // Backend trả về dạng phẳng hoặc có pagination tuỳ endpoint
-        if (Array.isArray(d)) {
-          return { data: d, pagination: {} }
+      return studentApi.getAll(params).then((r) => {
+        const d = (r.data as { data?: unknown } | unknown) as StudentsResponse
+        const raw = (d as { data?: StudentsResponse }).data || (d as StudentsResponse).items || (d as StudentsResponse) || {}
+        if (Array.isArray(raw)) {
+          return { data: raw, pagination: {} }
         }
         return {
-          data: d.data || d.items || [],
-          pagination: d.pagination || {},
+          data: (raw as { data?: Student[]; items?: Student[] }).data || (raw as { items?: Student[] }).items || [],
+          pagination: (raw as { pagination?: PaginationMeta }).pagination || {},
         }
       })
     },
     staleTime: 30 * 1000,
   })
 
-  const studentsData = Array.isArray(students) ? students : (students?.data || [])
-  const pagination = students?.pagination || {}
+  const studentsData: Student[] = Array.isArray((students as unknown as Student[]))
+    ? (students as unknown as Student[])
+    : ((students as unknown as { data?: Student[] }).data || [])
+
+  const pagination: PaginationMeta = (students as unknown as { pagination?: PaginationMeta }).pagination || {}
 
   // Fetch faculties
-  const { data: faculties = [] } = useQuery({
+  const { data: faculties = [] } = useQuery<Faculty[]>({
     queryKey: ['faculties'],
-    queryFn: () => studentApi.getFaculties().then(r => r.data?.data || r.data || []),
+    queryFn: () => studentApi.getFaculties().then((r) => {
+      const d = r.data as { data?: Faculty[] } | Faculty[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Faculty[] }).data : d) || []
+    }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Fetch majors when faculty changes
-  const { data: majors = [] } = useQuery({
+  const { data: majors = [] } = useQuery<Major[]>({
     queryKey: ['majors', filterFaculty],
     queryFn: () => filterFaculty
-      ? studentApi.getMajors(filterFaculty).then(r => r.data?.data || r.data || [])
+      ? studentApi.getMajors(filterFaculty).then((r) => {
+          const d = r.data as { data?: Major[] } | Major[]
+          return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Major[] }).data : d) || []
+        })
       : Promise.resolve([]),
     enabled: Boolean(filterFaculty),
     staleTime: 5 * 60 * 1000,
   })
 
   // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id) => studentApi.delete(id),
+  const deleteMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: (id: string) => studentApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa sinh viên thành công!')
       queryClient.invalidateQueries({ queryKey: ['students'] })
     },
-    onError: (error) => {
-      const msg = error.response?.data?.message || 'Không thể xóa sinh viên.'
-      toast.error(msg)
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Không thể xóa sinh viên.')
+      toast.error(msg as string)
     },
   })
 
   // Import mutation
-  const importMutation = useMutation({
-    mutationFn: (students) => studentApi.importBatch(students),
+  const importMutation = useMutation<unknown, ApiError, Record<string, string | null>[]>({
+    mutationFn: (studentsToImport: Record<string, string | null>[]) =>
+      studentApi.importBatch(studentsToImport),
     onSuccess: (res) => {
-      const result = res.data?.data || res.data || {}
+      const result = (res as unknown as { data?: { successCount?: number; errorCount?: number } }).data || {}
       const ok = result.successCount || 0
       const fail = result.errorCount || 0
       if (fail > 0) {
@@ -103,13 +182,16 @@ export default function StudentListPage() {
       resetImport()
       queryClient.invalidateQueries({ queryKey: ['students'] })
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi import.')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Lỗi khi import.')
+      toast.error(msg as string)
     },
   })
 
   // Client-side filter (for status since backend may not support)
-  const filtered = studentsData.filter(s => {
+  const filtered = studentsData.filter((s: Student) => {
     const s2 = search.toLowerCase()
     const matchSearch = !s2 ||
       (s.studentCode || '').toLowerCase().includes(s2) ||
@@ -124,7 +206,7 @@ export default function StudentListPage() {
   const safePage = Math.min(page, totalPages)
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  function resetFilters() {
+  function resetFilters(): void {
     setSearch('')
     setFilterFaculty('')
     setFilterMajor('')
@@ -132,19 +214,19 @@ export default function StudentListPage() {
     setPage(1)
   }
 
-  function handleFacultyChange(val) {
+  function handleFacultyChange(val: string): void {
     setFilterFaculty(val)
     setFilterMajor('')
     setPage(1)
   }
 
-  function handleDelete(id) {
+  function handleDelete(id: string): void {
     if (!window.confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) return
     deleteMutation.mutate(id)
   }
 
   // Import handlers
-  function resetImport() {
+  function resetImport(): void {
     setImportFile(null)
     setImportPreview([])
     setImportErrors([])
@@ -152,15 +234,15 @@ export default function StudentListPage() {
     setErrorCount(0)
   }
 
-  const handleFileChange = useCallback((e) => {
-    const file = e.target.files[0]
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
     setImportFile(file)
 
     const reader = new FileReader()
     reader.onload = (ev) => {
       try {
-        const data = new Uint8Array(ev.target.result)
+        const data = new Uint8Array(ev.target!.result as ArrayBuffer)
         importXlsx(data)
       } catch {
         toast.error('Không thể đọc file.')
@@ -169,7 +251,7 @@ export default function StudentListPage() {
     reader.readAsArrayBuffer(file)
   }, [])
 
-  async function importXlsx(data) {
+  async function importXlsx(data: Uint8Array): Promise<void> {
     const XLSX = window.XLSX
     if (!XLSX) { toast.error('Thư viện xlsx chưa được load.'); return }
 
@@ -179,19 +261,20 @@ export default function StudentListPage() {
 
     if (!rows.length) { toast.error('File trống.'); return }
 
-    const valid = [], invalid = []
+    const valid: Record<string, string | null>[] = []
+    const invalid: ImportRow[] = []
     rows.forEach((row, idx) => {
-      const code = row['Mã SV'] || row['Mã SV (*)'] || ''
-      const name = row['Họ tên'] || row['Họ tên (*)'] || ''
-      const email = row['Email'] || row['Email (*)'] || ''
-      const majorId = row['Mã Ngành'] || row['Mã Ngành (*)'] || ''
-      const dob = row['Ngày sinh'] || ''
-      const gender = row['Giới tính'] || ''
-      const phone = row['Số điện thoại'] || ''
-      const address = row['Địa chỉ'] || ''
-      const ay = row['Niên khóa'] || ''
+      const code = (row as Record<string, string>)['Mã SV'] || (row as Record<string, string>)['Mã SV (*)'] || ''
+      const name = (row as Record<string, string>)['Họ tên'] || (row as Record<string, string>)['Họ tên (*)'] || ''
+      const email = (row as Record<string, string>)['Email'] || (row as Record<string, string>)['Email (*)'] || ''
+      const majorId = (row as Record<string, string>)['Mã Ngành'] || (row as Record<string, string>)['Mã Ngành (*)'] || ''
+      const dob = (row as Record<string, string>)['Ngày sinh'] || ''
+      const gender = (row as Record<string, string>)['Giới tính'] || ''
+      const phone = (row as Record<string, string>)['Số điện thoại'] || ''
+      const address = (row as Record<string, string>)['Địa chỉ'] || ''
+      const ay = (row as Record<string, string>)['Niên khóa'] || ''
 
-      const errors = []
+      const errors: string[] = []
       if (!code || !/^SV\d+$/i.test(String(code).trim())) errors.push('Mã SV không hợp lệ (cần SV + số)')
       if (!name) errors.push('Họ tên trống')
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) errors.push('Email không hợp lệ')
@@ -220,12 +303,12 @@ export default function StudentListPage() {
     setErrorCount(invalid.length)
   }
 
-  function handleImport() {
+  function handleImport(): void {
     if (!importPreview.length) { toast.error('Không có dữ liệu hợp lệ.'); return }
     importMutation.mutate(importPreview)
   }
 
-  function downloadTemplate() {
+  function downloadTemplate(): void {
     const headers = ['Mã SV (*)', 'Họ tên (*)', 'Email (*)', 'Số điện thoại', 'Ngày sinh', 'Giới tính', 'Địa chỉ', 'Mã Ngành (*)', 'Niên khóa']
     const sample = ['SV2024001', 'Nguyễn Văn A', 'nguyenvana@student.edu.vn', '0912345678', '2003-05-15', 'Nam', 'TP.HCM', 'MAJ001', 'AY2024']
     const ws = window.XLSX.utils.aoa_to_sheet([headers, sample])
@@ -234,10 +317,10 @@ export default function StudentListPage() {
     window.XLSX.writeFile(wb, 'MauNhapSinhVien.xlsx')
   }
 
-  function handleExport() {
+  function handleExport(): void {
     const XLSX = window.XLSX
     if (!XLSX) { toast.error('Thư viện xlsx chưa được load.'); return }
-    const cols = [
+    const cols: { label: string; f: (r: Student) => string | undefined | null }[] = [
       { label: 'Mã SV', f: r => r.studentCode },
       { label: 'Họ tên', f: r => r.fullName },
       { label: 'Email', f: r => r.email },
@@ -268,11 +351,11 @@ export default function StudentListPage() {
         <div className="filter-group">
           <select className="form-control" value={filterFaculty} onChange={e => handleFacultyChange(e.target.value)}>
             <option value="">Tất cả khoa</option>
-            {faculties.map(f => <option key={f.facultyId} value={f.facultyId}>{f.facultyName}</option>)}
+            {faculties.map(f => <option key={String(f.facultyId)} value={String(f.facultyId)}>{f.facultyName}</option>)}
           </select>
           <select className="form-control" value={filterMajor} onChange={e => { setFilterMajor(e.target.value); setPage(1) }} disabled={!filterFaculty}>
             <option value="">Tất cả ngành</option>
-            {majors.map(m => <option key={m.majorId} value={m.majorId}>{m.majorName}</option>)}
+            {majors.map(m => <option key={String(m.majorId)} value={String(m.majorId)}>{m.majorName}</option>)}
           </select>
           <select className="form-control" value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1) }}>
             <option value="">Tất cả trạng thái</option>
@@ -351,9 +434,9 @@ export default function StudentListPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan="8" className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                  <tr><td colSpan={8} className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan="8" className="text-center">Không có dữ liệu</td></tr>
+                  <tr><td colSpan={8} className="text-center">Không có dữ liệu</td></tr>
                 ) : (
                   paginated.map(s => (
                     <tr key={s.studentId}>

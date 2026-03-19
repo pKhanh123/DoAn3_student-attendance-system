@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { saveAs } from 'file-saver'
@@ -14,7 +14,111 @@ const GPA_COLORS = { excellent: '#28a745', good: '#0d6efd', average: '#ffc107', 
 const WARNING_COLORS = { lowGpa: '#ffc107', poorAttendance: '#fd7e14', both: '#dc3545' }
 const DEBT_COLORS = '#36a2eb'
 
-function renderActiveShape(props) {
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+    }
+  }
+}
+
+interface SchoolYearItem {
+  schoolYearId: string
+  yearName?: string
+  schoolYearCode?: string
+}
+
+interface FacultyItem {
+  facultyId: string
+  facultyName?: string
+  name?: string
+}
+
+interface MajorItem {
+  majorId: string
+  majorName?: string
+  name?: string
+}
+
+interface GpaDistribution {
+  excellent?: number
+  good?: number
+  average?: number
+  weak?: number
+}
+
+interface CreditDebtRange {
+  range?: string
+  count?: number
+}
+
+interface AcademicWarnings {
+  total?: number
+  lowGpa?: number
+  poorAttendance?: number
+  both?: number
+}
+
+interface CreditDebtStats {
+  total?: number
+  byRange?: CreditDebtRange[]
+}
+
+interface TopDebtStudent {
+  studentId?: string
+  studentCode?: string
+  fullName?: string
+  studentName?: string
+  className?: string
+  adminClassName?: string
+  creditDebt?: number
+  debt?: number
+  gpa?: number | string
+  GPA?: number | string
+}
+
+interface AdminReportsResponse {
+  creditDebtStats?: CreditDebtStats
+  academicWarnings?: AcademicWarnings
+  gpaDistribution?: GpaDistribution
+  topCreditDebt?: TopDebtStudent[]
+}
+
+interface GpaChartEntry {
+  name: string
+  value: number
+  color: string
+}
+
+interface WarningChartEntry {
+  name: string
+  value: number
+  color: string
+}
+
+interface DebtChartEntry {
+  range?: string
+  count?: number
+}
+
+interface Filters {
+  schoolYearId: string
+  facultyId: string
+  majorId: string
+  semester: string
+}
+
+interface SectorProps {
+  cx: number
+  cy: number
+  innerRadius: number
+  outerRadius: number
+  startAngle: number
+  endAngle: number
+  fill: string
+}
+
+function renderActiveShape(props: SectorProps): React.ReactElement {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props
   return (
     <g>
@@ -24,43 +128,41 @@ function renderActiveShape(props) {
   )
 }
 
-export default function AdminReportPage() {
-  const [filters, setFilters] = useState({
+export default function AdminReportPage(): React.JSX.Element {
+  const [filters, setFilters] = useState<Filters>({
     schoolYearId: '', facultyId: '', majorId: '', semester: '',
   })
-  const [activeGpaIndex, setActiveGpaIndex] = useState(0)
-  const [activeWarningIndex, setActiveWarningIndex] = useState(0)
+  const [activeGpaIndex, setActiveGpaIndex] = useState<number>(0)
+  const [activeWarningIndex, setActiveWarningIndex] = useState<number>(0)
 
-  // Load dropdowns
-  const { data: schoolYears = [] } = useQuery({
+  const { data: schoolYears = [] } = useQuery<SchoolYearItem[]>({
     queryKey: ['school-years-dropdown'], staleTime: 5 * 60 * 1000,
-    queryFn: () => lookupApi.getSchoolYears().then(r => {
+    queryFn: () => lookupApi.getSchoolYears().then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as SchoolYearItem[]
     }),
   })
-  const { data: faculties = [] } = useQuery({
+  const { data: faculties = [] } = useQuery<FacultyItem[]>({
     queryKey: ['faculties-dropdown'], staleTime: 5 * 60 * 1000,
-    queryFn: () => lookupApi.getFaculties().then(r => {
+    queryFn: () => lookupApi.getFaculties().then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as FacultyItem[]
     }),
   })
-  const { data: majors = [] } = useQuery({
+  const { data: majors = [] } = useQuery<MajorItem[]>({
     queryKey: ['majors-dropdown', filters.facultyId], staleTime: 5 * 60 * 1000,
     enabled: !!filters.facultyId,
-    queryFn: () => lookupApi.getMajors(filters.facultyId).then(r => {
+    queryFn: () => lookupApi.getMajors(filters.facultyId).then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as MajorItem[]
     }),
   })
 
-  // Load reports
-  const { data: reports = {}, isLoading, refetch } = useQuery({
+  const { data: reports = {}, isLoading, refetch } = useQuery<AdminReportsResponse>({
     queryKey: ['admin-reports', filters],
-    queryFn: () => reportApi.getAdminReports(filters).then(r => {
+    queryFn: () => reportApi.getAdminReports(filters).then((r: any) => {
       const d = r.data
-      return d?.data || d || {}
+      return (d?.data || d || {}) as AdminReportsResponse
     }),
     staleTime: 0,
   })
@@ -73,30 +175,27 @@ export default function AdminReportPage() {
   const gpaTotal = gpaDist.excellent + gpaDist.good + gpaDist.average + gpaDist.weak
   const warningTotal = warnings.lowGpa + warnings.poorAttendance + warnings.both
 
-  // Chart data
-  const gpaData = [
+  const gpaData: GpaChartEntry[] = [
     { name: 'Giỏi (≥3.5)', value: gpaDist.excellent, color: GPA_COLORS.excellent },
     { name: 'Khá (3.0–3.49)', value: gpaDist.good, color: GPA_COLORS.good },
     { name: 'TB (2.0–2.99)', value: gpaDist.average, color: GPA_COLORS.average },
     { name: 'Yếu (<2.0)', value: gpaDist.weak, color: GPA_COLORS.weak },
-  ].filter(d => d.value > 0)
+  ].filter((d) => d.value > 0)
 
-  const warningData = [
+  const warningData: WarningChartEntry[] = [
     { name: 'GPA < 2.0', value: warnings.lowGpa, color: WARNING_COLORS.lowGpa },
     { name: 'Điểm danh < 50%', value: warnings.poorAttendance, color: WARNING_COLORS.poorAttendance },
     { name: 'Cả hai', value: warnings.both, color: WARNING_COLORS.both },
-  ].filter(d => d.value > 0)
+  ].filter((d) => d.value > 0)
 
-  const debtData = (creditDebt.byRange || []).map(r => ({
+  const debtData: DebtChartEntry[] = (creditDebt.byRange || []).map((r): DebtChartEntry => ({
     range: r.range,
     count: r.count,
   }))
 
-  // Export Excel
-  function handleExportExcel() {
+  function handleExportExcel(): void {
     const wb = XLSX.utils.book_new()
 
-    // Sheet 1: GPA Distribution
     const gpaSheet = XLSX.utils.json_to_sheet([
       { 'Xếp loại': 'Giỏi (≥3.5)', 'Số SV': gpaDist.excellent, 'Tỷ lệ': gpaTotal ? Math.round(gpaDist.excellent / gpaTotal * 100) + '%' : '0%' },
       { 'Xếp loại': 'Khá (3.0–3.49)', 'Số SV': gpaDist.good, 'Tỷ lệ': gpaTotal ? Math.round(gpaDist.good / gpaTotal * 100) + '%' : '0%' },
@@ -105,7 +204,6 @@ export default function AdminReportPage() {
     ])
     XLSX.utils.book_append_sheet(wb, gpaSheet, 'Phân bố GPA')
 
-    // Sheet 2: Cảnh báo
     const warnSheet = XLSX.utils.json_to_sheet([
       { 'Loại cảnh báo': 'GPA thấp (<2.0)', 'Số SV': warnings.lowGpa },
       { 'Loại cảnh báo': 'Điểm danh thấp (<50%)', 'Số SV': warnings.poorAttendance },
@@ -113,21 +211,19 @@ export default function AdminReportPage() {
     ])
     XLSX.utils.book_append_sheet(wb, warnSheet, 'Cảnh báo học tập')
 
-    // Sheet 3: Nợ tín chỉ
     const debtSheet = XLSX.utils.json_to_sheet(
-      (creditDebt.byRange || []).map(r => ({ 'Khoảng nợ': r.range, 'Số sinh viên': r.count }))
+      (creditDebt.byRange || []).map((r) => ({ 'Khoảng nợ': r.range, 'Số sinh viên': r.count }))
     )
     XLSX.utils.book_append_sheet(wb, debtSheet, 'Nợ tín chỉ')
 
-    // Sheet 4: Top nợ tín chỉ
     if (topDebt.length > 0) {
       const topSheet = XLSX.utils.json_to_sheet(
         topDebt.map((s, i) => ({
           'STT': i + 1,
           'Mã SV': s.studentCode || '',
           'Họ tên': s.fullName || s.studentName || '',
-          'Số tín chỉ nợ': s.creditDebt || s.debt || 0,
-          'GPA': s.gpa || s.GPA || '',
+          'Số tín chỉ nợ': s.creditDebt ?? s.debt ?? 0,
+          'GPA': s.gpa ?? s.GPA ?? '',
           'Lớp': s.className || s.adminClassName || '',
         }))
       )
@@ -140,8 +236,8 @@ export default function AdminReportPage() {
     toast.success('Đã tải file Excel!')
   }
 
-  function handleFacultyChange(fid) {
-    setFilters(f => ({ ...f, facultyId: fid, majorId: '' }))
+  function handleFacultyChange(fid: string): void {
+    setFilters((f) => ({ ...f, facultyId: fid, majorId: '' }))
   }
 
   return (
@@ -156,33 +252,32 @@ export default function AdminReportPage() {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="card mb-3">
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-3">
               <label className="form-label">Năm học</label>
               <select className="form-control" value={filters.schoolYearId}
-                onChange={e => setFilters(f => ({ ...f, schoolYearId: e.target.value }))}>
+                onChange={(e) => setFilters((f) => ({ ...f, schoolYearId: e.target.value }))}>
                 <option value="">— Tất cả —</option>
-                {schoolYears.map(s => <option key={s.schoolYearId} value={s.schoolYearId}>{s.yearName || s.schoolYearCode}</option>)}
+                {schoolYears.map((s) => <option key={s.schoolYearId} value={s.schoolYearId}>{s.yearName || s.schoolYearCode}</option>)}
               </select>
             </div>
             <div className="col-md-3">
               <label className="form-label">Khoa</label>
               <select className="form-control" value={filters.facultyId}
-                onChange={e => handleFacultyChange(e.target.value)}>
+                onChange={(e) => handleFacultyChange(e.target.value)}>
                 <option value="">— Tất cả —</option>
-                {faculties.map(f => <option key={f.facultyId} value={f.facultyId}>{f.facultyName || f.name}</option>)}
+                {faculties.map((f) => <option key={f.facultyId} value={f.facultyId}>{f.facultyName || f.name}</option>)}
               </select>
             </div>
             <div className="col-md-3">
               <label className="form-label">Ngành</label>
               <select className="form-control" value={filters.majorId}
-                onChange={e => setFilters(f => ({ ...f, majorId: e.target.value }))}
+                onChange={(e) => setFilters((f) => ({ ...f, majorId: e.target.value }))}
                 disabled={!filters.facultyId}>
                 <option value="">— Tất cả —</option>
-                {majors.map(m => <option key={m.majorId} value={m.majorId}>{m.majorName || m.name}</option>)}
+                {majors.map((m) => <option key={m.majorId} value={m.majorId}>{m.majorName || m.name}</option>)}
               </select>
             </div>
             <div className="col-md-3 d-flex align-items-end">
@@ -200,7 +295,6 @@ export default function AdminReportPage() {
 
       {!isLoading && (
         <>
-          {/* Summary stats */}
           <div className="row mb-3">
             <div className="col-md-3 col-6">
               <div className="card text-center">
@@ -236,9 +330,7 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* Charts row */}
           <div className="row mb-3">
-            {/* GPA Distribution Pie */}
             <div className="col-lg-4 mb-3">
               <div className="card h-100">
                 <div className="card-header"><strong><i className="fas fa-chart-pie"></i> Phân bố GPA</strong></div>
@@ -261,7 +353,7 @@ export default function AdminReportPage() {
                             <Cell key={idx} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v) => `${v} SV`} />
+                        <Tooltip formatter={(v: number) => `${v} SV`} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
@@ -272,7 +364,6 @@ export default function AdminReportPage() {
               </div>
             </div>
 
-            {/* Academic Warnings Doughnut */}
             <div className="col-lg-4 mb-3">
               <div className="card h-100">
                 <div className="card-header"><strong><i className="fas fa-exclamation-triangle"></i> Cảnh báo học tập</strong></div>
@@ -295,7 +386,7 @@ export default function AdminReportPage() {
                             <Cell key={idx} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v) => `${v} SV`} />
+                        <Tooltip formatter={(v: number) => `${v} SV`} />
                         <Legend />
                       </PieChart>
                     </ResponsiveContainer>
@@ -306,7 +397,6 @@ export default function AdminReportPage() {
               </div>
             </div>
 
-            {/* Credit Debt Bar */}
             <div className="col-lg-4 mb-3">
               <div className="card h-100">
                 <div className="card-header"><strong><i className="fas fa-chart-bar"></i> Nợ tín chỉ theo khoảng</strong></div>
@@ -316,7 +406,7 @@ export default function AdminReportPage() {
                       <BarChart data={debtData}>
                         <XAxis dataKey="range" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(v) => `${v} SV`} />
+                        <Tooltip formatter={(v: number) => `${v} SV`} />
                         <Bar dataKey="count" fill={DEBT_COLORS} radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -328,7 +418,6 @@ export default function AdminReportPage() {
             </div>
           </div>
 
-          {/* Top credit debt table */}
           {topDebt.length > 0 && (
             <div className="card">
               <div className="card-header">

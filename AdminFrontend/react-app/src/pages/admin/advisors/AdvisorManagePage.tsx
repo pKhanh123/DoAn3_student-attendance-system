@@ -3,52 +3,107 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import advisorApi from '../../../api/advisorApi'
 
-function getPages(currentPage, totalPages) {
-  const pages = []
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Advisor {
+  advisorId: string
+  advisorCode?: string
+  fullName: string
+  email: string
+  phone?: string | null
+  departmentId?: string | number
+  departmentName?: string
+  isActive?: boolean
+  studentCount?: number
+  assignedStudents?: number
+}
+
+interface Department {
+  departmentId: string | number
+  departmentName: string
+}
+
+interface AdvisorFormState {
+  fullName: string
+  email: string
+  phone: string
+  departmentId: string
+  isActive: boolean
+}
+
+interface FormErrors {
+  fullName?: string
+  email?: string
+  departmentId?: string
+}
+
+interface AssignStudentsPayload {
+  advisorId: string
+  studentIds: string[]
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+    } | string
+  }
+}
+
+// ── Pagination helpers ─────────────────────────────────────────────────────────
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function AdvisorManagePage() {
+export default function AdvisorManagePage(): React.JSX.Element {
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState('')
-  const [filterDept, setFilterDept] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState<string>('')
+  const [filterDept, setFilterDept] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
   // Modal state
-  const [showModal, setShowModal] = useState(false)
-  const [editingAdvisor, setEditingAdvisor] = useState(null)
-  const [showAssignModal, setShowAssignModal] = useState(false)
-  const [selectedAdvisor, setSelectedAdvisor] = useState(null)
-  const [advisorForm, setAdvisorForm] = useState({
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [editingAdvisor, setEditingAdvisor] = useState<Advisor | null>(null)
+  const [showAssignModal, setShowAssignModal] = useState<boolean>(false)
+  const [selectedAdvisor, setSelectedAdvisor] = useState<Advisor | null>(null)
+  const [advisorForm, setAdvisorForm] = useState<AdvisorFormState>({
     fullName: '', email: '', phone: '', departmentId: '', isActive: true,
   })
-  const [formErrors, setFormErrors] = useState({})
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
   // Fetch advisors
-  const { data: advisors = [], isLoading } = useQuery({
+  const { data: advisors = [], isLoading } = useQuery<Advisor[]>({
     queryKey: ['advisors'],
-    queryFn: () => advisorApi.getAll().then(r => r.data?.data || r.data || []),
+    queryFn: () => advisorApi.getAll().then(r => {
+      const d = r.data as { data?: Advisor[] } | Advisor[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Advisor[] }).data : d) || []
+    }),
     staleTime: 30 * 1000,
   })
 
   // Fetch departments
-  const { data: departments = [] } = useQuery({
+  const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['departments'],
-    queryFn: () => advisorApi.getDepartments().then(r => r.data?.data || r.data || []),
+    queryFn: () => advisorApi.getDepartments().then(r => {
+      const d = r.data as { data?: Department[] } | Department[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Department[] }).data : d) || []
+    }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       if (!advisorForm.fullName || !advisorForm.email || !advisorForm.departmentId)
         throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc')
-      const payload = { ...advisorForm, departmentId: advisorForm.departmentId }
+      const payload: AdvisorFormState = { ...advisorForm, departmentId: advisorForm.departmentId }
       return editingAdvisor
         ? advisorApi.update(editingAdvisor.advisorId, payload)
         : advisorApi.create(payload)
@@ -60,44 +115,55 @@ export default function AdvisorManagePage() {
       setEditingAdvisor(null)
       queryClient.invalidateQueries({ queryKey: ['advisors'] })
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || error.message || 'Lỗi khi lưu cố vấn')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : null) ||
+        (error as Error).message ||
+        'Lỗi khi lưu cố vấn'
+      toast.error(msg as string)
     },
   })
 
   // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id) => advisorApi.delete(id),
+  const deleteMutation = useMutation<unknown, ApiError, string>({
+    mutationFn: (id: string) => advisorApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa cố vấn thành công!')
       queryClient.invalidateQueries({ queryKey: ['advisors'] })
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Không thể xóa cố vấn')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Không thể xóa cố vấn')
+      toast.error(msg as string)
     },
   })
 
   // Assign students mutation
-  const assignMutation = useMutation({
-    mutationFn: ({ advisorId, studentIds }) => advisorApi.assignStudents(advisorId, studentIds),
+  const assignMutation = useMutation<unknown, ApiError, AssignStudentsPayload>({
+    mutationFn: ({ advisorId, studentIds }: AssignStudentsPayload) => advisorApi.assignStudents(advisorId, studentIds),
     onSuccess: () => {
       toast.success('Phân sinh viên thành công!')
       setShowAssignModal(false)
       setSelectedAdvisor(null)
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Lỗi khi phân sinh viên')
+    onError: (error: ApiError) => {
+      const msg =
+        (typeof error.response?.data === 'object' && error.response?.data?.message) ||
+        (typeof error.response?.data === 'string' ? error.response?.data : 'Lỗi khi phân sinh viên')
+      toast.error(msg as string)
     },
   })
 
   // Filter
-  const filtered = advisors.filter(a => {
+  const filtered = advisors.filter((a: Advisor) => {
     const s = search.toLowerCase()
     const matchSearch = !s ||
       (a.fullName || '').toLowerCase().includes(s) ||
       (a.email || '').toLowerCase().includes(s) ||
       (a.advisorCode || '').toLowerCase().includes(s)
-    const matchDept = !filterDept || a.departmentId === filterDept
+    const matchDept = !filterDept || String(a.departmentId) === filterDept
     return matchSearch && matchDept
   })
 
@@ -105,28 +171,28 @@ export default function AdvisorManagePage() {
   const safePage = Math.min(page, totalPages)
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  function openAddModal() {
+  function openAddModal(): void {
     setEditingAdvisor(null)
     setAdvisorForm({ fullName: '', email: '', phone: '', departmentId: '', isActive: true })
     setFormErrors({})
     setShowModal(true)
   }
 
-  function openEditModal(adv) {
+  function openEditModal(adv: Advisor): void {
     setEditingAdvisor(adv)
     setAdvisorForm({
       fullName: adv.fullName || '',
       email: adv.email || '',
       phone: adv.phone || '',
-      departmentId: adv.departmentId || '',
+      departmentId: adv.departmentId ? String(adv.departmentId) : '',
       isActive: adv.isActive ?? true,
     })
     setFormErrors({})
     setShowModal(true)
   }
 
-  function validateForm() {
-    const errs = {}
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {}
     if (!advisorForm.fullName) errs.fullName = 'Họ tên bắt buộc'
     if (!advisorForm.email) errs.email = 'Email bắt buộc'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(advisorForm.email)) errs.email = 'Email không hợp lệ'
@@ -134,18 +200,18 @@ export default function AdvisorManagePage() {
     return errs
   }
 
-  function handleSave() {
+  function handleSave(): void {
     const errs = validateForm()
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return }
     saveMutation.mutate()
   }
 
-  function handleDelete(id) {
+  function handleDelete(id: string): void {
     if (!window.confirm('Bạn có chắc muốn xóa cố vấn này?')) return
     deleteMutation.mutate(id)
   }
 
-  function openAssignModal(adv) {
+  function openAssignModal(adv: Advisor): void {
     setSelectedAdvisor(adv)
     setShowAssignModal(true)
   }
@@ -160,7 +226,7 @@ export default function AdvisorManagePage() {
         <div className="filter-group">
           <select className="form-control" value={filterDept} onChange={e => { setFilterDept(e.target.value); setPage(1) }}>
             <option value="">Tất cả bộ môn</option>
-            {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+            {departments.map(d => <option key={String(d.departmentId)} value={String(d.departmentId)}>{d.departmentName}</option>)}
           </select>
           <button className="btn btn-primary" onClick={openAddModal}>
             <i className="fas fa-plus"></i> Thêm CVHT
@@ -179,9 +245,9 @@ export default function AdvisorManagePage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan="8" className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                  <tr><td colSpan={8} className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan="8" className="text-center">Không có dữ liệu</td></tr>
+                  <tr><td colSpan={8} className="text-center">Không có dữ liệu</td></tr>
                 ) : (
                   paginated.map(a => (
                     <tr key={a.advisorId}>
@@ -278,7 +344,7 @@ export default function AdvisorManagePage() {
                   value={advisorForm.departmentId}
                   onChange={e => setAdvisorForm(f => ({ ...f, departmentId: e.target.value }))}>
                   <option value="">-- Chọn bộ môn --</option>
-                  {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+                  {departments.map(d => <option key={String(d.departmentId)} value={String(d.departmentId)}>{d.departmentName}</option>)}
                 </select>
                 {formErrors.departmentId && <div className="invalid-feedback d-block">{formErrors.departmentId}</div>}
               </div>

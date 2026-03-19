@@ -4,59 +4,106 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import subjectApi from '../../../api/subjectApi'
 
-function getPages(currentPage, totalPages) {
-  const pages = []
+interface ApiError {
+  validation?: FormErrors
+  response?: {
+    data?: {
+      message?: string
+    }
+  }
+}
+
+interface Pagination {
+  totalPages?: number
+  totalCount?: number
+}
+
+interface SubjectItem {
+  subjectId: string
+  subjectCode?: string
+  subjectName?: string
+  credits?: number
+  departmentId?: string
+  departmentName?: string
+  description?: string
+  isActive?: boolean
+}
+
+interface DepartmentItem {
+  departmentId: string
+  departmentName: string
+}
+
+interface SubjectForm {
+  subjectCode: string
+  subjectName: string
+  credits: number | string
+  departmentId: string
+  description: string
+  isActive: boolean
+}
+
+interface FormErrors {
+  subjectCode?: string
+  subjectName?: string
+  departmentId?: string
+}
+
+interface SubjectQueryData {
+  data: SubjectItem[]
+  pagination: Pagination
+}
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function SubjectListPage() {
+export default function SubjectListPage(): React.JSX.Element {
   const navigate = useNavigate()
+  void navigate
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState('')
-  const [filterDept, setFilterDept] = useState('')
-  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState<string>('')
+  const [filterDept, setFilterDept] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
-  // Modal state
-  const [showModal, setShowModal] = useState(false)
-  const [editingSubject, setEditingSubject] = useState(null)
-  const [form, setForm] = useState({
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [editingSubject, setEditingSubject] = useState<SubjectItem | null>(null)
+  const [form, setForm] = useState<SubjectForm>({
     subjectCode: '', subjectName: '', credits: 3,
     departmentId: '', description: '', isActive: true,
   })
-  const [formErrors, setFormErrors] = useState({})
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
-  // Fetch subjects
-  const { data: rawData = {}, isLoading } = useQuery({
+  const { data: rawData = { data: [], pagination: {} }, isLoading } = useQuery<SubjectQueryData>({
     queryKey: ['subjects', page, search, filterDept],
     queryFn: () => {
-      const params = { page, pageSize }
+      const params: Record<string, string | number> = { page, pageSize }
       if (search) params.search = search
       if (filterDept) params.departmentId = filterDept
-      return subjectApi.getAll(params).then(r => {
+      return subjectApi.getAll(params).then((r: any) => {
         const d = r.data
-        if (Array.isArray(d)) return { data: d, pagination: {} }
-        return { data: d?.data || d?.items || [], pagination: d?.pagination || {} }
+        if (Array.isArray(d)) return { data: d as SubjectItem[], pagination: {} }
+        return { data: (d?.data || d?.items || []) as SubjectItem[], pagination: (d?.pagination || {}) as Pagination }
       })
     },
     staleTime: 30 * 1000,
   })
-  const subjects = Array.isArray(rawData) ? rawData : (rawData?.data || [])
+  const subjects = rawData?.data || []
   const pagination = rawData?.pagination || {}
 
-  // Fetch departments
-  const { data: departments = [] } = useQuery({
+  const { data: departments = [] } = useQuery<DepartmentItem[]>({
     queryKey: ['departments'],
-    queryFn: () => subjectApi.getDepartments().then(r => r.data?.data || r.data || []),
+    queryFn: () => subjectApi.getDepartments().then((r: any) => (r.data?.data || r.data || []) as DepartmentItem[]),
     staleTime: 5 * 60 * 1000,
   })
 
-  // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       const errs = validateForm()
       if (Object.keys(errs).length > 0) throw { validation: errs }
@@ -78,8 +125,7 @@ export default function SubjectListPage() {
     },
   })
 
-  // Delete mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutation<unknown, ApiError, string>({
     mutationFn: (id) => subjectApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa môn học thành công!')
@@ -88,33 +134,33 @@ export default function SubjectListPage() {
     onError: (error) => toast.error(error.response?.data?.message || 'Không thể xóa môn học'),
   })
 
-  function validateForm() {
-    const errs = {}
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {}
     if (!form.subjectCode) errs.subjectCode = 'Mã môn bắt buộc'
     if (!form.subjectName) errs.subjectName = 'Tên môn bắt buộc'
     if (!form.departmentId) errs.departmentId = 'Vui lòng chọn bộ môn'
     return errs
   }
 
-  function handleSave() {
+  function handleSave(): void {
     const errs = validateForm()
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return }
     saveMutation.mutate()
   }
 
-  function handleDelete(id) {
+  function handleDelete(id: string): void {
     if (!window.confirm('Bạn có chắc muốn xóa môn học này?')) return
     deleteMutation.mutate(id)
   }
 
-  function openCreate() {
+  function openCreate(): void {
     setEditingSubject(null)
     setForm({ subjectCode: '', subjectName: '', credits: 3, departmentId: '', description: '', isActive: true })
     setFormErrors({})
     setShowModal(true)
   }
 
-  function openEdit(s) {
+  function openEdit(s: SubjectItem): void {
     setEditingSubject(s)
     setForm({
       subjectCode: s.subjectCode || '',
@@ -137,12 +183,12 @@ export default function SubjectListPage() {
       <div className="filter-bar">
         <div className="filter-group" style={{ flex: 1 }}>
           <input type="text" className="form-control" placeholder="Tìm kiếm theo mã, tên môn..."
-            value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} />
         </div>
         <div className="filter-group">
-          <select className="form-control" value={filterDept} onChange={e => { setFilterDept(e.target.value); setPage(1) }}>
+          <select className="form-control" value={filterDept} onChange={(e) => { setFilterDept(e.target.value); setPage(1) }}>
             <option value="">Tất cả bộ môn</option>
-            {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+            {departments.map((d) => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
           </select>
           <button className="btn btn-primary" onClick={openCreate}>
             <i className="fas fa-plus"></i> Thêm môn
@@ -161,11 +207,11 @@ export default function SubjectListPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan="6" className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                  <tr><td colSpan={6} className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center">Không có dữ liệu</td></tr>
+                  <tr><td colSpan={6} className="text-center">Không có dữ liệu</td></tr>
                 ) : (
-                  paginated.map(s => (
+                  paginated.map((s) => (
                     <tr key={s.subjectId}>
                       <td><strong>{s.subjectCode}</strong></td>
                       <td>{s.subjectName}</td>
@@ -198,13 +244,13 @@ export default function SubjectListPage() {
                 Hiển thị {(safePage-1)*pageSize+1}–{Math.min(safePage*pageSize, subjects.length)} / {pagination.totalCount || subjects.length}
               </div>
               <div className="pagination">
-                <button className="btn btn-sm" onClick={() => setPage(p => Math.max(1,p-1))} disabled={safePage===1}>
+                <button className="btn btn-sm" onClick={() => setPage((p) => Math.max(1,p-1))} disabled={safePage===1}>
                   <i className="fas fa-chevron-left"></i> Trước
                 </button>
-                {getPages(safePage, totalPages).map(p => (
+                {getPages(safePage, totalPages).map((p) => (
                   <button key={p} className={`btn btn-sm ${p===safePage?'btn-primary':'btn-outline'}`} onClick={() => setPage(p)}>{p}</button>
                 ))}
-                <button className="btn btn-sm" onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={safePage===totalPages}>
+                <button className="btn btn-sm" onClick={() => setPage((p) => Math.min(totalPages,p+1))} disabled={safePage===totalPages}>
                   Sau <i className="fas fa-chevron-right"></i>
                 </button>
               </div>
@@ -213,10 +259,9 @@ export default function SubjectListPage() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{editingSubject ? 'Chỉnh sửa môn học' : 'Thêm môn học mới'}</h4>
               <button className="btn-close" onClick={() => setShowModal(false)}>×</button>
@@ -227,7 +272,7 @@ export default function SubjectListPage() {
                   <label>Mã môn <span className="text-danger">*</span></label>
                   <input className={`form-control${formErrors.subjectCode ? ' is-invalid' : ''}`}
                     value={form.subjectCode}
-                    onChange={e => setForm(f => ({ ...f, subjectCode: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, subjectCode: e.target.value }))}
                     placeholder="VD: CNPM" />
                   {formErrors.subjectCode && <div className="invalid-feedback d-block">{formErrors.subjectCode}</div>}
                 </div>
@@ -235,14 +280,14 @@ export default function SubjectListPage() {
                   <label>Số tín chỉ</label>
                   <input className="form-control" type="number" min="1" max="20"
                     value={form.credits}
-                    onChange={e => setForm(f => ({ ...f, credits: e.target.value }))} />
+                    onChange={(e) => setForm((f) => ({ ...f, credits: e.target.value }))} />
                 </div>
               </div>
               <div className="form-group mb-3">
                 <label>Tên môn <span className="text-danger">*</span></label>
                 <input className={`form-control${formErrors.subjectName ? ' is-invalid' : ''}`}
                   value={form.subjectName}
-                  onChange={e => setForm(f => ({ ...f, subjectName: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, subjectName: e.target.value }))}
                   placeholder="VD: Công nghệ phần mềm" />
                 {formErrors.subjectName && <div className="invalid-feedback d-block">{formErrors.subjectName}</div>}
               </div>
@@ -250,9 +295,9 @@ export default function SubjectListPage() {
                 <label>Bộ môn <span className="text-danger">*</span></label>
                 <select className={`form-control${formErrors.departmentId ? ' is-invalid' : ''}`}
                   value={form.departmentId}
-                  onChange={e => setForm(f => ({ ...f, departmentId: e.target.value }))}>
+                  onChange={(e) => setForm((f) => ({ ...f, departmentId: e.target.value }))}>
                   <option value="">-- Chọn bộ môn --</option>
-                  {departments.map(d => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
+                  {departments.map((d) => <option key={d.departmentId} value={d.departmentId}>{d.departmentName}</option>)}
                 </select>
                 {formErrors.departmentId && <div className="invalid-feedback d-block">{formErrors.departmentId}</div>}
               </div>
@@ -260,14 +305,14 @@ export default function SubjectListPage() {
                 <label>Mô tả</label>
                 <textarea className="form-control"
                   value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  rows="2" placeholder="Mô tả môn học..." />
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  rows={2} placeholder="Mô tả môn học..." />
               </div>
               {editingSubject && (
                 <div className="form-check form-switch mb-3">
                   <input className="form-check-input" type="checkbox" id="subjActive"
                     checked={form.isActive}
-                    onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))}
+                    onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
                     style={{ width: 40, height: 20, cursor: 'pointer' }} />
                   <label className="form-check-label" htmlFor="subjActive">
                     {form.isActive ? 'Hoạt động' : 'Khóa'}

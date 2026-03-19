@@ -5,8 +5,91 @@ import classApi from '../../../api/classApi'
 import lookupApi from '../../../api/lookupApi'
 import scheduleApi from '../../../api/scheduleApi'
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+      error?: string
+    }
+  }
+}
+
+interface ClassItem {
+  classId: string
+  classCode?: string
+  className?: string
+  subjectName?: string
+}
+
+interface SubjectItem {
+  subjectId: string
+  subjectName: string
+}
+
+interface LecturerItem {
+  lecturerId: string
+  fullName: string
+}
+
+interface RoomItem {
+  roomId: string
+  roomCode?: string
+  building?: string
+}
+
+interface SessionItem {
+  sessionId: string
+  classId?: string
+  subjectId?: string
+  lecturerId?: string
+  roomId?: string
+  weekday?: number
+  periodFrom?: number
+  periodTo?: number
+  startTime?: string
+  endTime?: string
+  start_time?: string
+  end_time?: string
+  class_code?: string
+  classCode?: string
+  class_name?: string
+  className?: string
+  subject_name?: string
+  subjectName?: string
+  lecturer_name?: string
+  lecturerName?: string
+  room_code?: string
+  roomCode?: string
+  notes?: string
+}
+
+interface ConflictItem {
+  lecturerName?: string
+  roomCode?: string
+}
+
+interface ConflictResult {
+  lecturerConflicts?: ConflictItem[]
+  roomConflicts?: ConflictItem[]
+  studentConflicts?: unknown[]
+  isOverCapacity?: boolean
+}
+
+interface TimetableForm {
+  classId: string
+  subjectId: string
+  lecturerId: string
+  roomId: string
+  weekday: number
+  periodFrom: number
+  periodTo: number
+  startTime: string
+  endTime: string
+  notes: string
+}
+
 const DAY_NAMES = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
-const PERIOD_TIMES = {
+const PERIOD_TIMES: Record<number, { start: string; end: string }> = {
   1:  { start: '07:00', end: '07:50' },
   2:  { start: '07:55', end: '08:45' },
   3:  { start: '09:00', end: '09:50' },
@@ -21,63 +104,62 @@ const PERIOD_TIMES = {
   12: { start: '17:15', end: '18:05' },
 }
 
-function getIsoWeek(date) {
+function getIsoWeek(date: Date): { year: number; week: number } {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = d.getUTCDay() || 7
   d.setUTCDate(d.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
   return { year: d.getUTCFullYear(), week: weekNo }
 }
 
-function formatTime(t) {
+function formatTime(t?: string | null): string {
   if (!t) return ''
   return String(t).substring(0, 5)
 }
 
-function timeToApi(t) {
+function timeToApi(t?: string | null): string | null {
   if (!t) return null
   const s = String(t)
-  if (s.length === 5) return s + ':00'
+  if (s.length === 5) return `${s}:00`
   if (s.length === 8) return s
   return null
 }
 
-export default function AdminTimetablePage() {
+export default function AdminTimetablePage(): React.JSX.Element {
   const queryClient = useQueryClient()
 
   const today = new Date()
   const iso = getIsoWeek(today)
 
-  const [year, setYear] = useState(iso.year)
-  const [week, setWeek] = useState(iso.week)
-  const [selectedClassId, setSelectedClassId] = useState('')
-  const [classSearch, setClassSearch] = useState('')
+  const [year, setYear] = useState<number>(iso.year)
+  const [week, setWeek] = useState<number>(iso.week)
+  const [selectedClassId, setSelectedClassId] = useState<string>('')
+  const [classSearch, setClassSearch] = useState<string>('')
 
-  const [showForm, setShowForm] = useState(false)
-  const [editMode, setEditMode] = useState(false)
-  const [editingSession, setEditingSession] = useState(null)
-  const [form, setForm] = useState({
+  const [showForm, setShowForm] = useState<boolean>(false)
+  const [editMode, setEditMode] = useState<boolean>(false)
+  const [editingSession, setEditingSession] = useState<SessionItem | null>(null)
+  const [form, setForm] = useState<TimetableForm>({
     classId: '', subjectId: '', lecturerId: '', roomId: '',
     weekday: 2, periodFrom: 1, periodTo: 3,
     startTime: '07:00', endTime: '09:00',
     notes: '',
   })
-  const [conflictResult, setConflictResult] = useState(null)
-  const [checkingConflicts, setCheckingConflicts] = useState(false)
+  const [conflictResult, setConflictResult] = useState<ConflictResult | null>(null)
+  const [checkingConflicts, setCheckingConflicts] = useState<boolean>(false)
 
-  // Fetch classes for dropdown
-  const { data: rawClasses = [] } = useQuery({
+  const { data: rawClasses = [] } = useQuery<ClassItem[]>({
     queryKey: ['classes-dropdown'],
-    queryFn: () => classApi.getAll({ pageSize: 500 }).then(r => {
+    queryFn: () => classApi.getAll({ pageSize: 500 }).then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as ClassItem[]
     }),
     staleTime: 5 * 60 * 1000,
   })
   const allClasses = rawClasses
   const filteredClasses = classSearch
-    ? allClasses.filter(c => {
+    ? allClasses.filter((c) => {
         const s = classSearch.toLowerCase()
         return (c.classCode || '').toLowerCase().includes(s) ||
                (c.className || '').toLowerCase().includes(s) ||
@@ -85,54 +167,49 @@ export default function AdminTimetablePage() {
       })
     : allClasses
 
-  // Fetch subjects, lecturers, rooms in parallel
-  const { data: subjects = [] } = useQuery({
+  const { data: subjects = [] } = useQuery<SubjectItem[]>({
     queryKey: ['subjects-dropdown'], staleTime: 5 * 60 * 1000,
-    queryFn: () => lookupApi.getSubjects().then(r => {
+    queryFn: () => lookupApi.getSubjects().then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as SubjectItem[]
     }),
   })
-  const { data: lecturers = [] } = useQuery({
+  const { data: lecturers = [] } = useQuery<LecturerItem[]>({
     queryKey: ['lecturers-dropdown'], staleTime: 5 * 60 * 1000,
-    queryFn: () => lookupApi.getLecturers().then(r => {
+    queryFn: () => lookupApi.getLecturers().then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as LecturerItem[]
     }),
   })
-  const { data: rooms = [] } = useQuery({
+  const { data: rooms = [] } = useQuery<RoomItem[]>({
     queryKey: ['rooms-dropdown'], staleTime: 5 * 60 * 1000,
-    queryFn: () => lookupApi.getRooms().then(r => {
+    queryFn: () => lookupApi.getRooms().then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
-    }).catch(() => scheduleApi.getRooms(null, true).then(r => {
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as RoomItem[]
+    }).catch(() => scheduleApi.getRooms(null, true).then((r: any) => {
       const d = r.data
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as RoomItem[]
     })),
   })
 
-  // Fetch sessions
-  const { data: sessions = [], isLoading } = useQuery({
+  const { data: sessions = [], isLoading } = useQuery<SessionItem[]>({
     queryKey: ['admin-sessions', year, week, selectedClassId],
     queryFn: () => {
-      const params = { year, week }
-      if (selectedClassId) params.classId = selectedClassId
-      return scheduleApi.getAllByWeek(year, week).then(r => {
+      return scheduleApi.getAllByWeek(year, week).then((r: any) => {
         const d = r.data
-        const data = Array.isArray(d) ? d : (d?.data || d?.items || [])
+        const data = (Array.isArray(d) ? d : (d?.data || d?.items || [])) as SessionItem[]
         return selectedClassId
-          ? data.filter(s => (s.classId || s.class_id) == selectedClassId)
+          ? data.filter((s) => String(s.classId || (s as any).class_id) === selectedClassId)
           : data
       })
     },
     staleTime: 30 * 1000,
   })
 
-  // Build grid: weekday -> list of sessions
-  const grid = {}
+  const grid: Record<number, SessionItem[]> = {}
   for (let d = 1; d <= 7; d++) grid[d] = []
-  sessions.forEach(s => {
-    const wd = s.weekday
+  sessions.forEach((s) => {
+    const wd = s.weekday || 0
     if (wd >= 1 && wd <= 7) {
       grid[wd].push({
         ...s,
@@ -147,13 +224,11 @@ export default function AdminTimetablePage() {
     }
   })
 
-  // Sort each day's sessions by startTime
-  Object.keys(grid).forEach(d => {
-    grid[d].sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
+  Object.keys(grid).forEach((d) => {
+    grid[Number(d)].sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))
   })
 
-  // Check conflicts mutation
-  const checkMutation = useMutation({
+  const checkMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       const payload = {
         classId: form.classId || null,
@@ -170,17 +245,17 @@ export default function AdminTimetablePage() {
       setCheckingConflicts(true)
       return scheduleApi.checkConflicts(payload)
     },
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       setCheckingConflicts(false)
-      setConflictResult(res.data?.data || res.data)
-      const cr = res.data?.data || res.data
+      const cr: ConflictResult = res.data?.data || res.data
+      setConflictResult(cr)
       const hasConflict =
-        (cr.lecturerConflicts?.length > 0) ||
-        (cr.roomConflicts?.length > 0) ||
-        (cr.studentConflicts?.length > 0) ||
-        cr.isOverCapacity
+        (cr.lecturerConflicts?.length || 0) > 0 ||
+        (cr.roomConflicts?.length || 0) > 0 ||
+        (cr.studentConflicts?.length || 0) > 0 ||
+        !!cr.isOverCapacity
       if (!hasConflict) toast.success('Không có xung đột! Có thể tạo phiên học.')
-      else toast.warning('Phát hiện xung đột, xem chi tiết bên dưới.')
+      else toast('Phát hiện xung đột, xem chi tiết bên dưới.', { icon: '⚠️' })
     },
     onError: (err) => {
       setCheckingConflicts(false)
@@ -189,8 +264,7 @@ export default function AdminTimetablePage() {
     },
   })
 
-  // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       const payload = {
         classId: form.classId,
@@ -205,7 +279,7 @@ export default function AdminTimetablePage() {
         notes: form.notes || null,
       }
       return editMode
-        ? scheduleApi.update(editingSession.sessionId, payload)
+        ? scheduleApi.update((editingSession as SessionItem).sessionId, payload)
         : scheduleApi.create(payload)
     },
     onSuccess: () => {
@@ -222,8 +296,7 @@ export default function AdminTimetablePage() {
     },
   })
 
-  // Delete mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutation<unknown, ApiError, string>({
     mutationFn: (id) => scheduleApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa phiên học thành công!')
@@ -232,15 +305,14 @@ export default function AdminTimetablePage() {
     onError: (err) => toast.error(err.response?.data?.message || 'Lỗi xóa phiên'),
   })
 
-  // Helpers
-  function updatePeriodDisplay(pf, pt) {
+  function updatePeriodDisplay(pf: number, pt: number): string {
     if (pf && pt && PERIOD_TIMES[pf] && PERIOD_TIMES[pt]) {
       return `${PERIOD_TIMES[pf].start} – ${PERIOD_TIMES[pt].end}`
     }
     return ''
   }
 
-  function openCreate() {
+  function openCreate(): void {
     setEditMode(false)
     setEditingSession(null)
     setConflictResult(null)
@@ -253,7 +325,7 @@ export default function AdminTimetablePage() {
     setShowForm(true)
   }
 
-  function openEdit(s) {
+  function openEdit(s: SessionItem): void {
     setEditMode(true)
     setEditingSession(s)
     setConflictResult(null)
@@ -272,16 +344,15 @@ export default function AdminTimetablePage() {
     setShowForm(true)
   }
 
-  function handleDelete(session) {
+  function handleDelete(session: SessionItem): void {
     if (!window.confirm('Xóa phiên học này?')) return
     deleteMutation.mutate(session.sessionId)
   }
 
-  function handleFormPeriodChange(field, val) {
+  function handleFormPeriodChange(field: 'periodFrom' | 'periodTo', val: string): void {
     const n = Number(val)
-    setForm(f => {
-      const next = { ...f, [field]: n }
-      // Auto-update time from period
+    setForm((f) => {
+      const next: TimetableForm = { ...f, [field]: n }
       if (next.periodFrom && next.periodTo && PERIOD_TIMES[next.periodFrom] && PERIOD_TIMES[next.periodTo]) {
         next.startTime = PERIOD_TIMES[next.periodFrom].start
         next.endTime = PERIOD_TIMES[next.periodTo].end
@@ -299,7 +370,6 @@ export default function AdminTimetablePage() {
           <h1><i className="fas fa-clock"></i> Thời khóa biểu</h1>
           <p className="text-muted mb-0">Tuần {week} / Năm {year}</p>
         </div>
-        {/* Week nav */}
         <div className="d-flex align-items-center gap-2">
           <button className="btn btn-outline-secondary btn-sm" onClick={() => {
             let w = week - 1, y = year
@@ -310,11 +380,11 @@ export default function AdminTimetablePage() {
           </button>
           <input type="number" className="form-control form-control-sm" style={{ width: 70 }}
             value={week} min={1} max={53}
-            onChange={e => setWeek(Math.max(1, Math.min(53, Number(e.target.value))))} />
+            onChange={(e) => setWeek(Math.max(1, Math.min(53, Number(e.target.value))))} />
           <span>–</span>
           <input type="number" className="form-control form-control-sm" style={{ width: 90 }}
             value={year} min={2000} max={2100}
-            onChange={e => setYear(Number(e.target.value))} />
+            onChange={(e) => setYear(Number(e.target.value))} />
           <button className="btn btn-outline-secondary btn-sm" onClick={() => {
             let w = week + 1, y = year
             if (w > 53) { w = 1; y++ }
@@ -328,7 +398,6 @@ export default function AdminTimetablePage() {
         </div>
       </div>
 
-      {/* Class filter */}
       <div className="card mb-3">
         <div className="card-body py-2">
           <div className="row g-2 align-items-center">
@@ -338,7 +407,7 @@ export default function AdminTimetablePage() {
             <div className="col-md-6">
               <input type="text" className="form-control form-control-sm"
                 placeholder="Tìm mã, tên lớp..."
-                value={classSearch} onChange={e => setClassSearch(e.target.value)} />
+                value={classSearch} onChange={(e) => setClassSearch(e.target.value)} />
             </div>
           </div>
           {classSearch && (
@@ -348,8 +417,8 @@ export default function AdminTimetablePage() {
                   onClick={() => { setSelectedClassId(''); setClassSearch('') }}>
                   — Xem tất cả —
                 </button>
-                {filteredClasses.slice(0, 20).map(c => (
-                  <button key={c.classId} className={`list-group-item list-group-item-action py-1 small ${selectedClassId == c.classId ? 'active' : ''}`}
+                {filteredClasses.slice(0, 20).map((c) => (
+                  <button key={c.classId} className={`list-group-item list-group-item-action py-1 small ${selectedClassId === c.classId ? 'active' : ''}`}
                     onClick={() => { setSelectedClassId(c.classId); setClassSearch('') }}>
                     <strong>{c.classCode}</strong> – {c.className}
                     {c.subjectName ? ` (${c.subjectName})` : ''}
@@ -366,7 +435,6 @@ export default function AdminTimetablePage() {
         </div>
       </div>
 
-      {/* Timetable grid */}
       <div className="card">
         <div className="card-body p-0">
           {isLoading ? (
@@ -392,7 +460,7 @@ export default function AdminTimetablePage() {
                         </td>
                         {DAY_NAMES.map((_, di) => {
                           const wd = di === 0 ? 7 : di
-                          const cellSessions = grid[wd]?.filter(s => {
+                          const cellSessions = grid[wd]?.filter((s) => {
                             const pf = s.periodFrom || 0
                             const pt = s.periodTo || 0
                             return p >= pf && p <= pt
@@ -431,10 +499,9 @@ export default function AdminTimetablePage() {
         </div>
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-content modal-lg" onClick={e => e.stopPropagation()}>
+          <div className="modal-content modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{editMode ? 'Chỉnh sửa phiên học' : 'Thêm phiên học mới'}</h4>
               <button className="btn-close" onClick={() => setShowForm(false)}>×</button>
@@ -444,17 +511,17 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-6 mb-3">
                   <label>Lớp học <span className="text-danger">*</span></label>
                   <select className="form-control" value={form.classId}
-                    onChange={e => setForm(f => ({ ...f, classId: e.target.value }))}>
+                    onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}>
                     <option value="">— Chọn lớp —</option>
-                    {allClasses.map(c => <option key={c.classId} value={c.classId}>{c.classCode} – {c.className}</option>)}
+                    {allClasses.map((c) => <option key={c.classId} value={c.classId}>{c.classCode} – {c.className}</option>)}
                   </select>
                 </div>
                 <div className="form-group col-md-6 mb-3">
                   <label>Môn học <span className="text-danger">*</span></label>
                   <select className="form-control" value={form.subjectId}
-                    onChange={e => setForm(f => ({ ...f, subjectId: e.target.value }))}>
+                    onChange={(e) => setForm((f) => ({ ...f, subjectId: e.target.value }))}>
                     <option value="">— Chọn môn —</option>
-                    {subjects.map(s => <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>)}
+                    {subjects.map((s) => <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>)}
                   </select>
                 </div>
               </div>
@@ -462,17 +529,17 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-6 mb-3">
                   <label>Giảng viên</label>
                   <select className="form-control" value={form.lecturerId}
-                    onChange={e => setForm(f => ({ ...f, lecturerId: e.target.value }))}>
+                    onChange={(e) => setForm((f) => ({ ...f, lecturerId: e.target.value }))}>
                     <option value="">— Chọn GV —</option>
-                    {lecturers.map(l => <option key={l.lecturerId} value={l.lecturerId}>{l.fullName}</option>)}
+                    {lecturers.map((l) => <option key={l.lecturerId} value={l.lecturerId}>{l.fullName}</option>)}
                   </select>
                 </div>
                 <div className="form-group col-md-6 mb-3">
                   <label>Phòng</label>
                   <select className="form-control" value={form.roomId}
-                    onChange={e => setForm(f => ({ ...f, roomId: e.target.value }))}>
+                    onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}>
                     <option value="">— Chọn phòng —</option>
-                    {rooms.map(r => <option key={r.roomId} value={r.roomId}>{r.roomCode}{r.building ? ` (${r.building})` : ''}</option>)}
+                    {rooms.map((r) => <option key={r.roomId} value={r.roomId}>{r.roomCode}{r.building ? ` (${r.building})` : ''}</option>)}
                   </select>
                 </div>
               </div>
@@ -480,8 +547,8 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-3 mb-3">
                   <label>Thứ</label>
                   <select className="form-control" value={form.weekday}
-                    onChange={e => setForm(f => ({ ...f, weekday: Number(e.target.value) }))}>
-                    {[{ v: 1, l: 'Chủ nhật' }, { v: 2, l: 'Thứ 2' }, { v: 3, l: 'Thứ 3' }, { v: 4, l: 'Thứ 4' }, { v: 5, l: 'Thứ 5' }, { v: 6, l: 'Thứ 6' }, { v: 7, l: 'Thứ 7' }].map(d => (
+                    onChange={(e) => setForm((f) => ({ ...f, weekday: Number(e.target.value) }))}>
+                    {[{ v: 1, l: 'Chủ nhật' }, { v: 2, l: 'Thứ 2' }, { v: 3, l: 'Thứ 3' }, { v: 4, l: 'Thứ 4' }, { v: 5, l: 'Thứ 5' }, { v: 6, l: 'Thứ 6' }, { v: 7, l: 'Thứ 7' }].map((d) => (
                       <option key={d.v} value={d.v}>{d.l}</option>
                     ))}
                   </select>
@@ -489,8 +556,8 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-3 mb-3">
                   <label>Tiết bắt đầu</label>
                   <select className="form-control" value={form.periodFrom}
-                    onChange={e => handleFormPeriodChange('periodFrom', e.target.value)}>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(p => (
+                    onChange={(e) => handleFormPeriodChange('periodFrom', e.target.value)}>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((p) => (
                       <option key={p} value={p}>Tiết {p} ({PERIOD_TIMES[p]?.start})</option>
                     ))}
                   </select>
@@ -498,8 +565,8 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-3 mb-3">
                   <label>Tiết kết thúc</label>
                   <select className="form-control" value={form.periodTo}
-                    onChange={e => handleFormPeriodChange('periodTo', e.target.value)}>
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(p => (
+                    onChange={(e) => handleFormPeriodChange('periodTo', e.target.value)}>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((p) => (
                       <option key={p} value={p}>Tiết {p} ({PERIOD_TIMES[p]?.end})</option>
                     ))}
                   </select>
@@ -513,29 +580,28 @@ export default function AdminTimetablePage() {
                 <div className="form-group col-md-6 mb-3">
                   <label>Giờ bắt đầu</label>
                   <input type="time" className="form-control" value={form.startTime}
-                    onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))} />
+                    onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))} />
                 </div>
                 <div className="form-group col-md-6 mb-3">
                   <label>Giờ kết thúc</label>
                   <input type="time" className="form-control" value={form.endTime}
-                    onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))} />
+                    onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))} />
                 </div>
               </div>
               <div className="form-group mb-3">
                 <label>Ghi chú</label>
                 <textarea className="form-control" rows={2} value={form.notes}
-                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
               </div>
 
-              {/* Conflict result */}
               {conflictResult && (
                 <div className={`alert ${conflictResult.lecturerConflicts?.length || conflictResult.roomConflicts?.length || conflictResult.isOverCapacity ? 'alert-danger' : 'alert-success'} mb-0`}>
                   <strong>{conflictResult.lecturerConflicts?.length || conflictResult.roomConflicts?.length || conflictResult.isOverCapacity ? '⚠️ Xung đột phát hiện' : '✅ Không có xung đột'}</strong>
-                  {conflictResult.lecturerConflicts?.length > 0 && (
-                    <div className="mt-1"><small>GV: {conflictResult.lecturerConflicts.map(c => c.lecturerName).join(', ')}</small></div>
+                  {(conflictResult.lecturerConflicts?.length || 0) > 0 && (
+                    <div className="mt-1"><small>GV: {conflictResult.lecturerConflicts?.map((c) => c.lecturerName).join(', ')}</small></div>
                   )}
-                  {conflictResult.roomConflicts?.length > 0 && (
-                    <div className="mt-1"><small>Phòng: {conflictResult.roomConflicts.map(c => c.roomCode).join(', ')}</small></div>
+                  {(conflictResult.roomConflicts?.length || 0) > 0 && (
+                    <div className="mt-1"><small>Phòng: {conflictResult.roomConflicts?.map((c) => c.roomCode).join(', ')}</small></div>
                   )}
                   {conflictResult.isOverCapacity && (
                     <div className="mt-1"><small>⚠️ Vượt sức chứa phòng</small></div>

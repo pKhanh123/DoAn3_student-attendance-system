@@ -3,67 +3,103 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import roomApi from '../../../api/roomApi'
 
-function getPages(currentPage, totalPages) {
-  const pages = []
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string
+      error?: string
+    }
+  }
+}
+
+interface Pagination {
+  totalCount?: number
+  totalPages?: number
+}
+
+interface RoomItem {
+  roomId: string
+  roomCode?: string
+  building?: string
+  capacity?: number | null
+  isActive?: boolean
+}
+
+interface RoomQueryData {
+  data: RoomItem[]
+  pagination: Pagination
+}
+
+interface RoomForm {
+  roomCode: string
+  building: string
+  capacity: number | string
+  isActive: boolean
+}
+
+interface FormErrors {
+  roomCode?: string
+  capacity?: string
+}
+
+function getPages(currentPage: number, totalPages: number): number[] {
+  const pages: number[] = []
   const start = Math.max(1, currentPage - 2)
   const end = Math.min(totalPages, currentPage + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
 }
 
-export default function RoomListPage() {
+export default function RoomListPage(): React.JSX.Element {
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState('')
-  const [filterActive, setFilterActive] = useState('') // ''=all, 'true'=active, 'false'=inactive
-  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState<string>('')
+  const [filterActive, setFilterActive] = useState<string>('')
+  const [page, setPage] = useState<number>(1)
   const pageSize = 10
 
-  const [showModal, setShowModal] = useState(false)
-  const [editingRoom, setEditingRoom] = useState(null)
-  const [form, setForm] = useState({ roomCode: '', building: '', capacity: '', isActive: true })
-  const [formErrors, setFormErrors] = useState({})
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [editingRoom, setEditingRoom] = useState<RoomItem | null>(null)
+  const [form, setForm] = useState<RoomForm>({ roomCode: '', building: '', capacity: '', isActive: true })
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
 
-  // Fetch rooms
-  const { data: rawData = {}, isLoading } = useQuery({
+  const { data: rawData = { data: [], pagination: {} }, isLoading } = useQuery<RoomQueryData>({
     queryKey: ['rooms', page, search, filterActive],
     queryFn: () => {
-      const params = { page, pageSize }
+      const params: Record<string, string | number> = { page, pageSize }
       if (search) params.search = search
       if (filterActive === 'true') params.isActive = true
       if (filterActive === 'false') params.isActive = false
-      return roomApi.getAll(params).then(r => {
+      return roomApi.getAll(params).then((r: any) => {
         const d = r.data
-        if (d?.success) return { data: d.data || [], pagination: { totalCount: d.totalCount, totalPages: d.totalPages } }
-        if (Array.isArray(d)) return { data: d, pagination: {} }
-        return { data: d?.data || d?.items || [], pagination: d?.pagination || {} }
+        if (d?.success) return { data: (d.data || []) as RoomItem[], pagination: { totalCount: d.totalCount, totalPages: d.totalPages } as Pagination }
+        if (Array.isArray(d)) return { data: d as RoomItem[], pagination: {} }
+        return { data: (d?.data || d?.items || []) as RoomItem[], pagination: (d?.pagination || {}) as Pagination }
       })
     },
     staleTime: 30 * 1000,
   })
-  const rooms = Array.isArray(rawData) ? rawData : (rawData?.data || [])
+  const rooms = Array.isArray(rawData as unknown) ? [] : (rawData?.data || [])
   const pagination = rawData?.pagination || {}
 
-  // Stats
-  const { data: allRooms = [] } = useQuery({
+  const { data: allRooms = [] } = useQuery<RoomItem[]>({
     queryKey: ['rooms-all'],
-    queryFn: () => roomApi.getAll({ page: 1, pageSize: 1000 }).then(r => {
+    queryFn: () => roomApi.getAll({ page: 1, pageSize: 1000 }).then((r: any) => {
       const d = r.data
       if (d?.success) return d.data || []
-      return Array.isArray(d) ? d : (d?.data || d?.items || [])
+      return (Array.isArray(d) ? d : (d?.data || d?.items || [])) as RoomItem[]
     }),
     staleTime: 60 * 1000,
   })
 
   const stats = {
     total: allRooms.length,
-    active: allRooms.filter(r => r.isActive).length,
-    inactive: allRooms.filter(r => !r.isActive).length,
+    active: allRooms.filter((r) => r.isActive).length,
+    inactive: allRooms.filter((r) => !r.isActive).length,
     capacity: allRooms.reduce((s, r) => s + (r.capacity || 0), 0),
   }
 
-  // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
       const payload = { ...form, capacity: form.capacity ? Number(form.capacity) : null }
       return editingRoom ? roomApi.update(editingRoom.roomId, payload) : roomApi.create(payload)
@@ -82,8 +118,7 @@ export default function RoomListPage() {
     },
   })
 
-  // Toggle active mutation
-  const toggleMutation = useMutation({
+  const toggleMutation = useMutation<unknown, ApiError, RoomItem>({
     mutationFn: (room) => roomApi.update(room.roomId, {
       roomCode: room.roomCode,
       building: room.building,
@@ -97,8 +132,7 @@ export default function RoomListPage() {
     onError: () => toast.error('Không thể cập nhật trạng thái'),
   })
 
-  // Delete mutation
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutation<unknown, ApiError, string>({
     mutationFn: (id) => roomApi.delete(id),
     onSuccess: () => {
       toast.success('Xóa phòng học thành công!')
@@ -114,34 +148,34 @@ export default function RoomListPage() {
   const safePage = Math.min(page, totalPages)
   const paginated = rooms.slice((safePage - 1) * pageSize, safePage * pageSize)
 
-  function validateForm() {
-    const errs = {}
+  function validateForm(): FormErrors {
+    const errs: FormErrors = {}
     if (!form.roomCode?.trim()) errs.roomCode = 'Mã phòng bắt buộc'
-    if (form.capacity && (isNaN(form.capacity) || Number(form.capacity) <= 0)) {
+    if (form.capacity && (isNaN(Number(form.capacity)) || Number(form.capacity) <= 0)) {
       errs.capacity = 'Sức chứa phải > 0'
     }
     return errs
   }
 
-  function handleSave() {
+  function handleSave(): void {
     const errs = validateForm()
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return }
     saveMutation.mutate()
   }
 
-  function handleDelete(room) {
+  function handleDelete(room: RoomItem): void {
     if (!window.confirm(`Xóa phòng "${room.roomCode}"?`)) return
     deleteMutation.mutate(room.roomId)
   }
 
-  function openCreate() {
+  function openCreate(): void {
     setEditingRoom(null)
     setForm({ roomCode: '', building: '', capacity: '', isActive: true })
     setFormErrors({})
     setShowModal(true)
   }
 
-  function openEdit(r) {
+  function openEdit(r: RoomItem): void {
     setEditingRoom(r)
     setForm({
       roomCode: r.roomCode || '',
@@ -155,7 +189,6 @@ export default function RoomListPage() {
 
   return (
     <div>
-      {/* Stats */}
       <div className="row mb-3">
         <div className="col-md-3 col-6 mb-2">
           <div className="card text-center">
@@ -191,14 +224,13 @@ export default function RoomListPage() {
         </div>
       </div>
 
-      {/* Filter bar */}
       <div className="filter-bar">
         <div className="filter-group" style={{ flex: 1 }}>
           <input type="text" className="form-control" placeholder="Tìm kiếm mã phòng, tòa nhà..."
-            value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} />
+            value={search} onChange={(e) => { setSearch(e.target.value); setPage(1) }} />
         </div>
         <div className="filter-group">
-          <select className="form-control" value={filterActive} onChange={e => { setFilterActive(e.target.value); setPage(1) }}>
+          <select className="form-control" value={filterActive} onChange={(e) => { setFilterActive(e.target.value); setPage(1) }}>
             <option value="">Tất cả</option>
             <option value="true">Đang hoạt động</option>
             <option value="false">Không hoạt động</option>
@@ -209,7 +241,6 @@ export default function RoomListPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="card">
         <div className="card-body">
           <div className="table-container">
@@ -221,11 +252,11 @@ export default function RoomListPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan="5" className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                  <tr><td colSpan={5} className="text-center"><i className="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
                 ) : paginated.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center">Không có dữ liệu</td></tr>
+                  <tr><td colSpan={5} className="text-center">Không có dữ liệu</td></tr>
                 ) : (
-                  paginated.map(r => (
+                  paginated.map((r) => (
                     <tr key={r.roomId}>
                       <td><strong>{r.roomCode}</strong></td>
                       <td>{r.building || '—'}</td>
@@ -261,13 +292,13 @@ export default function RoomListPage() {
                 Hiển thị {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, rooms.length)} / {pagination.totalCount || rooms.length}
               </div>
               <div className="pagination">
-                <button className="btn btn-sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={safePage === 1}>
+                <button className="btn btn-sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1}>
                   <i className="fas fa-chevron-left"></i> Trước
                 </button>
-                {getPages(safePage, totalPages).map(p => (
+                {getPages(safePage, totalPages).map((p) => (
                   <button key={p} className={`btn btn-sm ${p === safePage ? 'btn-primary' : 'btn-outline'}`} onClick={() => setPage(p)}>{p}</button>
                 ))}
-                <button className="btn btn-sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
+                <button className="btn btn-sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages}>
                   Sau <i className="fas fa-chevron-right"></i>
                 </button>
               </div>
@@ -276,10 +307,9 @@ export default function RoomListPage() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h4>{editingRoom ? 'Chỉnh sửa phòng học' : 'Thêm phòng học mới'}</h4>
               <button className="btn-close" onClick={() => setShowModal(false)}>×</button>
@@ -289,7 +319,7 @@ export default function RoomListPage() {
                 <label>Mã phòng <span className="text-danger">*</span></label>
                 <input className={`form-control${formErrors.roomCode ? ' is-invalid' : ''}`}
                   value={form.roomCode}
-                  onChange={e => setForm(f => ({ ...f, roomCode: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, roomCode: e.target.value }))}
                   placeholder="VD: A101" />
                 {formErrors.roomCode && <div className="invalid-feedback d-block">{formErrors.roomCode}</div>}
               </div>
@@ -297,7 +327,7 @@ export default function RoomListPage() {
                 <label>Tòa nhà</label>
                 <input className="form-control"
                   value={form.building}
-                  onChange={e => setForm(f => ({ ...f, building: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, building: e.target.value }))}
                   placeholder="VD: Tòa A" />
               </div>
               <div className="form-group mb-3">
@@ -305,7 +335,7 @@ export default function RoomListPage() {
                 <input className={`form-control${formErrors.capacity ? ' is-invalid' : ''}`}
                   type="number" min="1"
                   value={form.capacity}
-                  onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
                   placeholder="VD: 50" />
                 {formErrors.capacity && <div className="invalid-feedback d-block">{formErrors.capacity}</div>}
               </div>
@@ -313,7 +343,7 @@ export default function RoomListPage() {
                 <input className="form-check-input" type="checkbox"
                   id="roomActive"
                   checked={form.isActive}
-                  onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} />
+                  onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))} />
                 <label className="form-check-label" htmlFor="roomActive">Đang hoạt động</label>
               </div>
             </div>

@@ -4,7 +4,65 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import studentApi from '../../../api/studentApi'
 
-function formatDateForInput(dateStr) {
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Faculty {
+  facultyId: string | number
+  facultyName: string
+}
+
+interface Major {
+  majorId: string | number
+  majorName: string
+}
+
+interface AcademicYear {
+  academicYearId: string | number
+  yearName: string
+}
+
+interface StudentPayload {
+  studentCode?: string
+  fullName: string
+  email: string
+  phone?: string | null
+  dateOfBirth?: string | null
+  gender?: string | null
+  address?: string | null
+  facultyId?: string | null
+  majorId?: string | null
+  academicYearId?: string | null
+  cohortYear?: string | null
+}
+
+interface FormErrors {
+  studentCode?: string
+  fullName?: string
+  email?: string
+  phone?: string
+  majorId?: string
+}
+
+interface TouchedFields {
+  studentCode?: boolean
+  fullName?: boolean
+  email?: boolean
+  phone?: boolean
+  facultyId?: boolean
+  majorId?: boolean
+}
+
+interface ApiError {
+  response?: {
+    status?: number
+    data?: {
+      message?: string
+      errors?: Record<string, string[]>
+    } | string
+  }
+}
+
+function formatDateForInput(dateStr: string | null | undefined): string {
   if (!dateStr) return ''
   try {
     const d = new Date(dateStr)
@@ -13,7 +71,7 @@ function formatDateForInput(dateStr) {
   } catch { return '' }
 }
 
-function formatPhone(phone) {
+function formatPhone(phone: string | null | undefined): string {
   if (!phone || typeof phone !== 'string') return ''
   const cleaned = phone.replace(/[\s\-\(\)\.]/g, '')
   if (cleaned.startsWith('+')) return cleaned
@@ -22,8 +80,8 @@ function formatPhone(phone) {
   return cleaned
 }
 
-function validateForm(form, isEdit) {
-  const errors = {}
+function validateForm(form: StudentPayload, isEdit: boolean): FormErrors {
+  const errors: FormErrors = {}
   if (!isEdit) {
     if (!form.studentCode || !/^SV\d+$/i.test(form.studentCode))
       errors.studentCode = 'Mã SV phải có định dạng SV + số (VD: SV001)'
@@ -39,12 +97,12 @@ function validateForm(form, isEdit) {
   return errors
 }
 
-export default function StudentFormPage() {
+export default function StudentFormPage(): React.JSX.Element {
   const navigate = useNavigate()
-  const { id } = useParams()
+  const { id } = useParams<{ id?: string }>()
   const isEditMode = Boolean(id)
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<StudentPayload>({
     studentCode: '',
     fullName: '',
     email: '',
@@ -57,45 +115,54 @@ export default function StudentFormPage() {
     academicYearId: '',
     cohortYear: '',
   })
-  const [errors, setErrors] = useState({})
-  const [touched, setTouched] = useState({})
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [touched, setTouched] = useState<TouchedFields>({})
 
   // Fetch faculties
-  const { data: faculties = [] } = useQuery({
+  const { data: faculties = [] } = useQuery<Faculty[]>({
     queryKey: ['faculties'],
-    queryFn: () => studentApi.getFaculties().then(r => r.data?.data || r.data || []),
+    queryFn: () => studentApi.getFaculties().then(r => {
+      const d = r.data as { data?: Faculty[] } | Faculty[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Faculty[] }).data : d) || []
+    }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Fetch majors when faculty selected
-  const { data: majors = [] } = useQuery({
+  const { data: majors = [] } = useQuery<Major[]>({
     queryKey: ['majors', form.facultyId],
     queryFn: () => form.facultyId
-      ? studentApi.getMajors(form.facultyId).then(r => r.data?.data || r.data || [])
+      ? studentApi.getMajors(String(form.facultyId)).then(r => {
+          const d = r.data as { data?: Major[] } | Major[]
+          return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: Major[] }).data : d) || []
+        })
       : Promise.resolve([]),
     enabled: Boolean(form.facultyId),
     staleTime: 5 * 60 * 1000,
   })
 
   // Fetch academic years
-  const { data: academicYears = [] } = useQuery({
+  const { data: academicYears = [] } = useQuery<AcademicYear[]>({
     queryKey: ['academic-years'],
-    queryFn: () => studentApi.getAcademicYears().then(r => r.data?.data || r.data || []),
+    queryFn: () => studentApi.getAcademicYears().then(r => {
+      const d = r.data as { data?: AcademicYear[] } | AcademicYear[]
+      return (typeof d === 'object' && !Array.isArray(d) ? (d as { data?: AcademicYear[] }).data : d) || []
+    }),
     staleTime: 5 * 60 * 1000,
   })
 
   // Fetch student for edit
   const { isLoading } = useQuery({
     queryKey: ['student', id],
-    queryFn: () => studentApi.getById(id).then(r => {
-      const s = r.data?.data || r.data
+    queryFn: () => studentApi.getById(id!).then(r => {
+      const s = (r.data as { data?: StudentPayload } | StudentPayload)?.data || (r.data as StudentPayload)
       setForm(f => ({
         ...f,
         studentCode: s.studentCode || '',
         fullName: s.fullName || '',
         email: s.email || '',
         phone: s.phone || '',
-        dateOfBirth: formatDateForInput(s.dateOfBirth || s.dob),
+        dateOfBirth: formatDateForInput(s.dateOfBirth || (s as Record<string, string | null>).dob as string | null | undefined),
         gender: s.gender || '',
         address: s.address || '',
         facultyId: s.facultyId || '',
@@ -109,9 +176,9 @@ export default function StudentFormPage() {
   })
 
   // Save mutation
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<unknown, ApiError, void>({
     mutationFn: () => {
-      const payload = {
+      const payload: StudentPayload = {
         ...form,
         dateOfBirth: form.dateOfBirth
           ? new Date(form.dateOfBirth + 'T00:00:00').toISOString()
@@ -123,57 +190,57 @@ export default function StudentFormPage() {
         cohortYear: form.cohortYear || null,
       }
       return isEditMode
-        ? studentApi.update(id, payload)
-        : studentApi.create(payload)
+        ? studentApi.update(id!, payload)
+        : studentApi.create(payload as Omit<StudentPayload, 'facultyId'> & { studentCode: string })
     },
     onSuccess: () => {
       toast.success(`${isEditMode ? 'Cập nhật' : 'Thêm'} sinh viên thành công!`)
       navigate('/admin/students')
     },
-    onError: (error) => {
+    onError: (error: ApiError) => {
       const data = error.response?.data
-      if (data?.message) toast.error(data.message)
-      else if (data?.errors) toast.error(Object.values(data.errors).flat().join('; '))
+      if (typeof data === 'object' && data?.message) toast.error(data.message)
+      else if (typeof data === 'object' && data?.errors) toast.error(Object.values(data.errors).flat().join('; '))
       else if (error.response?.status === 409) toast.error('Mã SV hoặc email đã tồn tại')
       else toast.error('Không thể lưu sinh viên.')
     },
   })
 
-  function handleChange(e) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
     const { name, value } = e.target
     setForm(f => {
       const nf = { ...f, [name]: value }
       if (name === 'facultyId') nf.majorId = ''
       return nf
     })
-    setErrors(err => { const n = { ...err }; delete n[name]; return n })
+    setErrors(err => { const n = { ...err }; delete n[name as keyof FormErrors]; return n })
   }
 
-  function handleBlur(e) {
+  function handleBlur(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>): void {
     const { name } = e.target
     setTouched(t => ({ ...t, [name]: true }))
     const errs = validateForm({ ...form }, isEditMode)
-    setErrors(prev => ({ ...prev, [name]: errs[name] }))
+    setErrors(prev => ({ ...prev, [name]: errs[name as keyof FormErrors] }))
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault()
     const errs = validateForm(form, isEditMode)
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
-      setTouched({ studentCode: true, fullName: true, email: true, phone: true, facultyId: true, majorId: true })
+      setTouched({ studentCode: true, fullName: true, email: true, phone: true, majorId: true })
       toast.error('Vui lòng kiểm tra lại các trường đã nhập')
       return
     }
     saveMutation.mutate()
   }
 
-  const field = (name) => ({
+  const field = (name: keyof StudentPayload) => ({
     name,
-    value: form[name] || '',
+    value: (form[name] ?? '') as string,
     onChange: handleChange,
     onBlur: handleBlur,
-    className: `form-control${touched[name] && errors[name] ? ' is-invalid' : ''}`,
+    className: `form-control${touched[name as keyof TouchedFields] && errors[name as keyof FormErrors] ? ' is-invalid' : ''}`,
   })
 
   return (
@@ -251,14 +318,14 @@ export default function StudentFormPage() {
                     <label>Khoa</label>
                     <select {...field('facultyId')}>
                       <option value="">-- Chọn khoa --</option>
-                      {faculties.map(f => <option key={f.facultyId} value={f.facultyId}>{f.facultyName}</option>)}
+                      {faculties.map(f => <option key={String(f.facultyId)} value={String(f.facultyId)}>{f.facultyName}</option>)}
                     </select>
                   </div>
                   <div className="form-group col-md-4">
                     <label>Ngành <span className="text-danger">*</span></label>
                     <select {...field('majorId')} disabled={!form.facultyId}>
                       <option value="">-- Chọn ngành --</option>
-                      {majors.map(m => <option key={m.majorId} value={m.majorId}>{m.majorName}</option>)}
+                      {majors.map(m => <option key={String(m.majorId)} value={String(m.majorId)}>{m.majorName}</option>)}
                     </select>
                     {touched.majorId && errors.majorId && <div className="invalid-feedback d-block">{errors.majorId}</div>}
                   </div>
@@ -266,7 +333,7 @@ export default function StudentFormPage() {
                     <label>Niên khóa</label>
                     <select {...field('academicYearId')}>
                       <option value="">-- Chọn --</option>
-                      {academicYears.map(a => <option key={a.academicYearId} value={a.academicYearId}>{a.yearName}</option>)}
+                      {academicYears.map(a => <option key={String(a.academicYearId)} value={String(a.academicYearId)}>{a.yearName}</option>)}
                     </select>
                   </div>
                 </div>
