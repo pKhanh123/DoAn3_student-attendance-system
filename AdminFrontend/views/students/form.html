@@ -1,0 +1,114 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="{{isEditMode ? 'Sửa' : 'Thêm'}} Sinh viên"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Thông tin Sinh viên</h3>
+                </div>
+                <div class="card-body">
+                    <form ng-submit="saveStudent()">
+                        <div class="form-row">
+
+                             <div class="form-group">
+                                <label class="form-label required">User ID</label>
+                                <input type="text" class="form-control" ng-model="student.userId" ng-disabled="isEditMode" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label required">Mã sinh viên</label>
+                                <input type="text" class="form-control" ng-model="student.studentCode" ng-disabled="isEditMode" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label required">Họ tên</label>
+                                <input type="text" class="form-control" ng-model="student.fullName" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">Email</label>
+                                <input type="email" class="form-control" ng-model="student.email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" ng-model="student.phone">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Giới tính</label>
+                                <select class="form-control" ng-model="student.gender">
+                                    <option value="">-- Chọn giới tính --</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" 
+                                       ng-model="student.dob"
+                                       ng-model-options="{ timezone: 'UTC' }">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Khoa</label>
+                                <select class="form-control" ng-model="student.facultyId" ng-change="loadMajorsForForm()">
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                        {{faculty.facultyName}}
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Ngành</label>
+                                <select class="form-control" ng-model="student.majorId" ng-disabled="loadingStates.majors || !student.facultyId">
+                                    <option value="">-- Chọn ngành --</option>
+                                    <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                        {{major.majorName}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Năm nhập học</label>
+                            <input type="text" class="form-control" ng-model="student.cohortYear" placeholder="VD: 2024">
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="isActive" ng-model="student.isActive">
+                                <label for="isActive">Đang học</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-30">
+                            <button type="submit" class="btn btn-primary" ng-disabled="loadingStates.save">
+                                <i class="fas fa-save"></i> {{isEditMode ? 'Cập nhật' : 'Thêm mới'}}
+                            </button>
+                            <button type="button" class="btn btn-secondary" ng-click="cancel()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

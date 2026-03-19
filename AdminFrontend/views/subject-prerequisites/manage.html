@@ -1,0 +1,227 @@
+<div class="admin-layout" ng-controller="SubjectPrerequisiteController">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Môn tiên quyết"></app-topbar>
+        
+        <div class="content-body">
+            <div class="row">
+                <!-- Left: Subject Selection & Prerequisites -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-list-alt"></i>
+                                Điều kiện tiên quyết
+                            </h3>
+                            <div class="card-actions" ng-if="isAdmin()">
+                                <button class="btn btn-primary" 
+                                        ng-click="showAddModal()"
+                                        ng-disabled="!selectedSubject">
+                                    <i class="fas fa-plus"></i> Thêm điều kiện
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Subject Selection -->
+                            <div class="form-group">
+                                <label>Chọn môn học để xem điều kiện tiên quyết:</label>
+                                <select class="form-control" 
+                                        ng-model="selectedSubject" 
+                                        ng-change="onSubjectChange()">
+                                    <option value="">-- Chọn môn học --</option>
+                                    <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                        {{subject.subjectCode}} - {{subject.subjectName}}
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <!-- Prerequisites List -->
+                            <div ng-if="selectedSubject">
+                                <h6>Các môn tiên quyết:</h6>
+                                <div class="table-responsive" ng-if="!loading">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Mã môn</th>
+                                                <th>Tên môn</th>
+                                                <th>Điểm tối thiểu</th>
+                                                <th>Bắt buộc</th>
+                                                <th ng-if="isAdmin()">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="prereq in prerequisites">
+                                                <td>{{prereq.prerequisiteSubjectCode}}</td>
+                                                <td>{{prereq.prerequisiteSubjectName}}</td>
+                                                <td>{{prereq.minimumGrade}}</td>
+                                                <td>
+                                                    <span class="badge" 
+                                                          ng-class="prereq.isRequired ? 'badge-danger' : 'badge-secondary'">
+                                                        {{prereq.isRequired ? 'Bắt buộc' : 'Không bắt buộc'}}
+                                                    </span>
+                                                </td>
+                                                <td ng-if="isAdmin()">
+                                                    <button class="btn btn-sm btn-danger" 
+                                                            ng-click="deletePrerequisite(prereq.prerequisiteId)"
+                                                            title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr ng-if="prerequisites.length === 0">
+                                                <td colspan="5" class="text-center">
+                                                    Môn học này không có điều kiện tiên quyết
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div ng-if="loading" class="text-center p-3">
+                                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                </div>
+                            </div>
+                            
+                            <div ng-if="!selectedSubject" class="text-center text-muted p-5">
+                                <i class="fas fa-arrow-up fa-2x"></i>
+                                <p>Vui lòng chọn một môn học để xem điều kiện tiên quyết</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Check Prerequisites -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-check-circle"></i>
+                                Kiểm tra điều kiện
+                            </h3>
+                        </div>
+                        
+                        <div class="card-body">
+                            <p class="text-muted">Kiểm tra xem sinh viên có đủ điều kiện đăng ký môn học hay không.</p>
+                            
+                            <form name="checkForm">
+                                <div class="form-group">
+                                    <label>Mã sinh viên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" 
+                                           ng-model="checkData.studentId" 
+                                           placeholder="VD: SV001" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Môn học <span class="text-danger">*</span></label>
+                                    <select class="form-control" ng-model="checkData.subjectId" required>
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                            {{subject.subjectCode}} - {{subject.subjectName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-block" 
+                                        ng-click="checkPrerequisites()"
+                                        ng-disabled="checkForm.$invalid">
+                                    <i class="fas fa-search"></i> Kiểm tra
+                                </button>
+                            </form>
+                            
+                            <!-- Check Result -->
+                            <div ng-if="checkResult" class="mt-3">
+                                <hr>
+                                <div class="alert" 
+                                     ng-class="checkResult.eligible ? 'alert-success' : 'alert-danger'">
+                                    <h6>
+                                        <i class="fas" 
+                                           ng-class="checkResult.eligible ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                                        {{checkResult.message}}
+                                    </h6>
+                                </div>
+                                
+                                <div ng-if="!checkResult.eligible && checkResult.missingPrerequisites.length > 0">
+                                    <h6 class="text-danger">Các môn còn thiếu:</h6>
+                                    <ul class="list-unstyled">
+                                        <li ng-repeat="missing in checkResult.missingPrerequisites" class="mb-2">
+                                            <i class="fas fa-times text-danger"></i>
+                                            <strong>{{missing.subjectCode}}:</strong> {{missing.subjectName}}
+                                            <br>
+                                            <small class="text-muted">
+                                                {{missing.reason}} (Điểm tối thiểu: {{missing.minimumGrade}})
+                                            </small>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Prerequisite Modal -->
+            <div class="modal" id="prerequisiteModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Thêm điều kiện tiên quyết</h5>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form name="prerequisiteForm">
+                                <div class="form-group">
+                                    <label>Môn học chính</label>
+                                    <input type="text" class="form-control" 
+                                           ng-value="getSubjectName(currentPrerequisite.subjectId)" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Môn tiên quyết <span class="text-danger">*</span></label>
+                                    <select class="form-control" 
+                                            ng-model="currentPrerequisite.prerequisiteSubjectId" required>
+                                        <option value="">-- Chọn môn tiên quyết --</option>
+                                        <option ng-repeat="subject in subjects" 
+                                                value="{{subject.subjectId}}"
+                                                ng-if="subject.subjectId !== currentPrerequisite.subjectId">
+                                            {{subject.subjectCode}} - {{subject.subjectName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Điểm tối thiểu <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" 
+                                           ng-model="currentPrerequisite.minimumGrade" 
+                                           min="0" max="10" step="0.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" 
+                                               id="isRequired" ng-model="currentPrerequisite.isRequired">
+                                        <label class="custom-control-label" for="isRequired">
+                                            Bắt buộc
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mô tả</label>
+                                    <textarea class="form-control" 
+                                              ng-model="currentPrerequisite.description" rows="2"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-primary" 
+                                    ng-click="addPrerequisite()" 
+                                    ng-disabled="prerequisiteForm.$invalid">Thêm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <toast-container></toast-container>
+</div>
+

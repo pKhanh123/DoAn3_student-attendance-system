@@ -1,0 +1,106 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Khoa"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-building"></i>
+                        Danh sách Khoa
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-success" ng-click="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Xuất Excel
+                        </button>
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm khoa
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- ZONE 1: SEARCH -->
+                    <div class="section-zone search-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title">
+                                <i class="fas fa-search"></i>
+                                Tìm kiếm
+                            </h4>
+                            <span class="zone-badge primary">Tìm nhanh</span>
+                        </div>
+                        <search-bar 
+                            search-term="pagination.searchTerm" 
+                            on-search="handleSearch()" 
+                            placeholder="Tìm kiếm theo mã khoa, tên khoa...">
+                        </search-bar>
+                    </div>
+                    
+                    <!-- ZONE 2: DATA TABLE -->
+                    <div class="section-zone table-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title">
+                                <i class="fas fa-table"></i>
+                                Dữ liệu khoa
+                            </h4>
+                            <span class="zone-badge primary">{{pagination.totalItems}} bản ghi</span>
+                        </div>
+                        <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th sortable-header="facultyCode" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Mã khoa</th>
+                                    <th sortable-header="facultyName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Tên khoa</th>
+                                    <th sortable-header="description" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Mô tả</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                                </tr>
+                                <tr ng-if="!loading && displayedFaculties.length === 0">
+                                    <td colspan="4" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="faculty in displayedFaculties" ng-if="!loading">
+                                    <td>{{faculty.facultyCode}}</td>
+                                    <td>{{faculty.facultyName}}</td>
+                                    <td>{{faculty.description}}</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(faculty.facultyId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteFaculty(faculty.facultyId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <pagination 
+                            pagination="pagination" 
+                            on-page-change="handlePageChange()">
+                        </pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

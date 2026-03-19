@@ -1,0 +1,252 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Duyệt đăng ký học phần"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <search-bar 
+                        search-term="pagination.searchTerm" 
+                        on-search="handleSearch()" 
+                        placeholder="Tìm kiếm theo MSSV, tên sinh viên, mã lớp, tên môn học...">
+                    </search-bar>
+                    
+                    <div class="filters-bar" style="margin-top: 20px;">
+                        <div class="filter-group">
+                            <label class="filter-label">Sinh viên</label>
+                            <select class="filter-select" ng-model="filters.studentId" ng-change="handleFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="student in students" value="{{student.studentId}}">
+                                    {{student.studentCode}} - {{student.fullName}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Lớp học</label>
+                            <select class="filter-select" ng-model="filters.classId" ng-change="handleFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="class in classes" value="{{class.classId}}">
+                                    {{class.classCode}} - {{class.className}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Môn học</label>
+                            <select class="filter-select" ng-model="filters.subjectId" ng-change="handleFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                    {{subject.subjectCode}} - {{subject.subjectName}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Năm học</label>
+                            <select class="filter-select" ng-model="filters.schoolYearId" ng-change="handleFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="year in schoolYears" value="{{year.schoolYearId}}">
+                                    {{year.yearCode}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Học kỳ</label>
+                            <select class="filter-select" ng-model="filters.semester" ng-change="handleFilterChange()">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="sem in semesters" value="{{sem}}">
+                                    Học kỳ {{sem}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <button ng-click="resetFilters()" class="btn btn-outline" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Xóa lọc
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards (Optional) -->
+            <div class="row mb-4" ng-if="!loading">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5>Tổng số đăng ký chờ duyệt</h5>
+                            <h2>{{pagination.totalItems}}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enrollments List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Danh sách đăng ký chờ duyệt ({{pagination.totalItems}})</h3>
+                </div>
+                <div class="card-body">
+                    <div ng-if="loading" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                    
+                    <div ng-if="!loading && displayedEnrollments.length === 0" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="color: #999; margin-top: 10px;">Không có đăng ký nào chờ duyệt</p>
+                    </div>
+                    
+                    <div ng-if="!loading && displayedEnrollments.length > 0" class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">STT</th>
+                                    <th style="width: 120px;">MSSV</th>
+                                    <th style="width: 200px;">Tên sinh viên</th>
+                                    <th style="width: 120px;">Mã lớp</th>
+                                    <th style="width: 200px;">Tên môn học</th>
+                                    <th style="width: 80px;">TC</th>
+                                    <th style="width: 150px;">Giảng viên</th>
+                                    <th style="width: 150px;">Ngày đăng ký</th>
+                                    <th style="width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="enrollment in displayedEnrollments" 
+                                    ng-class="{'table-warning': isNewEnrollment(enrollment.enrollmentDate)}">
+                                    <td>{{($index + 1) + (pagination.currentPage - 1) * pagination.pageSize}}</td>
+                                    <td>
+                                        <strong>{{enrollment.studentCode}}</strong>
+                                        <span ng-if="isNewEnrollment(enrollment.enrollmentDate)" 
+                                              class="badge badge-warning" 
+                                              style="margin-left: 5px; font-size: 10px;">MỚI</span>
+                                    </td>
+                                    <td>{{enrollment.studentName}}</td>
+                                    <td>{{enrollment.classCode}}</td>
+                                    <td>
+                                        <strong>{{enrollment.subjectName}}</strong>
+                                        <br>
+                                        <small class="text-muted">{{enrollment.subjectCode}}</small>
+                                    </td>
+                                    <td>{{enrollment.credits || '-'}}</td>
+                                    <td>{{enrollment.lecturerName || '-'}}</td>
+                                    <td>
+                                        {{formatDate(enrollment.enrollmentDate)}}
+                                        <br>
+                                        <small class="text-muted">{{timeAgo(enrollment.enrollmentDate)}}</small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" 
+                                                ng-click="approveEnrollment(enrollment.enrollmentId)"
+                                                title="Duyệt đăng ký">
+                                            <i class="fas fa-check"></i> Duyệt
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" 
+                                                ng-click="viewDetail(enrollment)"
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <pagination 
+                        ng-if="!loading && displayedEnrollments.length > 0"
+                        pagination="pagination" 
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal" ng-if="showDetailModal" ng-class="{'show': showDetailModal}">
+    <div class="modal-overlay" ng-click="closeDetailModal()"></div>
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3>Chi tiết đăng ký học phần</h3>
+            <button class="modal-close" ng-click="closeDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" ng-if="selectedEnrollment">
+            <div class="form-group">
+                <label><strong>MSSV:</strong></label>
+                <p>{{selectedEnrollment.studentCode}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Tên sinh viên:</strong></label>
+                <p>{{selectedEnrollment.studentName}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Mã lớp:</strong></label>
+                <p>{{selectedEnrollment.classCode}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Tên lớp:</strong></label>
+                <p>{{selectedEnrollment.className}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Môn học:</strong></label>
+                <p>{{selectedEnrollment.subjectCode}} - {{selectedEnrollment.subjectName}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Số tín chỉ:</strong></label>
+                <p>{{selectedEnrollment.credits || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Giảng viên:</strong></label>
+                <p>{{selectedEnrollment.lecturerName || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Lịch học:</strong></label>
+                <p>{{selectedEnrollment.schedule || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Phòng học:</strong></label>
+                <p>{{selectedEnrollment.room || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Ngày đăng ký:</strong></label>
+                <p>{{formatDate(selectedEnrollment.enrollmentDate)}}</p>
+            </div>
+            <div class="form-group" ng-if="selectedEnrollment.notes">
+                <label><strong>Ghi chú:</strong></label>
+                <p>{{selectedEnrollment.notes}}</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="approveEnrollment(selectedEnrollment.enrollmentId)">
+                <i class="fas fa-check"></i> Duyệt đăng ký
+            </button>
+            <button class="btn btn-outline" ng-click="closeDetailModal()">
+                <i class="fas fa-times"></i> Đóng
+            </button>
+        </div>
+    </div>
+</div>
+

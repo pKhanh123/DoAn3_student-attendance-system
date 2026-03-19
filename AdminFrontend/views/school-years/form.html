@@ -1,0 +1,219 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="{{isEditMode ? 'Chỉnh sửa' : 'Thêm mới'}} Năm học"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Alert Messages -->
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="#!/dashboard"><i class="fas fa-home"></i> Trang chủ</a>
+                <span class="separator">/</span>
+                <a href="#!/school-years">Năm học</a>
+                <span class="separator">/</span>
+                <span class="current">{{isEditMode ? 'Chỉnh sửa' : 'Thêm mới'}}</span>
+            </nav>
+            
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-edit"></i> {{isEditMode ? 'Chỉnh sửa thông tin năm học' : 'Tạo năm học mới'}}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form name="schoolYearForm" ng-submit="saveSchoolYear()" novalidate>
+                        <div class="row">
+                            <!-- School Year ID -->
+                            <div class="col-md-6" ng-if="!isEditMode">
+                                <div class="form-group">
+                                    <label for="schoolYearId">
+                                        Mã năm học <span class="text-danger">*</span>
+                                        <i class="fas fa-info-circle" title="VD: SY2024, SY2025"></i>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="schoolYearId" 
+                                           name="schoolYearId"
+                                           ng-model="schoolYear.schoolYearId" 
+                                           placeholder="VD: SY2024"
+                                           required
+                                           ng-disabled="isEditMode">
+                                    <small class="form-text text-muted">Mã duy nhất cho năm học (VD: SY2024)</small>
+                                    <div ng-if="schoolYearForm.schoolYearId.$invalid && schoolYearForm.$submitted" class="text-danger">
+                                        Vui lòng nhập mã năm học
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Year Code -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="yearCode">
+                                        Năm học <span class="text-danger">*</span>
+                                        <i class="fas fa-info-circle" title="VD: 2024-2025"></i>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="yearCode" 
+                                           name="yearCode"
+                                           ng-model="schoolYear.yearCode" 
+                                           placeholder="VD: 2024-2025"
+                                           required>
+                                    <small class="form-text text-muted">Định dạng: YYYY-YYYY (VD: 2024-2025)</small>
+                                    <div ng-if="schoolYearForm.yearCode.$invalid && schoolYearForm.$submitted" class="text-danger">
+                                        Vui lòng nhập năm học
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Year Name -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="yearName">Tên năm học</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="yearName" 
+                                           ng-model="schoolYear.yearName" 
+                                           placeholder="VD: Năm học 2024-2025">
+                                    <small class="form-text text-muted">Tên mô tả cho năm học (tùy chọn)</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Academic Year (Cohort) -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="academicYearId">Niên khóa</label>
+                                    <select class="form-control" 
+                                            id="academicYearId" 
+                                            ng-model="schoolYear.academicYearId">
+                                        <option value="">-- Chọn niên khóa --</option>
+                                        <option ng-repeat="ay in academicYears" value="{{ay.academicYearId}}">
+                                            {{ay.cohortCode}} - {{ay.yearName}}
+                                        </option>
+                                    </select>
+                                    <small class="form-text text-muted">Niên khóa mà năm học này thuộc về (tùy chọn)</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Start Date -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="startDate">
+                                        Ngày bắt đầu <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="startDate" 
+                                           name="startDate"
+                                           ng-model="schoolYear.startDate"
+                                           ng-model-options="{ timezone: 'UTC' }"
+                                           required>
+                                    <small class="form-text text-muted">Ngày bắt đầu năm học (thường là 01/09)</small>
+                                    <div ng-if="schoolYearForm.startDate.$invalid && schoolYearForm.$submitted" class="text-danger">
+                                        Vui lòng chọn ngày bắt đầu
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- End Date -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="endDate">
+                                        Ngày kết thúc <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="endDate" 
+                                           name="endDate"
+                                           ng-model="schoolYear.endDate"
+                                           ng-model-options="{ timezone: 'UTC' }"
+                                           required>
+                                    <small class="form-text text-muted">Ngày kết thúc năm học (thường là 30/06)</small>
+                                    <div ng-if="schoolYearForm.endDate.$invalid && schoolYearForm.$submitted" class="text-danger">
+                                        Vui lòng chọn ngày kết thúc
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Current Semester -->
+                            <div class="col-md-6" ng-if="isEditMode">
+                                <div class="form-group">
+                                    <label for="currentSemester">Học kỳ hiện tại</label>
+                                    <select class="form-control" 
+                                            id="currentSemester" 
+                                            ng-model="schoolYear.currentSemester">
+                                        <option value="">-- Chưa xác định --</option>
+                                        <option value="1">Học kỳ 1 (Tháng 9 - Tháng 1)</option>
+                                        <option value="2">Học kỳ 2 (Tháng 2 - Tháng 6)</option>
+                                    </select>
+                                    <small class="form-text text-muted">Học kỳ hiện tại của năm học</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Is Active -->
+                            <div class="col-md-6" ng-if="isEditMode">
+                                <div class="form-group">
+                                    <label class="d-block">Trạng thái</label>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" 
+                                               class="custom-control-input" 
+                                               id="isActive" 
+                                               ng-model="schoolYear.isActive">
+                                        <label class="custom-control-label" for="isActive">
+                                            {{schoolYear.isActive ? 'Đang hoạt động' : 'Không hoạt động'}}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Chỉ được kích hoạt 1 năm học tại một thời điểm</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="description">Mô tả</label>
+                                    <textarea class="form-control" 
+                                              id="description" 
+                                              ng-model="schoolYear.description" 
+                                              rows="3"
+                                              placeholder="Nhập mô tả cho năm học (tùy chọn)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Help Box -->
+                        <div class="alert alert-info mt-3">
+                            <h6><i class="fas fa-lightbulb"></i> Lưu ý:</h6>
+                            <ul class="mb-0">
+                                <li>Mỗi năm học kéo dài từ tháng 9 năm X đến tháng 6 năm X+1</li>
+                                <li>Năm học gồm 2 học kỳ: HK1 (Tháng 9 - Tháng 1) và HK2 (Tháng 2 - Tháng 6)</li>
+                                <li>Sử dụng chức năng "Tạo tự động" để tạo 4 năm học cho một khóa</li>
+                                <li>Chỉ được kích hoạt 1 năm học tại một thời điểm</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="form-actions mt-4">
+                            <button type="submit" class="btn btn-primary" ng-disabled="loading">
+                                <i class="fas" ng-class="loading ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                                {{loading ? 'Đang lưu...' : (isEditMode ? 'Cập nhật' : 'Tạo mới')}}
+                            </button>
+                            <button type="button" class="btn btn-secondary" ng-click="cancel()" ng-disabled="loading">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Modal -->
+<app-avatar-modal></app-avatar-modal>
+

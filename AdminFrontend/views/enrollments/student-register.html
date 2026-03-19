@@ -1,0 +1,236 @@
+<div class="admin-layout" ng-controller="EnrollmentController">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Đăng ký học phần"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Active Period Check -->
+            <div class="alert alert-danger" ng-if="!activePeriod">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Thông báo:</strong> Hiện tại không có đợt đăng ký nào đang mở. Vui lòng quay lại sau!
+            </div>
+            
+            <div class="alert alert-success" ng-if="activePeriod">
+                <i class="fas fa-calendar-check"></i>
+                <strong>Đợt đăng ký đang mở:</strong> {{activePeriod.periodName}}
+                <br>
+                <strong>Thời gian:</strong> {{activePeriod.startDate | date:'dd/MM/yyyy'}} - {{activePeriod.endDate | date:'dd/MM/yyyy'}}
+            </div>
+            
+            <!-- Summary Card -->
+            <div class="card" ng-if="summary">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-bar"></i> Tổng quan</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-box">
+                                <div class="stat-value">{{summary.totalEnrolled}}</div>
+                                <div class="stat-label">Tổng đăng ký</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box success">
+                                <div class="stat-value">{{summary.totalApproved}}</div>
+                                <div class="stat-label">Đã duyệt</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box warning">
+                                <div class="stat-value">{{summary.totalPending}}</div>
+                                <div class="stat-label">Chờ duyệt</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-box info">
+                                <div class="stat-value">{{summary.totalCredits}}/{{summary.maxCredits}}</div>
+                                <div class="stat-label">Tín chỉ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- My Enrollments -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-list"></i>
+                        Danh sách môn đã đăng ký
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" 
+                                ng-click="showRegisterModal()"
+                                ng-disabled="!activePeriod || !summary.canEnrollMore">
+                            <i class="fas fa-plus"></i> Đăng ký mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="table-responsive" ng-if="!loading">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Môn học</th>
+                                    <th>Giảng viên</th>
+                                    <th>Tín chỉ</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày đăng ký</th>
+                                    <th>Hạn hủy</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="enroll in enrollments">
+                                    <td>{{enroll.classCode}}</td>
+                                    <td>{{enroll.subjectName}}</td>
+                                    <td>{{enroll.lecturerName}}</td>
+                                    <td>{{enroll.credits}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusBadge(enroll.enrollmentStatus)">
+                                            {{enroll.enrollmentStatus === 'APPROVED' ? 'Đã duyệt' :
+                                              enroll.enrollmentStatus === 'PENDING' ? 'Chờ duyệt' :
+                                              enroll.enrollmentStatus === 'DROPPED' ? 'Đã hủy' : 'Đã rút'}}
+                                        </span>
+                                    </td>
+                                    <td>{{enroll.enrollmentDate | date:'dd/MM/yyyy HH:mm'}}</td>
+                                    <td>{{enroll.dropDeadline | date:'dd/MM/yyyy'}}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" 
+                                                ng-click="showDropModal(enroll)"
+                                                ng-if="canDrop(enroll)"
+                                                title="Hủy đăng ký">
+                                            <i class="fas fa-times"></i> Hủy
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr ng-if="enrollments.length === 0">
+                                    <td colspan="8" class="text-center">Chưa đăng ký môn nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div ng-if="loading" class="text-center p-5">
+                        <i class="fas fa-spinner fa-spin fa-3x"></i>
+                        <p>Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Available Classes (if any) -->
+            <div class="card" ng-if="availableClasses.length > 0">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-book-open"></i>
+                        Lớp học phần có thể đăng ký
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã lớp</th>
+                                    <th>Môn học</th>
+                                    <th>Giảng viên</th>
+                                    <th>Tín chỉ</th>
+                                    <th>Còn trống</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="class in availableClasses">
+                                    <td>{{class.classCode}}</td>
+                                    <td>{{class.subjectName}}</td>
+                                    <td>{{class.lecturerName}}</td>
+                                    <td>{{class.credits}}</td>
+                                    <td>{{class.availableSeats}}/{{class.maxStudents}}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success" 
+                                                ng-click="quickRegister(class.classId)"
+                                                ng-disabled="!activePeriod || !summary.canEnrollMore">
+                                            <i class="fas fa-check"></i> Đăng ký
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Register Modal -->
+            <div class="modal" id="registerModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Đăng ký học phần</h5>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <form name="registerForm">
+                                <div class="form-group">
+                                    <label>Chọn lớp học phần <span class="text-danger">*</span></label>
+                                    <select class="form-control" ng-model="currentEnrollment.classId" required>
+                                        <option value="">Chọn lớp</option>
+                                        <option ng-repeat="class in availableClasses" value="{{class.classId}}">
+                                            {{class.classCode}} - {{class.subjectName}} ({{class.lecturerName}})
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ghi chú</label>
+                                    <textarea class="form-control" ng-model="currentEnrollment.notes" rows="2"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-primary" 
+                                    ng-click="register()" 
+                                    ng-disabled="registerForm.$invalid">Đăng ký</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Drop Modal -->
+            <div class="modal" id="dropModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Hủy đăng ký học phần</h5>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Lớp:</strong> {{currentEnrollment.classCode}} - {{currentEnrollment.subjectName}}</p>
+                            <p><strong>Hạn hủy:</strong> {{currentEnrollment.dropDeadline | date:'dd/MM/yyyy'}}</p>
+                            <form name="dropForm">
+                                <div class="form-group">
+                                    <label>Lý do hủy <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" ng-model="dropReason" rows="3" required></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy bỏ</button>
+                            <button type="button" class="btn btn-danger" 
+                                    ng-click="drop()" 
+                                    ng-disabled="dropForm.$invalid">Xác nhận hủy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <toast-container></toast-container>
+</div>
+

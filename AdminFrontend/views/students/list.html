@@ -1,0 +1,284 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Sinh viên"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Alerts -->
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Danh sách Sinh viên
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-success" ng-click="downloadTemplate()">
+                            <i class="fas fa-download"></i> Tải mẫu Import
+                        </button>
+                        <button class="btn btn-info" ng-click="openImportModal()">
+                            <i class="fas fa-file-import"></i> Import Excel
+                        </button>
+                        <button class="btn btn-success" ng-click="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Xuất Excel
+                        </button>
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm sinh viên
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- ZONE 1: SEARCH -->
+                    <div class="section-zone search-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title">
+                                <i class="fas fa-search"></i>
+                                Tìm kiếm
+                            </h4>
+                            <span class="zone-badge primary">Tìm nhanh</span>
+                        </div>
+                        <search-bar 
+                            search-term="pagination.searchTerm" 
+                            on-search="handleSearch()" 
+                            placeholder="Tìm kiếm theo mã SV, tên, email, SĐT...">
+                        </search-bar>
+                    </div>
+                    
+                    <!-- ZONE 2: FILTERS -->
+                    <div class="section-zone filter-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title">
+                                <i class="fas fa-filter"></i>
+                                Bộ lọc
+                            </h4>
+                            <span class="zone-badge warning">Lọc nâng cao</span>
+                        </div>
+                        <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Khoa</label>
+                            <select ng-model="filters.facultyId" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                    {{faculty.facultyName}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Ngành</label>
+                            <select ng-model="filters.majorId" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                    {{major.majorName}}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Trạng thái</label>
+                            <select ng-model="filters.status" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option value="true">Đang học</option>
+                                <option value="false">Nghỉ học</option>
+                            </select>
+                        </div>
+                        
+                        <button ng-click="resetFilters()" class="btn btn-outline" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                        </div>
+                    </div>
+                    
+                    <!-- ZONE 3: DATA TABLE -->
+                    <div class="section-zone table-zone">
+                        <div class="zone-header">
+                            <h4 class="zone-title">
+                                <i class="fas fa-table"></i>
+                                Dữ liệu sinh viên
+                            </h4>
+                            <span class="zone-badge primary">{{pagination.totalItems}} bản ghi</span>
+                        </div>
+                        <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th sortable-header="studentCode" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Mã SV</th>
+                                    <th sortable-header="fullName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Họ tên</th>
+                                    <th sortable-header="email" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Email</th>
+                                    <th sortable-header="phone" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Số điện thoại</th>
+                                    <th sortable-header="facultyName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Khoa</th>
+                                    <th sortable-header="majorName" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Ngành</th>
+                                    <th sortable-header="isActive" 
+                                        pagination="pagination" 
+                                        on-sort="handleSort()">Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loadingStates.students">
+                                    <td colspan="8" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loadingStates.students && displayedStudents.length === 0">
+                                    <td colspan="8" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="student in displayedStudents" ng-if="!loadingStates.students">
+                                    <td>{{student.studentCode}}</td>
+                                    <td>{{student.fullName}}</td>
+                                    <td>{{student.email}}</td>
+                                    <td>{{student.phone}}</td>
+                                    <td>{{student.facultyName}}</td>
+                                    <td>{{student.majorName}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="student.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{student.isActive ? 'Đang học' : 'Nghỉ học'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(student.studentId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteStudent(student.studentId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <pagination 
+                            pagination="pagination" 
+                            on-page-change="handlePageChange()">
+                        </pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div ng-if="showImportModal" class="modal-overlay" ng-class="{'active': showImportModal}" ng-click="closeImportModal()">
+    <div class="modal" ng-class="{'active': showImportModal}" ng-click="$event.stopPropagation()" style="width: 800px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 class="modal-title">Import danh sách Sinh viên</h3>
+            <button class="modal-close" ng-click="closeImportModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- File Upload -->
+            <file-upload 
+                on-file-select="onFileSelect(files)" 
+                accept=".xlsx,.xls,.csv">
+            </file-upload>
+            
+            <!-- Preview and Validation Results -->
+            <div ng-if="importData.validCount > 0 || importData.errorCount > 0" style="margin-top: 20px;">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Kết quả kiểm tra:</strong> 
+                    {{importData.validCount}} bản ghi hợp lệ, 
+                    {{importData.errorCount}} bản ghi lỗi
+                </div>
+                
+                <!-- Valid Data Preview -->
+                <div ng-if="importData.validCount > 0">
+                    <h4>Dữ liệu hợp lệ ({{importData.validCount}} bản ghi)</h4>
+                    <div class="table-container" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã SV</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>SĐT</th>
+                                    <th>Mã Khoa</th>
+                                    <th>Mã Ngành</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="row in importData.preview | limitTo:10">
+                                    <td>{{row['Mã SV (*)'] || row['Mã SV']}}</td>
+                                    <td>{{row['Họ tên (*)'] || row['Họ tên']}}</td>
+                                    <td>{{row['Email (*)'] || row['Email']}}</td>
+                                    <td>{{row['Số điện thoại']}}</td>
+                                    <td>{{row['Mã Khoa']}}</td>
+                                    <td>{{row['Mã Ngành (*)'] || row['Mã Ngành']}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p ng-if="importData.validCount > 10" class="text-center" style="margin-top: 10px;">
+                            <small>Hiển thị 10/{{importData.validCount}} bản ghi</small>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Error Data -->
+                <div ng-if="importData.errorCount > 0" style="margin-top: 20px;">
+                    <h4 class="text-danger">Dữ liệu lỗi ({{importData.errorCount}} bản ghi)</h4>
+                    <div class="table-container" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Dòng</th>
+                                    <th>Lỗi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="error in importData.errors">
+                                    <td>{{error.row}}</td>
+                                    <td>
+                                        <ul style="margin: 0; padding-left: 20px;">
+                                            <li ng-repeat="err in error.errors">{{err}}</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" ng-click="closeImportModal()">Hủy</button>
+            <button class="btn btn-primary" 
+                    ng-click="confirmImport()" 
+                    ng-disabled="importData.validCount === 0 || loadingStates.import">
+                <i class="fas fa-check"></i> 
+                <span ng-if="!loadingStates.import">Import {{importData.validCount}} bản ghi</span>
+                <span ng-if="loadingStates.import"><i class="fas fa-spinner fa-spin"></i> Đang import...</span>
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+<!-- Avatar Change Modal -->
+<div class="modal-overlay avatar-modal" ng-if="avatarModal.show" ng-click="closeAvatarModal($event)">
+    <div class="modal" ng-click="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-user-circle"></i> Thay đổi ảnh đại diện</h3>
+            <button class="modal-close" ng-click="closeAvatarModal($event)" type="button" aria-label="Đóng modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="avatar-preview-container">
+                <div class="avatar-preview">
+                    <img ng-if="avatarModal.previewUrl" ng-src="{{avatarModal.previewUrl}}" alt="Preview">
+                    <div ng-if="!avatarModal.previewUrl" class="avatar-preview-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>{{currentUser.fullName.charAt(0)}}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="avatar-upload-area">
+                <div class="avatar-upload-dropzone" 
+                     ng-click="triggerFileInput()"
+                     ng-class="{'drag-over': avatarModal.dragOver}"
+                     ng-drop="handleDrop($event)"
+                     ng-dragover="handleDragOver($event)"
+                     ng-dragleave="handleDragLeave($event)">
+                    <div class="avatar-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="avatar-upload-text">
+                        <strong>Nhấp để chọn file</strong> hoặc kéo thả vào đây
+                        <br>
+                        <small>Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)</small>
+                    </div>
+                </div>
+                
+                <input type="file" 
+                       id="avatarFileInput" 
+                       accept="image/jpeg,image/png,image/gif" 
+                       style="display: none;" 
+                       onchange="var scope = angular.element(this).scope(); var files = Array.prototype.slice.call(this.files); scope.$apply(function() { scope.handleFileSelect(files); });">
+                
+                <div class="avatar-file-info" ng-if="avatarModal.selectedFile">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="avatar-file-details">
+                        <div class="avatar-file-name">{{avatarModal.selectedFile.name}}</div>
+                        <div class="avatar-file-size">{{formatFileSize(avatarModal.selectedFile.size)}}</div>
+                    </div>
+                    <button class="btn-remove" ng-click="clearSelectedFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="avatar-error" ng-if="avatarModal.error">
+                    <i class="fas fa-exclamation-circle"></i> {{avatarModal.error}}
+                </div>
+                
+                <div class="avatar-success" ng-if="avatarModal.success">
+                    <i class="fas fa-check-circle"></i> {{avatarModal.success}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" ng-click="closeAvatarModal($event)" ng-disabled="avatarModal.uploading" type="button">
+                Hủy
+            </button>
+            <button class="btn btn-primary" 
+                    ng-click="uploadAvatar($event)" 
+                    ng-disabled="!avatarModal.selectedFile || avatarModal.uploading">
+                <i class="fas fa-upload"></i> 
+                <span ng-if="!avatarModal.uploading">Tải lên</span>
+                <span ng-if="avatarModal.uploading">Đang tải...</span>
+            </button>
+        </div>
+    </div>
+</div>
+

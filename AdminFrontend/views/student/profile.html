@@ -1,0 +1,227 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Thông tin cá nhân"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Loading State -->
+            <div ng-if="loading" class="card">
+                <div class="card-body text-center" style="padding: 60px 20px;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <p style="font-size: 16px; color: var(--text-secondary);">Đang tải thông tin...</p>
+                </div>
+            </div>
+            
+            <!-- Profile Header Card -->
+            <div class="card profile-header-card" ng-if="!loading && studentInfo">
+                <div class="profile-header-background"></div>
+                <div class="card-body" style="position: relative; z-index: 1;">
+                    <div class="profile-header-content">
+                        <div class="profile-avatar-section">
+                            <div class="profile-avatar-wrapper" ng-click="openAvatarModal()">
+                                <div class="profile-avatar-large">
+                                    <img ng-if="currentUser.avatarUrl" ng-src="{{currentUser.avatarUrl}}" alt="Avatar">
+                                    <span ng-if="!currentUser.avatarUrl">{{studentInfo.fullName ? studentInfo.fullName.charAt(0).toUpperCase() : 'S'}}</span>
+                                </div>
+                                <div class="profile-avatar-edit-badge">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                            </div>
+                            <div class="profile-status-badge">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Đang học</span>
+                            </div>
+                        </div>
+                        <div class="profile-header-info">
+                            <h1 class="profile-name">{{studentInfo.fullName || 'Sinh viên'}}</h1>
+                            <p class="profile-role">
+                                <i class="fas fa-graduation-cap"></i>
+                                {{studentInfo.studentCode || 'N/A'}}
+                            </p>
+                            <div class="profile-quick-info">
+                                <div class="quick-info-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>{{studentInfo.className || 'N/A'}}</span>
+                                </div>
+                                <div class="quick-info-item">
+                                    <i class="fas fa-building"></i>
+                                    <span>{{studentInfo.facultyName || 'N/A'}}</span>
+                                </div>
+                                <div class="quick-info-item">
+                                    <i class="fas fa-book"></i>
+                                    <span>{{studentInfo.majorName || 'N/A'}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-header-actions">
+                            <button class="btn btn-primary" ng-click="startEdit()" ng-if="!editing">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </button>
+                            <div ng-if="editing" style="display: flex; gap: 10px;">
+                                <button class="btn btn-secondary" ng-click="cancelEdit()">
+                                    <i class="fas fa-times"></i> Hủy
+                                </button>
+                                <button class="btn btn-primary" ng-click="saveProfile()">
+                                    <i class="fas fa-save"></i> Lưu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Details Cards -->
+            <div class="profile-details-grid" ng-if="!loading && studentInfo">
+                <!-- Personal Information -->
+                <div class="card profile-detail-card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas fa-user-circle"></i>
+                            Thông tin cá nhân
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-id-card"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Mã sinh viên</label>
+                                    <div class="info-value">{{studentInfo.studentCode || studentInfo.studentId || 'N/A'}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Họ và tên</label>
+                                    <input type="text" class="form-control" ng-model="profileForm.fullName" ng-disabled="!editing" ng-if="editing">
+                                    <div class="info-value" ng-if="!editing">{{studentInfo.fullName || 'N/A'}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item" ng-if="studentInfo.gender">
+                                <div class="info-icon">
+                                    <i class="fas" ng-class="studentInfo.gender === 'M' ? 'fa-mars' : 'fa-venus'"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Giới tính</label>
+                                    <div class="info-value">{{studentInfo.gender === 'M' ? 'Nam' : (studentInfo.gender === 'F' ? 'Nữ' : 'N/A')}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item" ng-if="studentInfo.dob">
+                                <div class="info-icon">
+                                    <i class="fas fa-birthday-cake"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Ngày sinh</label>
+                                    <div class="info-value">{{studentInfo.dob | date:'dd/MM/yyyy'}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="card profile-detail-card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas fa-address-book"></i>
+                            Thông tin liên hệ
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" ng-model="profileForm.email" ng-disabled="!editing" ng-if="editing">
+                                    <div class="info-value" ng-if="!editing">
+                                        <a ng-if="studentInfo.email" href="mailto:{{studentInfo.email}}">{{studentInfo.email}}</a>
+                                        <span ng-if="!studentInfo.email">N/A</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Số điện thoại</label>
+                                    <input type="text" class="form-control" ng-model="profileForm.phone" ng-disabled="!editing" ng-if="editing">
+                                    <div class="info-value" ng-if="!editing">
+                                        <a ng-if="studentInfo.phone" href="tel:{{studentInfo.phone}}">{{studentInfo.phone}}</a>
+                                        <span ng-if="!studentInfo.phone">N/A</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Academic Information -->
+                <div class="card profile-detail-card">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas fa-graduation-cap"></i>
+                            Thông tin học tập
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Lớp hành chính</label>
+                                    <div class="info-value">{{studentInfo.className || 'N/A'}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Khoa</label>
+                                    <div class="info-value">{{studentInfo.facultyName || studentInfo.faculty || 'N/A'}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item">
+                                <div class="info-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Ngành học</label>
+                                    <div class="info-value">{{studentInfo.majorName || studentInfo.major || 'N/A'}}</div>
+                                </div>
+                            </div>
+                            <div class="profile-info-item" ng-if="studentInfo.academicYear">
+                                <div class="info-icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Niên khóa</label>
+                                    <div class="info-value">{{studentInfo.academicYear}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Change Modal -->
+<div ng-include="'views/partials/avatar-modal.html'"></div>
+

@@ -1,0 +1,553 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Cảnh báo và Gửi email"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Tabs -->
+            <div class="custom-tabs">
+                <div class="custom-tab-nav">
+                    <button class="custom-tab-button" ng-class="{'active': activeTab === 'attendance'}" ng-click="switchTab('attendance')">
+                        <i class="fas fa-user-times"></i> Cảnh báo chuyên cần
+                    </button>
+                    <button class="custom-tab-button" ng-class="{'active': activeTab === 'academic'}" ng-click="switchTab('academic')">
+                        <i class="fas fa-chart-line"></i> Cảnh báo học tập
+                    </button>
+                    <button class="custom-tab-button" ng-class="{'active': activeTab === 'config'}" ng-click="switchTab('config')">
+                        <i class="fas fa-cog"></i> Cấu hình
+                    </button>
+                </div>
+                
+                <div class="custom-tab-content">
+                    <!-- Tab: Attendance Warnings -->
+                    <div ng-show="activeTab === 'attendance'">
+                        <!-- Filter Form -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Khoa</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.attendance.facultyId" 
+                                                ng-change="loadMajors('attendance')"
+                                                ng-disabled="loading.filters">
+                                            <option value="">-- Chọn khoa --</option>
+                                            <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                                {{faculty.facultyName}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Ngành</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.attendance.majorId" 
+                                                ng-change="loadClasses('attendance')"
+                                                ng-disabled="loading.filters || !filters.attendance.facultyId">
+                                            <option value="">-- Chọn ngành --</option>
+                                            <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                                {{major.majorName}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Lớp</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.attendance.classId" 
+                                                ng-disabled="loading.filters || !filters.attendance.majorId">
+                                            <option value="">-- Chọn lớp --</option>
+                                            <option ng-repeat="class in classes" value="{{class.adminClassId}}">
+                                                {{class.className}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Khóa học</label>
+                                        <select class="form-control" ng-model="filters.attendance.cohortYear">
+                                            <option value="">-- Chọn khóa học --</option>
+                                            <option ng-repeat="year in cohortYears" value="{{year}}">
+                                                {{year}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 0 0 auto; min-width: 200px;">
+                                        <label class="form-label">Ngưỡng cảnh báo vắng (%)</label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               ng-model="filters.attendance.attendanceThreshold" 
+                                               min="0" 
+                                               max="100" 
+                                               step="0.1">
+                                    </div>
+                                    <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button class="btn btn-primary" ng-click="loadAttendanceWarnings()" ng-disabled="loading.attendance" style="width: 100%; white-space: nowrap;">
+                                            <i class="fas fa-search"></i> Tìm kiếm
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Form -->
+                        <div class="card mb-4" ng-if="selectedStudents.attendance.length > 0">
+                            <div class="card-header">
+                                <h3><i class="fas fa-envelope"></i> Gửi email cảnh báo ({{selectedStudents.attendance.length}} sinh viên)</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">Tiêu đề email (tùy chọn)</label>
+                                    <input type="text" class="form-control" ng-model="emailForm.customSubject" placeholder="Để trống để dùng tiêu đề mặc định">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nội dung email (tùy chọn)</label>
+                                    <textarea class="form-control" ng-model="emailForm.customMessage" rows="4" placeholder="Để trống để dùng nội dung mặc định"></textarea>
+                                </div>
+                                <button class="btn btn-primary" ng-click="sendBulkEmail('attendance')" ng-disabled="loading.sending">
+                                    <i class="fas fa-paper-plane"></i> Gửi email cho {{selectedStudents.attendance.length}} sinh viên
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading -->
+                        <div ng-if="loading.attendance" class="card">
+                            <div class="card-body text-center" style="padding: 60px;">
+                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                                <p class="mt-3">Đang tải danh sách cảnh báo chuyên cần...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Error -->
+                        <div ng-if="error.attendance && !loading.attendance" class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> {{error.attendance}}
+                            <button class="btn btn-sm btn-danger ml-2" ng-click="loadAttendanceWarnings()">
+                                <i class="fas fa-redo"></i> Thử lại
+                            </button>
+                        </div>
+                        
+                        <!-- Warnings Table -->
+                        <div ng-if="!loading.attendance && !error.attendance && attendanceWarnings.length > 0" class="card">
+                            <div class="card-header">
+                                <h3>
+                                    <i class="fas fa-exclamation-triangle"></i> Danh sách cảnh báo chuyên cần
+                                    <span class="badge badge-danger ml-2">{{pagination.attendance.totalCount}}</span>
+                                </h3>
+                                <div class="card-actions">
+                                    <button class="btn btn-sm btn-primary" ng-click="selectAll('attendance')">
+                                        <i class="fas fa-check-square"></i> {{selectedStudents.attendance.length === attendanceWarnings.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 50px;">
+                                                    <input type="checkbox" 
+                                                           ng-checked="selectedStudents.attendance.length === attendanceWarnings.length && attendanceWarnings.length > 0"
+                                                           ng-click="selectAll('attendance')">
+                                                </th>
+                                                <th>MSSV</th>
+                                                <th>Họ và tên</th>
+                                                <th>Email</th>
+                                                <th>Lớp</th>
+                                                <th>Khoa</th>
+                                                <th>Ngành</th>
+                                                <th style="width: 120px;">Tỷ lệ vắng (%)</th>
+                                                <th style="width: 120px;">Tỷ lệ có mặt (%)</th>
+                                                <th style="width: 120px;">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="warning in attendanceWarnings">
+                                                <td>
+                                                    <input type="checkbox" 
+                                                           ng-checked="isSelected(warning.studentId, 'attendance')"
+                                                           ng-click="toggleSelectStudent(warning.studentId, 'attendance')">
+                                                </td>
+                                                <td><strong>{{warning.studentCode}}</strong></td>
+                                                <td>{{warning.fullName}}</td>
+                                                <td>{{warning.email || 'N/A'}}</td>
+                                                <td>{{warning.className || 'N/A'}}</td>
+                                                <td>{{warning.facultyName || 'N/A'}}</td>
+                                                <td>{{warning.majorName || 'N/A'}}</td>
+                                                <td>
+                                                    <span class="badge badge-danger">
+                                                        {{warning.absenceRate | number:1}}%
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge" ng-class="{
+                                                        'badge-success': warning.attendanceRate >= 90,
+                                                        'badge-warning': warning.attendanceRate >= 80 && warning.attendanceRate < 90,
+                                                        'badge-danger': warning.attendanceRate < 80
+                                                    }">
+                                                        {{warning.attendanceRate | number:1}}%
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" ng-click="viewStudentDetail(warning.studentId)" title="Xem chi tiết">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-warning ml-1" 
+                                                            ng-click="sendEmailToStudent(warning.studentId, 'attendance')" 
+                                                            ng-disabled="loading.sending || !warning.email"
+                                                            title="Gửi email">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <div ng-if="pagination.attendance.totalPages > 1" class="pagination-container mt-3">
+                                    <nav>
+                                        <ul class="pagination justify-content-center">
+                                            <li class="page-item" ng-class="{'disabled': pagination.attendance.page === 1}">
+                                                <a class="page-link" href="#" ng-click="loadAttendanceWarnings(pagination.attendance.page - 1)">Trước</a>
+                                            </li>
+                                            <li class="page-item" 
+                                                ng-repeat="n in getPageNumbers('attendance') track by $index" 
+                                                ng-class="{'active': n === pagination.attendance.page, 'disabled': n === '...'}">
+                                                <a class="page-link" href="#" ng-click="n !== '...' && loadAttendanceWarnings(n)" ng-if="n !== '...'">{{n}}</a>
+                                                <span class="page-link" ng-if="n === '...'">...</span>
+                                            </li>
+                                            <li class="page-item" ng-class="{'disabled': pagination.attendance.page === pagination.attendance.totalPages}">
+                                                <a class="page-link" href="#" ng-click="loadAttendanceWarnings(pagination.attendance.page + 1)">Sau</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                    <p class="text-center text-muted">
+                                        Trang {{pagination.attendance.page}} / {{pagination.attendance.totalPages}} 
+                                        (Tổng: {{pagination.attendance.totalCount}} sinh viên)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div ng-if="!loading.attendance && !error.attendance && attendanceWarnings.length === 0" class="card">
+                            <div class="card-body text-center text-muted" style="padding: 60px;">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <p>Không có sinh viên nào vi phạm ngưỡng cảnh báo chuyên cần.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab: Academic Warnings -->
+                    <div ng-show="activeTab === 'academic'">
+                        <!-- Filter Form -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Khoa</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.academic.facultyId" 
+                                                ng-change="loadMajors('academic')"
+                                                ng-disabled="loading.filters">
+                                            <option value="">-- Chọn khoa --</option>
+                                            <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                                {{faculty.facultyName}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Ngành</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.academic.majorId" 
+                                                ng-change="loadClasses('academic')"
+                                                ng-disabled="loading.filters || !filters.academic.facultyId">
+                                            <option value="">-- Chọn ngành --</option>
+                                            <option ng-repeat="major in majors" value="{{major.majorId}}">
+                                                {{major.majorName}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Lớp</label>
+                                        <select class="form-control" 
+                                                ng-model="filters.academic.classId" 
+                                                ng-disabled="loading.filters || !filters.academic.majorId">
+                                            <option value="">-- Chọn lớp --</option>
+                                            <option ng-repeat="class in classes" value="{{class.adminClassId}}">
+                                                {{class.className}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Khóa học</label>
+                                        <select class="form-control" ng-model="filters.academic.cohortYear">
+                                            <option value="">-- Chọn khóa học --</option>
+                                            <option ng-repeat="year in cohortYears" value="{{year}}">
+                                                {{year}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 0 0 auto; min-width: 200px;">
+                                        <label class="form-label">Ngưỡng cảnh báo GPA</label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               ng-model="filters.academic.gpaThreshold" 
+                                               min="0" 
+                                               max="10" 
+                                               step="0.1">
+                                    </div>
+                                    <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button class="btn btn-primary" ng-click="loadAcademicWarnings()" ng-disabled="loading.academic" style="width: 100%; white-space: nowrap;">
+                                            <i class="fas fa-search"></i> Tìm kiếm
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Form -->
+                        <div class="card mb-4" ng-if="selectedStudents.academic.length > 0">
+                            <div class="card-header">
+                                <h3><i class="fas fa-envelope"></i> Gửi email cảnh báo ({{selectedStudents.academic.length}} sinh viên)</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <label class="form-label">Tiêu đề email (tùy chọn)</label>
+                                    <input type="text" class="form-control" ng-model="emailForm.customSubject" placeholder="Để trống để dùng tiêu đề mặc định">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nội dung email (tùy chọn)</label>
+                                    <textarea class="form-control" ng-model="emailForm.customMessage" rows="4" placeholder="Để trống để dùng nội dung mặc định"></textarea>
+                                </div>
+                                <button class="btn btn-primary" ng-click="sendBulkEmail('academic')" ng-disabled="loading.sending">
+                                    <i class="fas fa-paper-plane"></i> Gửi email cho {{selectedStudents.academic.length}} sinh viên
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading -->
+                        <div ng-if="loading.academic" class="card">
+                            <div class="card-body text-center" style="padding: 60px;">
+                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                                <p class="mt-3">Đang tải danh sách cảnh báo học tập...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Error -->
+                        <div ng-if="error.academic && !loading.academic" class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> {{error.academic}}
+                            <button class="btn btn-sm btn-danger ml-2" ng-click="loadAcademicWarnings()">
+                                <i class="fas fa-redo"></i> Thử lại
+                            </button>
+                        </div>
+                        
+                        <!-- Warnings Table -->
+                        <div ng-if="!loading.academic && !error.academic && academicWarnings.length > 0" class="card">
+                            <div class="card-header">
+                                <h3>
+                                    <i class="fas fa-exclamation-triangle"></i> Danh sách cảnh báo học tập
+                                    <span class="badge badge-warning ml-2">{{pagination.academic.totalCount}}</span>
+                                </h3>
+                                <div class="card-actions">
+                                    <button class="btn btn-sm btn-primary" ng-click="selectAll('academic')">
+                                        <i class="fas fa-check-square"></i> {{selectedStudents.academic.length === academicWarnings.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 50px;">
+                                                    <input type="checkbox" 
+                                                           ng-checked="selectedStudents.academic.length === academicWarnings.length && academicWarnings.length > 0"
+                                                           ng-click="selectAll('academic')">
+                                                </th>
+                                                <th>MSSV</th>
+                                                <th>Họ và tên</th>
+                                                <th>Email</th>
+                                                <th>Lớp</th>
+                                                <th>Khoa</th>
+                                                <th>Ngành</th>
+                                                <th style="width: 120px;">GPA</th>
+                                                <th style="width: 120px;">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="warning in academicWarnings">
+                                                <td>
+                                                    <input type="checkbox" 
+                                                           ng-checked="isSelected(warning.studentId, 'academic')"
+                                                           ng-click="toggleSelectStudent(warning.studentId, 'academic')">
+                                                </td>
+                                                <td><strong>{{warning.studentCode}}</strong></td>
+                                                <td>{{warning.fullName}}</td>
+                                                <td>{{warning.email || 'N/A'}}</td>
+                                                <td>{{warning.className || 'N/A'}}</td>
+                                                <td>{{warning.facultyName || 'N/A'}}</td>
+                                                <td>{{warning.majorName || 'N/A'}}</td>
+                                                <td>
+                                                    <span class="badge" ng-class="{
+                                                        'badge-success': warning.gpa && warning.gpa >= 3.0,
+                                                        'badge-warning': warning.gpa && warning.gpa >= 2.0 && warning.gpa < 3.0,
+                                                        'badge-danger': !warning.gpa || warning.gpa < 2.0
+                                                    }">
+                                                        {{warning.gpa ? (warning.gpa | number:2) : 'N/A'}}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary" ng-click="viewStudentDetail(warning.studentId)" title="Xem chi tiết">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-warning ml-1" 
+                                                            ng-click="sendEmailToStudent(warning.studentId, 'academic')" 
+                                                            ng-disabled="loading.sending || !warning.email"
+                                                            title="Gửi email">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                <div ng-if="pagination.academic.totalPages > 1" class="pagination-container mt-3">
+                                    <nav>
+                                        <ul class="pagination justify-content-center">
+                                            <li class="page-item" ng-class="{'disabled': pagination.academic.page === 1}">
+                                                <a class="page-link" href="#" ng-click="loadAcademicWarnings(pagination.academic.page - 1)">Trước</a>
+                                            </li>
+                                            <li class="page-item" 
+                                                ng-repeat="n in getPageNumbers('academic') track by $index" 
+                                                ng-class="{'active': n === pagination.academic.page, 'disabled': n === '...'}">
+                                                <a class="page-link" href="#" ng-click="n !== '...' && loadAcademicWarnings(n)" ng-if="n !== '...'">{{n}}</a>
+                                                <span class="page-link" ng-if="n === '...'">...</span>
+                                            </li>
+                                            <li class="page-item" ng-class="{'disabled': pagination.academic.page === pagination.academic.totalPages}">
+                                                <a class="page-link" href="#" ng-click="loadAcademicWarnings(pagination.academic.page + 1)">Sau</a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                    <p class="text-center text-muted">
+                                        Trang {{pagination.academic.page}} / {{pagination.academic.totalPages}} 
+                                        (Tổng: {{pagination.academic.totalCount}} sinh viên)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div ng-if="!loading.academic && !error.academic && academicWarnings.length === 0" class="card">
+                            <div class="card-body text-center text-muted" style="padding: 60px;">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <p>Không có sinh viên nào vi phạm ngưỡng cảnh báo học tập.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab: Configuration -->
+                    <div ng-show="activeTab === 'config'">
+                        <!-- Loading -->
+                        <div ng-if="loading.config" class="card">
+                            <div class="card-body text-center" style="padding: 60px;">
+                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
+                                <p class="mt-3">Đang tải cấu hình...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Error -->
+                        <div ng-if="error.config && !loading.config" class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> {{error.config}}
+                            <button class="btn btn-sm btn-danger ml-2" ng-click="loadWarningConfig()">
+                                <i class="fas fa-redo"></i> Thử lại
+                            </button>
+                        </div>
+                        
+                        <!-- Config Form -->
+                        <div ng-if="!loading.config && !error.config && warningConfig" class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-cog"></i> Cấu hình cảnh báo</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Lưu ý:</strong> Cấu hình được lưu trong appsettings.json và yêu cầu khởi động lại ứng dụng để áp dụng.
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Ngưỡng cảnh báo vắng (%)</label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               ng-model="warningConfig.attendanceThreshold" 
+                                               min="0" 
+                                               max="100" 
+                                               step="0.1">
+                                        <small class="form-text text-muted">Sinh viên có tỷ lệ vắng mặt vượt quá ngưỡng này sẽ được cảnh báo.</small>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Ngưỡng cảnh báo GPA</label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               ng-model="warningConfig.gpaThreshold" 
+                                               min="0" 
+                                               max="10" 
+                                               step="0.1">
+                                        <small class="form-text text-muted">Sinh viên có GPA thấp hơn ngưỡng này sẽ được cảnh báo.</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Tiêu đề email mặc định</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               ng-model="warningConfig.emailSubject" 
+                                               placeholder="Để trống để dùng tiêu đề mặc định">
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Tự động gửi email</label>
+                                        <select class="form-control" ng-model="warningConfig.autoSendEmails">
+                                            <option value="false">Tắt</option>
+                                            <option value="true">Bật</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Template email (tùy chọn)</label>
+                                    <textarea class="form-control" 
+                                              ng-model="warningConfig.emailTemplate" 
+                                              rows="6" 
+                                              placeholder="HTML template cho email cảnh báo. Sử dụng {{studentName}}, {{className}}, {{gpa}}, {{absenceRate}} để thay thế dữ liệu."></textarea>
+                                </div>
+                                
+                                <button class="btn btn-primary" ng-click="saveWarningConfig()" ng-disabled="loading.config">
+                                    <i class="fas fa-save"></i> Lưu cấu hình
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

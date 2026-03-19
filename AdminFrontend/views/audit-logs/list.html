@@ -1,0 +1,448 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Nhật ký Hệ thống"></app-topbar>
+        
+        <div class="content-body audit-log-container">
+            <!-- Alerts -->
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-value">{{pagination.totalItems || 0}}</h3>
+                        <p class="stat-label">Tổng hoạt động</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-value">{{getActionCount('CREATE')}}</h3>
+                        <p class="stat-label">Thêm mới</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-value">{{getActionCount('UPDATE')}}</h3>
+                        <p class="stat-label">Cập nhật</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card stat-card-danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-value">{{getActionCount('DELETE')}}</h3>
+                        <p class="stat-label">Xóa</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Card -->
+            <div class="card audit-log-card">
+                <!-- Card Header with Actions -->
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <h3 class="card-title">
+                            <i class="fas fa-list-ul"></i> 
+                            Danh sách hoạt động
+                        </h3>
+                        <span class="badge badge-primary">{{pagination.totalItems || 0}} bản ghi</span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline-primary" ng-click="toggleViewMode()">
+                            <i class="fas" ng-class="viewMode === 'timeline' ? 'fa-table' : 'fa-stream'"></i>
+                            {{viewMode === 'timeline' ? 'Bảng' : 'Timeline'}}
+                        </button>
+                        <button class="btn btn-sm btn-success" ng-click="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Export
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" ng-click="refreshLogs()">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Advanced Search and Filters -->
+                    <div class="audit-filters-section">
+                        <!-- Search Bar -->
+                        <search-bar 
+                            search-term="pagination.searchTerm" 
+                            on-search="handleSearch()" 
+                            placeholder="Tìm kiếm theo người dùng, hành động, đối tượng, IP...">
+                        </search-bar>
+                        
+                        <!-- Filters Toggle -->
+                        <button class="btn-filter-toggle" ng-click="showFilters = !showFilters">
+                            <i class="fas fa-filter"></i>
+                            Bộ lọc nâng cao
+                            <span class="badge badge-primary" ng-if="hasActiveFilters()">{{getActiveFiltersCount()}}</span>
+                            <i class="fas fa-chevron-down" ng-class="{'rotate-180': showFilters}"></i>
+                        </button>
+                        
+                        <!-- Advanced Filters Panel -->
+                        <div class="filters-panel" ng-show="showFilters">
+                            <div class="filters-grid">
+                                <!-- Action Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-bolt"></i> Hành động
+                                    </label>
+                                    <select ng-model="filters.action" 
+                                            ng-change="handleFilterChange()" 
+                                            class="form-select">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="type in actionTypes" value="{{type.value}}">
+                                            {{type.label}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Entity Type Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-cube"></i> Đối tượng
+                                    </label>
+                                    <select ng-model="filters.entityType" 
+                                            ng-change="handleFilterChange()" 
+                                            class="form-select">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="type in entityTypes" value="{{type.value}}">
+                                            {{type.label}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Date From Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-calendar-alt"></i> Từ ngày
+                                    </label>
+                                    <input type="date" 
+                                           ng-model="filters.dateFrom"
+                                           ng-model-options="{ timezone: 'UTC' }"
+                                           ng-change="handleFilterChange()" 
+                                           class="form-control">
+                                </div>
+                                
+                                <!-- Date To Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-calendar-check"></i> Đến ngày
+                                    </label>
+                                    <input type="date" 
+                                           ng-model="filters.dateTo"
+                                           ng-model-options="{ timezone: 'UTC' }"
+                                           ng-change="handleFilterChange()" 
+                                           class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="filters-actions">
+                                <button class="btn btn-sm btn-outline-secondary" ng-click="resetFilters()">
+                                    <i class="fas fa-undo"></i> Đặt lại
+                                </button>
+                                <button class="btn btn-sm btn-primary" ng-click="applyFilters()">
+                                    <i class="fas fa-check"></i> Áp dụng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div class="loading-overlay" ng-if="loading">
+                        <div class="spinner-container">
+                            <i class="fas fa-spinner fa-spin fa-3x"></i>
+                            <p>Đang tải dữ liệu...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline View -->
+                    <div class="audit-timeline" ng-if="viewMode === 'timeline' && !loading">
+                        <!-- Empty State -->
+                        <div class="empty-state" ng-if="displayedLogs.length === 0">
+                            <i class="fas fa-inbox fa-3x"></i>
+                            <h3>Không có dữ liệu</h3>
+                            <p>Không tìm thấy nhật ký nào phù hợp với bộ lọc</p>
+                        </div>
+                        
+                        <!-- Timeline Items -->
+                        <div class="timeline-item" ng-repeat="log in displayedLogs" ng-class="'timeline-' + log.action.toLowerCase()">
+                            <div class="timeline-marker">
+                                <i class="fas" ng-class="getActionIcon(log.action)"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-header">
+                                    <div class="timeline-title">
+                                        <span class="action-badge" ng-class="getActionClass(log.action)" title="Hành động: {{log.action}}">
+                                            <i class="fas" ng-class="getActionIcon(log.action)"></i>
+                                            {{log.actionLabel || getActionLabel(log.action)}}
+                                        </span>
+                                        <span class="entity-type" title="Đối tượng: {{log.entityType}}">
+                                            <i class="fas fa-cube"></i>
+                                            {{log.entityTypeLabel || getEntityLabel(log.entityType)}}
+                                        </span>
+                                        <span class="entity-id" ng-if="log.entityId" title="Mã ID: {{log.entityId}}">
+                                            <i class="fas fa-hashtag"></i>{{log.entityId}}
+                                        </span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-time">
+                                            <i class="fas fa-clock"></i>
+                                            {{formatDate(log.createdAt)}}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-body">
+                                    <div class="user-info-inline" title="Người thực hiện: {{log.userFullName || log.userName}} - ID: {{log.userId || 'System'}}">
+                                        <span class="user-label">Người thực hiện:</span>
+                                        <i class="fas fa-user-circle"></i>
+                                        <strong>{{log.userName}}</strong>
+                                        <small ng-if="log.userId" class="text-muted">(ID: {{log.userId}})</small>
+                                    </div>
+                                    <div class="log-details" ng-if="log.details">
+                                        <!-- Readable format -->
+                                        <div ng-if="!log.showRawJson" ng-init="log.readableData = parseJsonToReadable(log.details)">
+                                            <div class="readable-details">
+                                                <div class="readable-item" ng-repeat="item in log.readableData | limitTo: (log.expanded ? undefined : 5)">
+                                                    <span class="readable-label">{{item.label}}:</span>
+                                                    <span class="readable-value">{{item.value}}</span>
+                                                </div>
+                                                <div class="more-items-indicator" ng-if="!log.expanded && log.readableData.length > 5">
+                                                    <span class="more-count">+ {{log.readableData.length - 5}} thông tin khác</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Raw JSON format -->
+                                        <div ng-if="log.showRawJson">
+                                            <div class="detail-preview" ng-if="!log.expanded">
+                                                {{log.details | limitTo: 100}}
+                                                <span ng-if="log.details.length > 100">...</span>
+                                            </div>
+                                            <div class="detail-full" ng-if="log.expanded">
+                                                <pre>{{log.details}}</pre>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Action buttons -->
+                                        <div class="detail-actions">
+                                            <button class="btn-expand" ng-click="log.expanded = !log.expanded">
+                                                <i class="fas" ng-class="log.expanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                {{log.expanded ? 'Thu gọn' : 'Xem thêm'}}
+                                            </button>
+                                            <button class="btn-toggle-format" ng-click="log.showRawJson = !log.showRawJson" title="{{log.showRawJson ? 'Xem dạng dễ hiểu' : 'Xem dạng JSON'}}">
+                                                <i class="fas" ng-class="log.showRawJson ? 'fa-align-left' : 'fa-code'"></i>
+                                                {{log.showRawJson ? 'Dễ hiểu' : 'JSON'}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-footer">
+                                    <span class="ip-address" ng-if="log.ipAddress">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        IP: {{log.ipAddress}}
+                                    </span>
+                                    <span class="user-agent" ng-if="log.userAgent" title="{{log.userAgent}}">
+                                        <i class="fas fa-desktop"></i>
+                                        {{getUserAgentInfo(log.userAgent)}}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table View (Original) -->
+                    <div class="table-view" ng-if="viewMode === 'table' && !loading">
+                        <div class="table-responsive">
+                            <table class="table table-hover audit-table">
+                                <thead>
+                                    <tr>
+                                        <th width="180">Thời gian</th>
+                                        <th width="150">Người dùng</th>
+                                        <th width="120">Hành động</th>
+                                        <th width="120">Đối tượng</th>
+                                        <th>Chi tiết</th>
+                                        <th width="140">IP Address</th>
+                                        <th width="80">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-if="displayedLogs.length === 0">
+                                        <td colspan="7" class="text-center empty-row">
+                                            <i class="fas fa-inbox fa-2x"></i>
+                                            <p>Không có dữ liệu</p>
+                                        </td>
+                                    </tr>
+                                    <tr ng-repeat="log in displayedLogs" class="table-row-hover">
+                                        <td>
+                                            <div class="cell-time">
+                                                <i class="fas fa-clock"></i>
+                                                {{formatDate(log.createdAt)}}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="cell-user" title="{{log.userFullName ? log.userFullName : log.userName}} - ID: {{log.userId || 'System'}}">
+                                                <i class="fas fa-user-circle"></i>
+                                                <strong>{{log.userName}}</strong>
+                                                <small ng-if="log.userId" class="text-muted" style="display: block; font-size: 11px;">ID: {{log.userId}}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge" ng-class="getActionClass(log.action)" title="Hành động: {{log.action}}">
+                                                <i class="fas" ng-class="getActionIcon(log.action)"></i>
+                                                {{log.actionLabel || getActionLabel(log.action)}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="entity-badge" title="Đối tượng: {{log.entityType}}">
+                                                <i class="fas fa-cube"></i>
+                                                {{log.entityTypeLabel || getEntityLabel(log.entityType)}}
+                                                <small ng-if="log.entityId" class="text-muted">#{{log.entityId}}</small>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="cell-details" title="{{log.details}}">
+                                                {{log.details | limitTo: 50}}
+                                                <span ng-if="log.details.length > 50">...</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="cell-ip">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                {{log.ipAddress || 'N/A'}}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" ng-click="viewDetails(log)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper">
+                        <pagination 
+                            pagination="pagination" 
+                            on-page-change="handlePageChange()">
+                        </pagination>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal-overlay" ng-if="showDetailsModal" ng-click="closeDetailsModal()">
+    <div class="modal-container" ng-click="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3><i class="fas fa-info-circle"></i> Chi tiết Nhật ký</h3>
+            <button class="modal-close" ng-click="closeDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-row">
+                <label>Thời gian:</label>
+                <span>{{formatDate(selectedLog.createdAt)}}</span>
+            </div>
+            <div class="detail-row">
+                <label>Người thực hiện:</label>
+                <span>
+                    <strong>{{selectedLog.userName || 'Hệ thống'}}</strong>
+                    <small ng-if="selectedLog.userId" class="text-muted">(ID: {{selectedLog.userId}})</small>
+                    <small ng-if="selectedLog.userFullName && selectedLog.userFullName !== selectedLog.userName" class="text-muted"> - {{selectedLog.userFullName}}</small>
+                </span>
+            </div>
+            <div class="detail-row">
+                <label>Hành động:</label>
+                <span class="badge" ng-class="getActionClass(selectedLog.action)" title="Mã: {{selectedLog.action}}">
+                    <i class="fas" ng-class="getActionIcon(selectedLog.action)"></i>
+                    {{selectedLog.actionLabel || getActionLabel(selectedLog.action)}}
+                </span>
+                <small class="text-muted" ng-if="selectedLog.action">({{selectedLog.action}})</small>
+            </div>
+            <div class="detail-row">
+                <label>Đối tượng:</label>
+                <span title="Mã: {{selectedLog.entityType}}">
+                    <i class="fas fa-cube"></i>
+                    {{selectedLog.entityTypeLabel || getEntityLabel(selectedLog.entityType)}}
+                    <small class="text-muted" ng-if="selectedLog.entityType">({{selectedLog.entityType}})</small>
+                </span>
+            </div>
+            <div class="detail-row" ng-if="selectedLog.entityId">
+                <label>ID:</label>
+                <span>{{selectedLog.entityId}}</span>
+            </div>
+            <div class="detail-row" ng-if="selectedLog.ipAddress">
+                <label>IP Address:</label>
+                <span>{{selectedLog.ipAddress}}</span>
+            </div>
+            <div class="detail-row" ng-if="selectedLog.userAgent">
+                <label>User Agent:</label>
+                <span class="text-wrap">{{selectedLog.userAgent}}</span>
+            </div>
+            <div class="detail-row full-width" ng-if="selectedLog.details">
+                <label>Chi tiết:</label>
+                
+                <!-- Toggle between readable and raw format -->
+                <div class="format-toggle-buttons">
+                    <button class="btn-format-toggle" 
+                            ng-class="{'active': !selectedLog.showRawJson}"
+                            ng-click="selectedLog.showRawJson = false">
+                        <i class="fas fa-align-left"></i> Dễ hiểu
+                    </button>
+                    <button class="btn-format-toggle" 
+                            ng-class="{'active': selectedLog.showRawJson}"
+                            ng-click="selectedLog.showRawJson = true">
+                        <i class="fas fa-code"></i> JSON gốc
+                    </button>
+                </div>
+                
+                <!-- Readable format -->
+                <div class="readable-details-modal" ng-if="!selectedLog.showRawJson">
+                    <div class="readable-item-modal" ng-repeat="item in selectedLog.readableData">
+                        <div class="readable-label-modal">{{item.label}}</div>
+                        <div class="readable-value-modal">{{item.value}}</div>
+                    </div>
+                </div>
+                
+                <!-- Raw JSON format -->
+                <pre class="detail-pre" ng-if="selectedLog.showRawJson">{{selectedLog.details}}</pre>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline-secondary" ng-click="closeDetailsModal()">
+                <i class="fas fa-times"></i> Đóng
+            </button>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,182 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Nhập điểm Kỳ thi"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#/advisor/exam-schedules">Quản lý Lịch thi</a></li>
+                    <li class="breadcrumb-item active">Nhập điểm</li>
+                </ol>
+            </nav>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+                <button type="button" class="close" ng-click="error = null">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải dữ liệu...</p>
+            </div>
+
+            <!-- Exam Info Card -->
+            <div ng-if="exam && !loading" class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Thông tin Kỳ thi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Lớp học phần:</strong> {{exam.classCode}} - {{exam.className}}</p>
+                            <p><strong>Môn học:</strong> {{exam.subjectName}}</p>
+                            <p><strong>Loại thi:</strong> 
+                                <span class="badge" ng-class="exam.examType === 'GIỮA_HỌC_PHẦN' ? 'badge-warning' : 'badge-danger'">
+                                    {{exam.examType === 'GIỮA_HỌC_PHẦN' ? 'Thi giữa học phần' : 'Thi kết thúc học phần'}}
+                                </span>
+                            </p>
+                            <p ng-if="exam.sessionNo"><strong>Ca thi:</strong> Ca {{exam.sessionNo}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Ngày thi:</strong> {{formatDate(exam.examDate)}}</p>
+                            <p><strong>Giờ thi:</strong> {{formatTime(exam.examTime)}} - {{formatTime(exam.endTime)}}</p>
+                            <p><strong>Phòng thi:</strong> {{exam.roomCode}}</p>
+                            <p><strong>Trạng thái:</strong> 
+                                <span class="badge" ng-class="{
+                                    'badge-info': exam.status === 'PLANNED',
+                                    'badge-success': exam.status === 'CONFIRMED',
+                                    'badge-secondary': exam.status === 'COMPLETED',
+                                    'badge-danger': exam.status === 'CANCELLED'
+                                }">
+                                    {{exam.status === 'PLANNED' ? 'Đã lên kế hoạch' : 
+                                      exam.status === 'CONFIRMED' ? 'Đã xác nhận' : 
+                                      exam.status === 'COMPLETED' ? 'Đã hoàn thành' : 
+                                      exam.status === 'CANCELLED' ? 'Đã hủy' : exam.status}}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Entry Form -->
+            <div ng-if="exam && !loading" class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clipboard-list"></i> Nhập điểm cho Sinh viên
+                    </h4>
+                    <p class="mb-0 text-muted" style="font-size: 14px;">
+                        Điểm sẽ tự động gán vào <strong>{{exam.examType === 'GIỮA_HỌC_PHẦN' ? 'điểm giữa học phần (midterm_score)' : 'điểm cuối học phần (final_score)'}}</strong> trong bảng điểm
+                    </p>
+                </div>
+                <div class="card-body">
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Hướng dẫn:</strong>
+                        <ul class="mb-0">
+                            <li>Nhập điểm cho từng sinh viên (thang điểm 10)</li>
+                            <li>Chọn trạng thái: <strong>Đã dự thi</strong>, <strong>Vắng thi</strong>, hoặc <strong>Vắng có lý do</strong></li>
+                            <li>Sau khi lưu, điểm sẽ tự động gán vào bảng điểm và hệ thống sẽ tính lại tổng điểm</li>
+                        </ul>
+                    </div>
+
+                    <!-- Scores Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Mã SV</th>
+                                    <th>Họ và Tên</th>
+                                    <th>Số ghế</th>
+                                    <th>Trạng thái</th>
+                                    <th>Điểm (0-10)</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="!scores || scores.length === 0">
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox"></i> Chưa có danh sách sinh viên. Vui lòng tải lại trang.
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="score in scores | orderBy:['seatNumber', 'studentCode']" 
+                                    ng-class="{
+                                        'table-warning': score.status === 'NOT_QUALIFIED',
+                                        'table-danger': score.status === 'ABSENT',
+                                        'table-info': score.status === 'EXCUSED'
+                                    }">
+                                    <td>{{$index + 1}}</td>
+                                    <td><strong>{{score.studentCode}}</strong></td>
+                                    <td>{{score.studentName}}</td>
+                                    <td>
+                                        <span ng-if="score.seatNumber" class="badge badge-secondary">
+                                            {{score.seatNumber}}
+                                        </span>
+                                        <span ng-if="!score.seatNumber" class="text-muted">—</span>
+                                    </td>
+                                    <td>
+                                        <select ng-model="score.status" class="form-control form-control-sm" 
+                                                ng-change="onStatusChange(score)">
+                                            <option value="ASSIGNED">Đã phân ca</option>
+                                            <option value="NOT_QUALIFIED">Không đủ điều kiện</option>
+                                            <option value="ATTENDED">Đã dự thi</option>
+                                            <option value="ABSENT">Vắng thi</option>
+                                            <option value="EXCUSED">Vắng có lý do</option>
+                                        </select>
+                                        <small ng-if="score.status === 'NOT_QUALIFIED'" class="text-danger">
+                                            <i class="fas fa-exclamation-triangle"></i> Vắng mặt > 20%
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <input type="number" 
+                                               ng-model="score.score" 
+                                               class="form-control form-control-sm" 
+                                               min="0" 
+                                               max="10" 
+                                               step="0.1"
+                                               ng-disabled="score.status !== 'ATTENDED'"
+                                               placeholder="0.0">
+                                        <small ng-if="score.status !== 'ATTENDED'" class="text-muted">
+                                            Chỉ nhập điểm khi trạng thái là "Đã dự thi"
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               ng-model="score.notes" 
+                                               class="form-control form-control-sm" 
+                                               placeholder="Ghi chú (nếu có)">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4 text-right">
+                        <button ng-click="$location.path('/advisor/exam-schedules')" class="btn btn-secondary mr-2">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+                        <button ng-click="saveScores()" 
+                                class="btn btn-primary" 
+                                ng-disabled="saving || !scores || scores.length === 0">
+                            <i class="fas fa-save"></i> {{saving ? 'Đang lưu...' : 'Lưu điểm'}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

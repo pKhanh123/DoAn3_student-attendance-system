@@ -1,0 +1,129 @@
+<header class="header">
+    <!-- Top Row: Menu + Title + Notifications (Mobile) / All items (Desktop) -->
+    <div class="header-top-row">
+        <div class="header-left">
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="page-title">{{pageTitle}}</h1>
+        </div>
+        <div class="header-notifications">
+            <notification-bell></notification-bell>
+        </div>
+        <!-- Desktop: User Info and Logout in same row -->
+        <div class="header-right">
+            <div class="user-info" ng-click="openAvatarModal($event)">
+                <div class="user-avatar">
+                    <img ng-if="currentUser.avatarUrl" ng-src="{{currentUser.avatarUrl}}" alt="Avatar">
+                    <span ng-if="!currentUser.avatarUrl">{{currentUser.fullName ? currentUser.fullName.charAt(0) : 'U'}}</span>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">{{currentUser.fullName}}</span>
+                    <span class="user-role">{{getRoleDisplayName(currentUser)}}</span>
+                </div>
+            </div>
+            <button ng-click="logout()" class="btn btn-outline btn-logout" aria-label="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i> <span class="logout-text">Đăng xuất</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Row: User Info + Logout (Mobile only) -->
+    <div class="header-bottom-row">
+        <div class="user-info" ng-click="openAvatarModal($event)">
+            <div class="user-avatar">
+                <img ng-if="currentUser.avatarUrl" ng-src="{{currentUser.avatarUrl}}" alt="Avatar">
+                <span ng-if="!currentUser.avatarUrl">{{currentUser.fullName ? currentUser.fullName.charAt(0) : 'U'}}</span>
+            </div>
+            <div class="user-details">
+                <span class="user-name">{{currentUser.fullName}}</span>
+                <span class="user-role">{{getRoleDisplayName(currentUser)}}</span>
+            </div>
+        </div>
+        <button ng-click="logout()" class="btn btn-outline btn-logout-mobile" aria-label="Đăng xuất">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="logout-text">Đăng xuất</span>
+        </button>
+    </div>
+</header>
+
+<!-- Avatar Change Modal -->
+<div class="modal-overlay avatar-modal" ng-class="{'active': avatarModal && avatarModal.show}" ng-if="avatarModal && avatarModal.show" ng-click="closeAvatarModal($event)">
+    <div class="modal active" ng-click="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-user-circle"></i> Thay đổi ảnh đại diện</h3>
+            <button class="modal-close" ng-click="closeAvatarModal($event)" type="button" aria-label="Đóng modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="avatar-preview-container">
+                <div class="avatar-preview">
+                    <img ng-if="avatarModal.previewUrl" ng-src="{{avatarModal.previewUrl}}" alt="Preview">
+                    <div ng-if="!avatarModal.previewUrl" class="avatar-preview-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>{{currentUser.fullName ? currentUser.fullName.charAt(0) : 'U'}}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="avatar-upload-area">
+                <div class="avatar-upload-dropzone" 
+                     ng-click="triggerFileInput()"
+                     ng-class="{'drag-over': avatarModal.dragOver}"
+                     ng-drop="handleDrop($event)"
+                     ng-dragover="handleDragOver($event)"
+                     ng-dragleave="handleDragLeave($event)">
+                    <div class="avatar-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="avatar-upload-text">
+                        <strong>Nhấp để chọn file</strong> hoặc kéo thả vào đây
+                        <br>
+                        <small>Hỗ trợ: JPG, PNG, GIF (tối đa 5MB)</small>
+                    </div>
+                </div>
+                
+                <input type="file" 
+                       id="avatarFileInput" 
+                       accept="image/jpeg,image/png,image/gif" 
+                       style="display: none;" 
+                       onchange="var scope = angular.element(this).scope(); var files = Array.prototype.slice.call(this.files); scope.$apply(function() { scope.handleFileSelect(files); });">
+                
+                <div class="avatar-file-info" ng-if="avatarModal.selectedFile">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="avatar-file-details">
+                        <div class="avatar-file-name">{{avatarModal.selectedFile.name}}</div>
+                        <div class="avatar-file-size">{{formatFileSize(avatarModal.selectedFile.size)}}</div>
+                    </div>
+                    <button class="btn-remove" ng-click="clearSelectedFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="avatar-error" ng-if="avatarModal.error">
+                    <i class="fas fa-exclamation-circle"></i> {{avatarModal.error}}
+                </div>
+                
+                <div class="avatar-success" ng-if="avatarModal.success">
+                    <i class="fas fa-check-circle"></i> {{avatarModal.success}}
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-outline" ng-click="closeAvatarModal($event)" ng-disabled="avatarModal.uploading" type="button">
+                Hủy
+            </button>
+            <button class="btn btn-primary" 
+                    ng-click="uploadAvatar($event)" 
+                    ng-disabled="!avatarModal.selectedFile || avatarModal.uploading">
+                <i class="fas fa-upload"></i> 
+                <span ng-if="!avatarModal.uploading">Tải lên</span>
+                <span ng-if="avatarModal.uploading">Đang tải...</span>
+            </button>
+        </div>
+    </div>
+</div>
+

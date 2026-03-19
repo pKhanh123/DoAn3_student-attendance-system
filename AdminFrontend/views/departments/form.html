@@ -1,0 +1,87 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="{{isEditMode ? 'Sửa' : 'Thêm'}} Bộ môn"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-sitemap"></i> Thông tin Bộ môn</h3>
+                </div>
+                <div class="card-body">
+                    <form ng-submit="saveDepartment()">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">Mã bộ môn</label>
+                                <input type="text" class="form-control" ng-model="department.departmentCode" 
+                                       ng-disabled="isEditMode" required 
+                                       placeholder="Ví dụ: CS-BASE">
+                                <small class="form-text">Mã bộ môn không thể thay đổi sau khi tạo</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label required">Thuộc khoa</label>
+                                <select class="form-control" ng-model="department.facultyId" required>
+                                    <option value="">-- Chọn khoa --</option>
+                                    <option ng-repeat="faculty in faculties" value="{{faculty.facultyId}}">
+                                        {{faculty.facultyName}}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label required">Tên bộ môn</label>
+                            <input type="text" class="form-control" ng-model="department.departmentName" required
+                                   placeholder="Ví dụ: Công nghệ phần mềm">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" ng-model="department.description" rows="4"
+                                      placeholder="Nhập mô tả về bộ môn..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="isActive" ng-model="department.isActive">
+                                <label for="isActive">Đang hoạt động</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-30">
+                            <button type="submit" class="btn btn-primary" ng-disabled="loading">
+                                <i class="fas fa-save"></i> {{isEditMode ? 'Cập nhật' : 'Thêm mới'}}
+                            </button>
+                            <button type="button" class="btn btn-secondary" ng-click="cancel()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="card mt-20">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-info-circle"></i> Hướng dẫn</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="help-list">
+                        <li><strong>Bộ môn</strong> là đơn vị thuộc Khoa, quản lý các môn học và giảng viên</li>
+                        <li><strong>Mã bộ môn</strong> phải unique và không thể thay đổi sau khi tạo</li>
+                        <li>Một <strong>Khoa</strong> có thể có nhiều <strong>Bộ môn</strong></li>
+                        <li>Mỗi <strong>Môn học</strong> thuộc về một Bộ môn</li>
+                        <li>Mỗi <strong>Giảng viên</strong> thuộc về một Bộ môn chính</li>
+                        <li>Không thể xóa bộ môn nếu còn môn học hoặc giảng viên liên kết</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,89 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Danh mục Môn học"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-book"></i> Danh sách Danh mục Môn học
+                    </h3>
+                    <div class="card-actions" style="display: flex; gap: 10px; align-items: center;">
+                        <select class="form-control" style="width: 220px;" ng-model="filterByDepartment" ng-change="filterSubjects()">
+                            <option value="">-- Tất cả Bộ môn --</option>
+                            <option ng-repeat="d in departments" value="{{d.departmentId}}">
+                                {{d.departmentName}} ({{d.facultyName}})
+                            </option>
+                        </select>
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm môn học
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">Mã môn</th>
+                                    <th>Tên môn học</th>
+                                    <th style="width: 200px;">Bộ môn</th>
+                                    <th style="width: 80px;">Tín chỉ</th>
+                                    <th style="width: 120px;">Số GV dạy</th>
+                                    <th style="width: 100px;">Trạng thái</th>
+                                    <th style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                                </tr>
+                                <tr ng-if="!loading && filteredSubjects.length === 0">
+                                    <td colspan="7" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="subject in filteredSubjects" ng-if="!loading">
+                                    <td><strong>{{subject.subjectCode}}</strong></td>
+                                    <td>{{subject.subjectName}}</td>
+                                    <td>
+                                        <span class="badge badge-info" ng-if="subject.departmentName">
+                                            {{subject.departmentName}}
+                                        </span>
+                                        <span class="text-muted" ng-if="!subject.departmentName">
+                                            Chưa phân bộ môn
+                                        </span>
+                                    </td>
+                                    <td class="text-center">{{subject.credits}}</td>
+                                    <td class="text-center">
+                                        <span class="badge badge-success">{{subject.lecturerCount || 0}}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="subject.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{subject.isActive ? 'Hoạt động' : 'Ngưng'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(subject.subjectId)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteSubject(subject.subjectId)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

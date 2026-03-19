@@ -1,0 +1,258 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Năm học"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Alert Messages -->
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <!-- Current School Year Info Card -->
+            <div class="row" ng-if="currentSchoolYear">
+                <div class="col-md-6">
+                    <div class="card card-primary mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title"><i class="fas fa-calendar-check"></i> Năm học hiện tại</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-group">
+                                <h2 class="text-primary">{{currentSchoolYear.yearCode}}</h2>
+                                <p class="mb-2">
+                                    <strong>Học kỳ:</strong> 
+                                    <span class="badge badge-info">{{getSemesterName(currentSchoolYear.currentSemester)}}</span>
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Trạng thái:</strong> 
+                                    <span class="badge badge-success"><i class="fas fa-check-circle"></i> Đang hoạt động</span>
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Thời gian:</strong> 
+                                    {{formatDateRange(currentSchoolYear.startDate, currentSchoolYear.endDate)}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6" ng-if="currentSemesterInfo">
+                    <div class="card card-info mb-3">
+                        <div class="card-header">
+                            <h4 class="card-title"><i class="fas fa-info-circle"></i> Thông tin học kỳ</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-group">
+                                <p class="mb-2">
+                                    <strong>Năm học:</strong> {{currentSemesterInfo.schoolYearCode}}
+                                </p>
+                                <p class="mb-2">
+                                    <strong>Học kỳ:</strong> 
+                                    <span class="badge badge-info">{{currentSemesterInfo.semesterName}}</span>
+                                </p>
+                                <p class="mb-0 text-muted">
+                                    <i class="fas fa-lightbulb"></i> Hệ thống đang hoạt động theo thông tin này
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h4 class="card-title"><i class="fas fa-bolt"></i> Thao tác nhanh</h4>
+                </div>
+                <div class="card-body">
+                    <div class="btn-group">
+                        <button class="btn btn-success" ng-click="transitionToNextSemester()" ng-disabled="loading">
+                            <i class="fas fa-forward"></i> Chuyển học kỳ tự động
+                        </button>
+                        <button class="btn btn-primary" ng-click="autoCreateForCohort()" ng-disabled="loading">
+                            <i class="fas fa-magic"></i> Tạo năm học tự động cho khóa mới
+                        </button>
+                        <button class="btn btn-outline-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm năm học thủ công
+                        </button>
+                    </div>
+                    <div class="mt-3" style="border-top: 1px solid #dee2e6; padding-top: 15px;">
+                        <div class="d-flex align-items-center mb-2">
+                            <strong class="text-warning mr-2">
+                                <i class="fas fa-flask"></i> TEST TOOLS:
+                            </strong>
+                            <button class="btn btn-sm btn-warning mr-2" 
+                                    ng-click="forceTransitionSemester(1)" 
+                                    ng-disabled="loading"
+                                    title="Force chuyển sang Học kỳ 1 (CHỈ DÙNG CHO TEST)">
+                                <i class="fas fa-arrow-left"></i> Force HK1
+                            </button>
+                            <button class="btn btn-sm btn-warning" 
+                                    ng-click="forceTransitionSemester(2)" 
+                                    ng-disabled="loading"
+                                    title="Force chuyển sang Học kỳ 2 (CHỈ DÙNG CHO TEST)">
+                                <i class="fas fa-arrow-right"></i> Force HK2
+                            </button>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            <strong>Lưu ý:</strong> Các nút "Force" chỉ dùng cho test. Chúng sẽ force chuyển học kỳ mà không kiểm tra ngày tháng.
+                        </small>
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Chuyển học kỳ tự động:</strong> Hệ thống sẽ tự động xác định học kỳ dựa trên ngày hiện tại (HK1: Tháng 9 - Tháng 1, HK2: Tháng 2 - Tháng 6)
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- School Years List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-list"></i> Danh sách tất cả năm học</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-sm btn-outline-secondary" ng-click="loadSchoolYears()" ng-disabled="loading">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="15%">Mã năm học</th>
+                                    <th width="20%">Năm học</th>
+                                    <th width="15%">Niên khóa</th>
+                                    <th width="15%">Học kỳ hiện tại</th>
+                                    <th width="15%">Thời gian</th>
+                                    <th width="10%">Trạng thái</th>
+                                    <th width="10%">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loading && schoolYears.length === 0">
+                                    <td colspan="7" class="text-center text-muted">
+                                        <i class="fas fa-inbox"></i> Chưa có năm học nào
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="sy in schoolYears | orderBy:['-isActive', '-startDate']" ng-if="!loading">
+                                    <td>
+                                        <strong>{{sy.schoolYearId}}</strong>
+                                    </td>
+                                    <td>
+                                        <strong>{{sy.yearCode}}</strong>
+                                        <br>
+                                        <small class="text-muted">{{sy.yearName}}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-secondary">{{sy.cohortCode || 'N/A'}}</span>
+                                    </td>
+                                    <td>
+                                        <span ng-if="sy.currentSemester" class="badge badge-info">
+                                            {{getSemesterName(sy.currentSemester)}}
+                                        </span>
+                                        <span ng-if="!sy.currentSemester" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <small>{{formatDateRange(sy.startDate, sy.endDate)}}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="sy.isActive ? 'badge-success' : 'badge-secondary'">
+                                            <i class="fas" ng-class="sy.isActive ? 'fa-check-circle' : 'fa-circle'"></i>
+                                            {{sy.isActive ? 'Active' : 'Inactive'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <!-- Activate button for inactive years -->
+                                            <button ng-if="!sy.isActive" 
+                                                    class="btn btn-sm btn-success" 
+                                                    ng-click="activateSchoolYear(sy.schoolYearId, 1)"
+                                                    title="Kích hoạt năm học này">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                            
+                                            <!-- Deactivate button for active year -->
+                                            <button ng-if="sy.isActive" 
+                                                    class="btn btn-sm btn-warning" 
+                                                    ng-click="deactivateSchoolYear(sy.schoolYearId)"
+                                                    title="Hủy kích hoạt">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                            
+                                            <!-- Edit button -->
+                                            <button class="btn btn-sm btn-primary" 
+                                                    ng-click="goToEdit(sy.schoolYearId)"
+                                                    title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            
+                                            <!-- Delete button (only for inactive years) -->
+                                            <button ng-if="!sy.isActive" 
+                                                    class="btn btn-sm btn-danger" 
+                                                    ng-click="deleteSchoolYear(sy.schoolYearId)"
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary Stats -->
+                    <div class="mt-3 p-3 bg-light rounded" ng-if="!loading && schoolYears.length > 0">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Tổng số năm học:</strong> {{schoolYears.length}}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Đang hoạt động:</strong> 
+                                <span class="text-success">{{(schoolYears | filter:{isActive:true}).length}}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Không hoạt động:</strong> 
+                                <span class="text-muted">{{(schoolYears | filter:{isActive:false}).length}}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> Cập nhật: {{getCurrentTime()}}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card card-help mt-3">
+                <div class="card-header">
+                    <h4 class="card-title"><i class="fas fa-question-circle"></i> Hướng dẫn sử dụng</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Năm học:</strong> Mỗi năm học kéo dài từ tháng 9 năm X đến tháng 6 năm X+1, gồm 2 học kỳ (HK1: Tháng 9 - Tháng 1, HK2: Tháng 2 - Tháng 6)</li>
+                        <li><strong>Niên khóa:</strong> Mỗi niên khóa (VD: K21) gồm 4 năm học liên tiếp</li>
+                        <li><strong>Tự động tạo:</strong> Sử dụng nút "Tạo năm học tự động" để tạo 4 năm học cho một khóa mới</li>
+                        <li><strong>Chuyển học kỳ:</strong> Hệ thống tự động chuyển học kỳ dựa trên ngày hiện tại khi bạn nhấn nút "Chuyển học kỳ tự động"</li>
+                        <li><strong>Kích hoạt:</strong> Chỉ được kích hoạt 1 năm học tại một thời điểm. Kích hoạt năm học mới sẽ tự động hủy năm học cũ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Modal (will be included via directive) -->
+<app-avatar-modal></app-avatar-modal>
+

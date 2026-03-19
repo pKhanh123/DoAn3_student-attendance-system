@@ -1,0 +1,346 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Phúc khảo điểm"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="loading-overlay" ng-if="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Đang tải dữ liệu...</div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Action Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0;"><i class="fas fa-gavel"></i> Yêu cầu phúc khảo điểm</h2>
+                        <button class="btn btn-primary" ng-click="openCreateModal()" ng-disabled="loading">
+                            <i class="fas fa-plus"></i> Tạo yêu cầu phúc khảo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-control" ng-model="filters.status" ng-change="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="PENDING">Đang chờ</option>
+                                <option value="REVIEWING">Đang xem xét</option>
+                                <option value="APPROVED">Đã duyệt</option>
+                                <option value="REJECTED">Đã từ chối</option>
+                                <option value="CANCELLED">Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline" ng-click="clearFilters()" style="width: 100%;">
+                                <i class="fas fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appeals List -->
+            <div class="card" ng-if="!loading && appeals.length > 0">
+                <div class="card-header">
+                    <h3>Danh sách yêu cầu phúc khảo ({{pagination.totalCount}})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">Mã yêu cầu</th>
+                                    <th>Môn học</th>
+                                    <th style="width: 100px;">Điểm hiện tại</th>
+                                    <th style="width: 100px;">Điểm mong muốn</th>
+                                    <th style="width: 120px;">Trạng thái</th>
+                                    <th style="width: 150px;">Ngày tạo</th>
+                                    <th style="width: 150px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="appeal in appeals">
+                                    <td><code>{{appeal.appealId.substring(0, 8)}}...</code></td>
+                                    <td>
+                                        <strong>{{appeal.subjectName || appeal.subjectCode}}</strong><br>
+                                        <small class="text-muted">{{appeal.className || appeal.classCode}}</small>
+                                        <br>
+                                        <small ng-if="appeal.componentType" class="badge badge-info">
+                                            {{appeal.componentType === 'MIDTERM' ? 'Giữa kỳ' : 
+                                              appeal.componentType === 'FINAL' ? 'Cuối kỳ' : 
+                                              appeal.componentType === 'ATTENDANCE' ? 'Chuyên cần' : 
+                                              appeal.componentType === 'ASSIGNMENT' ? 'Bài tập' : appeal.componentType}}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong ng-if="appeal.currentScore">{{appeal.currentScore | number:1}}</strong>
+                                        <span ng-if="!appeal.currentScore">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong ng-if="appeal.expectedScore" class="text-primary">{{appeal.expectedScore | number:1}}</strong>
+                                        <span ng-if="!appeal.expectedScore">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusBadgeClass(appeal.status)">
+                                            {{appeal.status === 'PENDING' ? 'Đang chờ' : 
+                                              appeal.status === 'REVIEWING' ? 'Đang xem xét' :
+                                              appeal.status === 'APPROVED' ? 'Đã duyệt' :
+                                              appeal.status === 'REJECTED' ? 'Đã từ chối' :
+                                              appeal.status === 'CANCELLED' ? 'Đã hủy' : appeal.status}}
+                                        </span>
+                                    </td>
+                                    <td>{{appeal.createdAt | date:'dd/MM/yyyy HH:mm'}}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" ng-click="viewDetail(appeal.appealId)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" 
+                                                ng-if="appeal.status === 'PENDING' || appeal.status === 'REVIEWING'"
+                                                ng-click="cancelAppeal(appeal.appealId)" 
+                                                title="Hủy yêu cầu">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <pagination 
+                        current-page="pagination.page" 
+                        page-size="pagination.pageSize" 
+                        total-items="pagination.totalCount"
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div ng-if="!loading && appeals.length === 0" class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Chưa có yêu cầu phúc khảo nào</p>
+                    <button class="btn btn-primary" ng-click="openCreateModal()">
+                        <i class="fas fa-plus"></i> Tạo yêu cầu phúc khảo đầu tiên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Appeal Modal -->
+<div ng-if="showCreateModal" class="modal-overlay" ng-class="{'active': showCreateModal}" ng-click="closeCreateModal()">
+    <div class="modal" ng-class="{'active': showCreateModal}" ng-click="$event.stopPropagation()" style="width: 800px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 class="modal-title">Tạo yêu cầu phúc khảo</h3>
+            <button class="modal-close" ng-click="closeCreateModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div ng-if="loadingGrades" class="text-center">
+                <div class="spinner"></div>
+                <p>Đang tải danh sách điểm...</p>
+            </div>
+
+            <div ng-if="!loadingGrades">
+                <!-- Select Subject/Grade -->
+                <div class="form-group">
+                    <label class="form-label">Chọn môn học <span class="text-danger">*</span></label>
+                    <select class="form-control" ng-model="newAppeal.gradeId" ng-change="onGradeSelect()" required>
+                        <option value="">-- Chọn môn học --</option>
+                        <option ng-repeat="grade in availableGrades" value="{{grade.gradeId}}">
+                            {{grade.subjectName || grade.subjectCode}} - {{grade.className || grade.classCode}}
+                            <span ng-if="grade.midtermScore !== null && grade.midtermScore !== undefined"> | Giữa kỳ: {{grade.midtermScore | number:1}}</span>
+                            <span ng-if="grade.finalScore !== null && grade.finalScore !== undefined"> | Cuối kỳ: {{grade.finalScore | number:1}}</span>
+                            <span ng-if="grade.attendanceScore !== null && grade.attendanceScore !== undefined"> | Chuyên cần: {{grade.attendanceScore | number:1}}</span>
+                            <span ng-if="grade.assignmentScore !== null && grade.assignmentScore !== undefined"> | Bài tập: {{grade.assignmentScore | number:1}}</span>
+                        </option>
+                    </select>
+                    <small class="form-text text-muted" ng-if="availableGrades.length === 0">
+                        Không có môn học nào có điểm thành phần để phúc khảo
+                    </small>
+                </div>
+
+                <!-- Select Component Type -->
+                <div ng-if="newAppeal.gradeId && selectedGrade" class="form-group">
+                    <label class="form-label">Chọn điểm thành phần cần phúc khảo <span class="text-danger">*</span></label>
+                    <select class="form-control" ng-model="newAppeal.componentType" ng-change="onComponentTypeSelect()" required>
+                        <option value="">-- Chọn điểm thành phần --</option>
+                        <option ng-repeat="component in getAvailableComponents()" value="{{component.value}}">
+                            {{component.label}}
+                            <span ng-if="selectedGrade[component.field] !== null && selectedGrade[component.field] !== undefined">
+                                (Hiện tại: {{selectedGrade[component.field] | number:1}})
+                            </span>
+                        </option>
+                    </select>
+                    <small class="form-text text-muted">
+                        Lưu ý: Không thể phúc khảo điểm tổng kết. Chỉ có thể phúc khảo các điểm thành phần.
+                    </small>
+                </div>
+
+                <div ng-if="newAppeal.gradeId && newAppeal.componentType">
+                    <!-- Current Score Display -->
+                    <div class="alert alert-info">
+                        <strong>Điểm thành phần hiện tại:</strong> 
+                        <span class="badge badge-primary" style="font-size: 1.2em; margin-left: 10px;">
+                            {{getComponentLabel(newAppeal.componentType)}}: {{newAppeal.currentScore | number:1}}
+                        </span>
+                    </div>
+
+                    <!-- Expected Score -->
+                    <div class="form-group">
+                        <label class="form-label">Điểm mong muốn <span class="text-danger">*</span></label>
+                        <input type="number" 
+                               class="form-control" 
+                               ng-model="newAppeal.expectedScore" 
+                               min="0" 
+                               max="10" 
+                               step="0.1"
+                               placeholder="Nhập điểm mong muốn (0-10)"
+                               required>
+                        <small class="form-text text-muted">
+                            Điểm mong muốn sau khi phúc khảo
+                        </small>
+                    </div>
+
+                    <!-- Appeal Reason -->
+                    <div class="form-group">
+                        <label class="form-label">Lý do phúc khảo <span class="text-danger">*</span></label>
+                        <textarea class="form-control" 
+                                  ng-model="newAppeal.appealReason" 
+                                  rows="5"
+                                  placeholder="Vui lòng mô tả chi tiết lý do phúc khảo (ít nhất 10 ký tự)..."
+                                  required></textarea>
+                        <small class="form-text text-muted">Số ký tự: {{newAppeal.appealReason.length}}/1000</small>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" ng-click="closeCreateModal()" ng-disabled="saving">Hủy</button>
+            <button class="btn btn-primary" ng-click="createAppeal()" ng-disabled="saving || !newAppeal.gradeId || !newAppeal.componentType || !newAppeal.expectedScore || !newAppeal.appealReason || newAppeal.appealReason.length < 10">
+                <i class="fas fa-save"></i> {{saving ? 'Đang tạo...' : 'Tạo yêu cầu'}}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Appeal Detail Modal -->
+<div ng-if="showDetailModal && selectedAppeal" class="modal-overlay" ng-class="{'active': showDetailModal}" ng-click="closeDetailModal()">
+    <div class="modal" ng-class="{'active': showDetailModal}" ng-click="$event.stopPropagation()" style="width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 class="modal-title">Chi tiết yêu cầu phúc khảo</h3>
+            <button class="modal-close" ng-click="closeDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Thông tin yêu cầu</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 150px;">Mã yêu cầu</th>
+                            <td><code>{{selectedAppeal.appealId}}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Môn học</th>
+                            <td>{{selectedAppeal.subjectName || selectedAppeal.subjectCode}}</td>
+                        </tr>
+                        <tr>
+                            <th>Lớp</th>
+                            <td>{{selectedAppeal.className || selectedAppeal.classCode}}</td>
+                        </tr>
+                        <tr>
+                            <th>Điểm hiện tại</th>
+                            <td><strong>{{selectedAppeal.currentScore | number:1}}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Điểm mong muốn</th>
+                            <td><strong class="text-primary">{{selectedAppeal.expectedScore | number:1}}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái</th>
+                            <td>
+                                <span class="badge" ng-class="getStatusBadgeClass(selectedAppeal.status)">
+                                    {{selectedAppeal.status}}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Lý do phúc khảo</h4>
+                    <div class="alert alert-light">
+                        {{selectedAppeal.appealReason}}
+                    </div>
+                    
+                    <h4>Phản hồi</h4>
+                    <div ng-if="selectedAppeal.lecturerResponse">
+                        <p><strong>Giảng viên:</strong></p>
+                        <div class="alert alert-info">
+                            {{selectedAppeal.lecturerResponse}}
+                        </div>
+                        <p><small>Quyết định: <span class="badge" ng-class="{
+                            'badge-success': selectedAppeal.lecturerDecision === 'APPROVE',
+                            'badge-danger': selectedAppeal.lecturerDecision === 'REJECT',
+                            'badge-warning': selectedAppeal.lecturerDecision === 'NEED_REVIEW'
+                        }">{{selectedAppeal.lecturerDecision}}</span></small></p>
+                    </div>
+                    
+                    <div ng-if="selectedAppeal.advisorResponse">
+                        <p><strong>Cố vấn:</strong></p>
+                        <div class="alert" ng-class="{
+                            'alert-success': selectedAppeal.advisorDecision === 'APPROVE',
+                            'alert-danger': selectedAppeal.advisorDecision === 'REJECT'
+                        }">
+                            {{selectedAppeal.advisorResponse}}
+                        </div>
+                        <p><small>Quyết định cuối: <span class="badge" ng-class="{
+                            'badge-success': selectedAppeal.advisorDecision === 'APPROVE',
+                            'badge-danger': selectedAppeal.advisorDecision === 'REJECT'
+                        }">{{selectedAppeal.advisorDecision}}</span></small></p>
+                        <p ng-if="selectedAppeal.finalScore"><strong>Điểm sau phúc khảo: {{selectedAppeal.finalScore | number:1}}</strong></p>
+                    </div>
+                    
+                    <div ng-if="!selectedAppeal.lecturerResponse && !selectedAppeal.advisorResponse" class="text-muted">
+                        <p>Chưa có phản hồi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" ng-click="closeDetailModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+

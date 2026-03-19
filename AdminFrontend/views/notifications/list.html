@@ -1,0 +1,215 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Thông báo"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách thông báo</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="openCreateModal()" ng-if="canCreateNotification">
+                            <i class="fas fa-plus"></i> Tạo thông báo mới
+                        </button>
+                        <button class="btn btn-outline" ng-click="markAllAsRead()">
+                            <i class="fas fa-check-double"></i> Đánh dấu tất cả là đã đọc
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <search-bar 
+                        search-term="pagination.searchTerm" 
+                        on-search="handleSearch()" 
+                        placeholder="Tìm kiếm thông báo...">
+                    </search-bar>
+                    
+                    <!-- Filters -->
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Trạng thái</label>
+                            <select ng-model="filters.isRead" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option value="false">Chưa đọc</option>
+                                <option value="true">Đã đọc</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Loại</label>
+                            <select ng-model="filters.type" 
+                                    ng-change="handleFilterChange()" 
+                                    class="filter-select">
+                                <option value="">Tất cả</option>
+                                <option value="GradeAppeal">Phúc khảo điểm</option>
+                                <option value="Enrollment">Đăng ký học phần</option>
+                                <option value="GradeUpdate">Cập nhật điểm</option>
+                                <option value="AttendanceWarning">Cảnh báo chuyên cần</option>
+                                <option value="AcademicWarning">Cảnh báo học tập</option>
+                                <option value="System">Hệ thống</option>
+                            </select>
+                        </div>
+                        
+                        <button ng-click="resetFilters()" class="btn btn-outline" style="margin-top: 20px;">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                    
+                    <!-- Notifications List -->
+                    <div class="notifications-list">
+                        <div ng-if="loading" class="text-center" style="padding: 40px;">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                        
+                        <div ng-if="!loading && displayedNotifications.length === 0" class="text-center" style="padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
+                            <p style="color: #999; margin-top: 10px;">Không có thông báo</p>
+                        </div>
+                        
+                        <div ng-repeat="notif in displayedNotifications" 
+                             class="notification-item" 
+                             ng-class="{'unread': !notif.isRead}"
+                             ng-if="!loading"
+                             ng-click="navigateToRelated(notif)"
+                             style="cursor: pointer;">
+                            <div class="notification-icon">
+                                <i class="fas {{getNotificationIcon(notif.type)}}" 
+                                   ng-class="getNotificationClass(notif.type)"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-header">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <h4 class="notification-title">{{notif.title}}</h4>
+                                        <span ng-if="!notif.isRead" class="badge badge-warning" style="font-size: 10px;">Chưa đọc</span>
+                                        <span class="badge" ng-class="getNotificationClass(notif.type)" style="font-size: 10px;">
+                                            {{getNotificationTypeName(notif.type)}}
+                                        </span>
+                                    </div>
+                                    <span class="notification-time">{{timeAgo(notif.createdAt || notif.sentDate)}}</span>
+                                </div>
+                                <p class="notification-message">{{notif.content || notif.message}}</p>
+                                <div class="notification-actions" ng-click="$event.stopPropagation()">
+                                    <button ng-if="!notif.isRead" 
+                                            class="btn btn-sm btn-outline" 
+                                            ng-click="markAsRead(notif.notificationId || notif.id)">
+                                        <i class="fas fa-check"></i> Đánh dấu đã đọc
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" 
+                                            ng-click="deleteNotification(notif.notificationId || notif.id)">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <pagination 
+                        pagination="pagination" 
+                        on-page-change="handlePageChange()">
+                    </pagination>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Notification Modal -->
+<div class="modal-overlay" ng-class="{'active': showCreateModal}" ng-click="closeCreateModal()">
+    <div class="modal" ng-class="{'active': showCreateModal}" ng-click="$event.stopPropagation()" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-bell"></i> Tạo thông báo mới</h3>
+            <button class="modal-close" ng-click="closeCreateModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form ng-submit="createNotification()">
+                <div class="form-group">
+                    <label class="form-label required">Người nhận</label>
+                    <input type="text" 
+                           class="form-control" 
+                           ng-model="userSearchTerm" 
+                           placeholder="Tìm kiếm user (username, tên, email)..."
+                           ng-keyup="filterUsers()"
+                           style="margin-bottom: 10px;">
+                    <select class="form-control" ng-model="newNotification.recipientId" required>
+                        <option value="">-- Chọn người nhận --</option>
+                        <optgroup label="Giảng viên" ng-if="getUsersByRole('Lecturer').length > 0">
+                            <option ng-repeat="user in getUsersByRole('Lecturer')" value="{{user.userId}}">
+                                {{user.fullName}} ({{user.username}}) - {{user.roleName}}
+                            </option>
+                        </optgroup>
+                        <optgroup label="Sinh viên" ng-if="getUsersByRole('Student').length > 0">
+                            <option ng-repeat="user in getUsersByRole('Student')" value="{{user.userId}}">
+                                {{user.fullName}} ({{user.username}}) - {{user.roleName}}
+                            </option>
+                        </optgroup>
+                        <optgroup label="Cố vấn" ng-if="getUsersByRole('Advisor').length > 0">
+                            <option ng-repeat="user in getUsersByRole('Advisor')" value="{{user.userId}}">
+                                {{user.fullName}} ({{user.username}}) - {{user.roleName}}
+                            </option>
+                        </optgroup>
+                        <optgroup label="Admin" ng-if="getUsersByRole('Admin').length > 0">
+                            <option ng-repeat="user in getUsersByRole('Admin')" value="{{user.userId}}">
+                                {{user.fullName}} ({{user.username}}) - {{user.roleName}}
+                            </option>
+                        </optgroup>
+                    </select>
+                    <small class="form-text">
+                        <strong>Gợi ý:</strong> User ID của giảng viên "Nguyen Huu Hung" là <code>USR_LEC_01</code>
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Tiêu đề</label>
+                    <input type="text" class="form-control" ng-model="newNotification.title" required
+                           placeholder="VD: Nhắc chấm điểm, Thông báo mới...">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Nội dung</label>
+                    <textarea class="form-control" ng-model="newNotification.content" required rows="4"
+                              placeholder="Nhập nội dung thông báo..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Loại thông báo</label>
+                    <select class="form-control" ng-model="newNotification.type">
+                        <option value="System">Hệ thống</option>
+                        <option value="GradeAppeal">Phúc khảo điểm</option>
+                        <option value="Enrollment">Đăng ký học phần</option>
+                        <option value="GradeUpdate">Cập nhật điểm</option>
+                        <option value="AttendanceWarning">Cảnh báo chuyên cần</option>
+                        <option value="AcademicWarning">Cảnh báo học tập</option>
+                    </select>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" ng-click="closeCreateModal()">
+                        Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary" ng-disabled="creatingNotification">
+                        <i class="fas fa-save"></i> 
+                        <span ng-if="!creatingNotification">Tạo thông báo</span>
+                        <span ng-if="creatingNotification">Đang tạo...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

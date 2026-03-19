@@ -1,0 +1,328 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Lịch thi"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Toolbar Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt"></i> Danh sách Lịch thi
+                    </h3>
+                    <button ng-click="openCreateForm()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Tạo lịch thi mới
+                    </button>
+                </div>
+                
+                <!-- Filters -->
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-2">
+                            <label>Năm học</label>
+                            <select ng-model="filters.schoolYearId" class="form-control" ng-change="applyFilters()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">
+                                    {{sy.yearCode}} - {{sy.yearName}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Học kỳ</label>
+                            <select ng-model="filters.semester" class="form-control" ng-change="applyFilters()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="sem in semesters" value="{{sem.value}}">
+                                    {{sem.label}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Loại thi</label>
+                            <select ng-model="filters.examType" class="form-control" ng-change="applyFilters()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="type in examTypes" value="{{type.value}}">
+                                    {{type.label}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Lớp học phần</label>
+                            <select ng-model="filters.classId" class="form-control" ng-change="applyFilters()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="c in classes" value="{{c.classId}}">
+                                    {{c.classCode}} - {{c.className}}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>&nbsp;</label>
+                            <div>
+                                <button ng-click="applyFilters()" class="btn btn-info">
+                                    <i class="fas fa-filter"></i> Lọc
+                                </button>
+                                <button ng-click="clearFilters()" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Xóa bộ lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+                <button type="button" class="close" ng-click="error = null">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Success Message -->
+            <div ng-if="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> {{success}}
+                <button type="button" class="close" ng-click="success = null">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải dữ liệu...</p>
+            </div>
+
+            <!-- Exam Schedules Table -->
+            <div ng-if="!loading" class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Loại thi</th>
+                                    <th>Lớp học phần</th>
+                                    <th>Môn học</th>
+                                    <th>Ngày thi</th>
+                                    <th>Giờ thi</th>
+                                    <th>Phòng thi</th>
+                                    <th>Ca thi</th>
+                                    <th>Số SV</th>
+                                    <th>Giảng viên coi thi</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="displayedSchedules.length === 0">
+                                    <td colspan="11" class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox"></i> Không có dữ liệu lịch thi
+                                    </td>
+                                </tr>
+                                <tr ng-repeat="exam in displayedSchedules">
+                                    <td>
+                                        <span class="badge" ng-class="exam.examType === 'GIỮA_HỌC_PHẦN' ? 'badge-warning' : 'badge-danger'">
+                                            {{exam.examTypeLabel}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{exam.classCode}}</strong><br>
+                                        <small class="text-muted">{{exam.className}}</small>
+                                    </td>
+                                    <td>{{exam.subjectName}}</td>
+                                    <td>{{formatDate(exam.examDate)}}</td>
+                                    <td>
+                                        {{formatTime(exam.examTime)}} - {{formatTime(exam.endTime)}}
+                                        <br>
+                                        <small class="text-muted">({{exam.duration}} phút)</small>
+                                    </td>
+                                    <td>{{exam.roomCode}}</td>
+                                    <td>
+                                        <span ng-if="exam.sessionNo" class="badge badge-info">
+                                            Ca {{exam.sessionNo}}
+                                        </span>
+                                        <span ng-if="!exam.sessionNo" class="text-muted">—</span>
+                                    </td>
+                                    <td>
+                                        <span ng-if="exam.assignedStudents > 0">
+                                            {{exam.assignedStudents}}/{{exam.maxStudents || '—'}}
+                                        </span>
+                                        <span ng-if="!exam.assignedStudents" class="text-muted">—</span>
+                                    </td>
+                                    <td>{{exam.proctorName}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="getStatusClass(exam.status)">
+                                            {{exam.statusLabel}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button ng-click="openEditForm(exam)" class="btn btn-outline-primary" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button ng-click="viewExamDetails(exam)" class="btn btn-outline-info" title="Chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button ng-if="exam.status !== 'CANCELLED'" 
+                                                    ng-click="cancelExamSchedule(exam)" 
+                                                    class="btn btn-outline-warning" 
+                                                    title="Hủy">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            <button ng-click="deleteExamSchedule(exam)" 
+                                                    class="btn btn-outline-danger" 
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create/Edit Form Modal -->
+            <div ng-if="showForm" class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas fa-calendar-plus"></i> {{isEditMode ? 'Sửa' : 'Tạo'}} Lịch thi
+                            </h5>
+                            <button type="button" class="close" ng-click="closeForm()">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form name="examForm">
+                                <div class="row">
+                                    <!-- Lớp học phần -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Lớp học phần <span class="text-danger">*</span></label>
+                                        <select ng-model="form.classId" 
+                                                ng-change="onClassSelect()" 
+                                                class="form-control" 
+                                                required>
+                                            <option value="">-- Chọn lớp học phần --</option>
+                                            <option ng-repeat="c in classes" value="{{c.classId}}">
+                                                {{c.classCode}} - {{c.className}}
+                                            </option>
+                                        </select>
+                                        <small class="text-muted" ng-if="selectedClass">
+                                            Môn: {{selectedClass.subjectName}} | 
+                                            Số SV: {{classStudents.length}}
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Loại thi -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Loại thi <span class="text-danger">*</span></label>
+                                        <select ng-model="form.examType" class="form-control" required>
+                                            <option ng-repeat="type in examTypes" value="{{type.value}}">
+                                                {{type.label}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Ngày thi -->
+                                    <div class="col-md-4 mb-3">
+                                        <label>Ngày thi <span class="text-danger">*</span></label>
+                                        <input type="date" ng-model="form.examDate" class="form-control" required>
+                                    </div>
+                                    
+                                    <!-- Giờ bắt đầu -->
+                                    <div class="col-md-4 mb-3">
+                                        <label>Giờ bắt đầu <span class="text-danger">*</span></label>
+                                        <input type="time" ng-model="form.examTime" class="form-control" required>
+                                    </div>
+                                    
+                                    <!-- Giờ kết thúc -->
+                                    <div class="col-md-4 mb-3">
+                                        <label>Giờ kết thúc <span class="text-danger">*</span></label>
+                                        <input type="time" ng-model="form.endTime" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Phòng thi -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Phòng thi <span class="text-danger">*</span></label>
+                                        <select ng-model="form.roomId" 
+                                                ng-change="onRoomSelect()" 
+                                                class="form-control" 
+                                                required>
+                                            <option value="">-- Chọn phòng thi --</option>
+                                            <option ng-repeat="room in rooms" value="{{room.roomId}}">
+                                                {{room.roomCode}} ({{room.capacity}} chỗ)
+                                            </option>
+                                        </select>
+                                        <button type="button" 
+                                                ng-click="checkRoomConflict()" 
+                                                class="btn btn-sm btn-outline-info mt-2">
+                                            <i class="fas fa-search"></i> Kiểm tra xung đột
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Thời lượng -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Thời lượng (phút) <span class="text-danger">*</span></label>
+                                        <input type="number" ng-model="form.duration" class="form-control" min="30" max="300" required>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Giảng viên coi thi -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Giảng viên coi thi</label>
+                                        <select ng-model="form.proctorLecturerId" class="form-control">
+                                            <option value="">-- Chọn giảng viên --</option>
+                                            <option ng-repeat="lec in lecturers" value="{{lec.lecturerId}}">
+                                                {{lec.fullName}} ({{lec.lecturerCode}})
+                                            </option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Ghi chú -->
+                                    <div class="col-md-6 mb-3">
+                                        <label>Ghi chú</label>
+                                        <textarea ng-model="form.notes" class="form-control" rows="2"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Info về số ca thi sẽ tạo -->
+                                <div ng-if="selectedClass && form.roomId && classStudents.length > 0" class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Thông tin:</strong>
+                                    <ul class="mb-0">
+                                        <li>Lớp có <strong>{{classStudents.length}}</strong> sinh viên</li>
+                                        <li ng-if="rooms.find(function(r) { return r.roomId === form.roomId; })">
+                                            Phòng có <strong>{{rooms.find(function(r) { return r.roomId === form.roomId; }).capacity}}</strong> chỗ
+                                        </li>
+                                        <li>
+                                            Hệ thống sẽ tự động tạo <strong>{{Math.ceil(classStudents.length / (rooms.find(function(r) { return r.roomId === form.roomId; })?.capacity || 1))}}</strong> ca thi
+                                            và phân tất cả sinh viên vào các ca thi
+                                        </li>
+                                    </ul>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" ng-click="closeForm()">
+                                <i class="fas fa-times"></i> Đóng
+                            </button>
+                            <button type="button" class="btn btn-primary" ng-click="saveExamSchedule()" ng-disabled="loading">
+                                <i class="fas fa-save"></i> {{isEditMode ? 'Cập nhật' : 'Tạo'}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="showForm" class="modal-backdrop fade show"></div>
+        </div>
+    </div>
+</div>
+

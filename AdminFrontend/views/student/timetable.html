@@ -1,0 +1,138 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Thời khóa biểu"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <!-- Loading -->
+            <div ng-if="loading" class="card">
+                <div class="card-body text-center" style="padding: 60px 20px;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary-color); margin-bottom: 20px;"></i>
+                    <p style="font-size: 16px; color: var(--text-secondary);">Đang tải thời khóa biểu...</p>
+                </div>
+            </div>
+            
+            <!-- Timetable Content -->
+            <div ng-if="!loading && studentId">
+                <!-- Week Navigation Card -->
+                <div class="card timetable-week-nav">
+                    <div class="card-body">
+                        <div class="week-navigation">
+                            <button class="btn-week-nav" ng-click="prevWeek()" title="Tuần trước">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div class="week-info">
+                                <div class="week-title">
+                                    <i class="fas fa-calendar-week"></i>
+                                    Tuần {{week}}
+                                </div>
+                                <div class="week-date-range" style="font-size: 13px; color: #ffffff; margin-top: 4px; font-weight: 500;">
+                                    {{getWeekDateRange()}}
+                                </div>
+                                <div class="week-year">Năm học {{year}}</div>
+                            </div>
+                            <button class="btn-week-nav" ng-click="nextWeek()" title="Tuần sau">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button class="btn-week-today" ng-click="goToToday()" title="Tuần hiện tại">
+                                <i class="fas fa-calendar-day"></i>
+                                Hôm nay
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timetable Grid -->
+                <div class="timetable-grid" ng-if="raw && raw.length > 0">
+                    <div ng-repeat="d in days" class="timetable-day-card">
+                        <div class="day-header">
+                            <div class="day-name">{{getDayName(d)}}</div>
+                            <div class="day-date" style="font-size: 12px; color: #ffffff; margin-top: 4px; font-weight: 500;">
+                                {{getDateForDay(d)}}
+                            </div>
+                            <div class="day-session-count" ng-if="grid[d] && grid[d].length > 0">
+                                {{grid[d].length}} môn
+                            </div>
+                        </div>
+                        <div class="day-sessions">
+                            <div ng-if="grid[d] && grid[d].length > 0">
+                                <div ng-repeat="s in grid[d] | orderBy:'startTime'" 
+                                     class="timetable-session-card"
+                                     ng-class="{'exam-card': s.type === 'exam', 'session-card': s.type === 'session' || !s.type, 'session-0': (!s.type || s.type === 'session') && ($index % 4 === 0), 'session-1': (!s.type || s.type === 'session') && ($index % 4 === 1), 'session-2': (!s.type || s.type === 'session') && ($index % 4 === 2), 'session-3': (!s.type || s.type === 'session') && ($index % 4 === 3)}">
+                                    <!-- ✅ Label phân loại ở đầu card -->
+                                    <div class="session-type-label">
+                                        <span ng-if="s.type === 'exam'" class="badge badge-danger">
+                                            <i class="fas fa-clipboard-list"></i> LỊCH THI
+                                        </span>
+                                        <span ng-if="s.type === 'session' || !s.type" class="badge badge-primary">
+                                            <i class="fas fa-book"></i> LỊCH HỌC
+                                        </span>
+                                    </div>
+                                    <div class="session-time">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{s.startTime || '—'}} - {{s.endTime || '—'}}</span>
+                                        <!-- Thêm thông tin ca thi nếu là exam -->
+                                        <span ng-if="s.type === 'exam' && s.sessionNo" class="text-muted">
+                                            <br><small>Ca thi {{s.sessionNo}}</small>
+                                        </span>
+                                    </div>
+                                    <div class="session-subject">
+                                        <i class="fas fa-book"></i>
+                                        {{s.subjectName || 'N/A'}}
+                                        <!-- Thêm loại thi nếu là exam -->
+                                        <span ng-if="s.type === 'exam'">
+                                            <br>
+                                            <small class="text-muted">
+                                                <span ng-if="s.examType === 'GIỮA_HỌC_PHẦN'">(Thi giữa)</span>
+                                                <span ng-if="s.examType === 'KẾT_THÚC_HỌC_PHẦN'">(Thi cuối)</span>
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="session-details">
+                                        <div class="session-detail-item">
+                                            <i class="fas fa-users"></i>
+                                            <span>{{s.classCode || '—'}}</span>
+                                        </div>
+                                        <div class="session-detail-item">
+                                            <i class="fas fa-door-open"></i>
+                                            <span>{{s.roomCode || '—'}}</span>
+                                        </div>
+                                        <div class="session-detail-item" ng-if="s.lecturerName">
+                                            <i class="fas fa-user-tie"></i>
+                                            <span>{{s.lecturerName}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="!grid[d] || grid[d].length === 0" class="day-empty">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>Không có lịch</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div ng-if="!loading && (!raw || raw.length === 0)" class="card">
+                    <div class="card-body text-center" style="padding: 60px 20px;">
+                        <i class="fas fa-calendar-times fa-4x" style="color: var(--text-light); margin-bottom: 20px;"></i>
+                        <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Không có lịch học và lịch thi</h3>
+                        <p style="color: var(--text-secondary);">Tuần này không có môn học hoặc lịch thi nào được lên lịch.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

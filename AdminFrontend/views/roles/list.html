@@ -1,0 +1,762 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Vai trò & Quyền hạn"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Toast Container -->
+            <toast-container></toast-container>
+            
+            <!-- Error Alert -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-shield-alt"></i> Danh sách Vai trò
+                    </h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="openCreateModal()">
+                            <i class="fas fa-plus"></i> Tạo vai trò mới
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Tên vai trò</th>
+                                    <th>Mô tả</th>
+                                    <th style="width: 120px;">Trạng thái</th>
+                                    <th style="width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="5" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                                <tr ng-if="!loading && roles.length === 0">
+                                    <td colspan="5" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="role in roles" ng-if="!loading">
+                                    <td>{{$index + 1}}</td>
+                                    <td>
+                                        <strong>{{role.roleName}}</strong>
+                                    </td>
+                                    <td>{{role.description || 'N/A'}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="role.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{role.isActive ? 'Hoạt động' : 'Không hoạt động'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info" 
+                                                    ng-click="openPermissionModal(role)"
+                                                    title="Quản lý quyền">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" 
+                                                    ng-click="openEditModal(role)"
+                                                    title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm" 
+                                                    ng-class="role.isActive ? 'btn-secondary' : 'btn-success'"
+                                                    ng-click="toggleStatus(role)"
+                                                    title="{{role.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}}">
+                                                <i class="fas" ng-class="role.isActive ? 'fa-ban' : 'fa-check'"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    ng-click="deleteRole(role)"
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: CREATE/EDIT ROLE -->
+<!-- ============================================================ -->
+<div id="roleFormModal" class="custom-modal">
+    <div class="custom-modal-backdrop" ng-click="closeModal('roleFormModal')"></div>
+    <div class="custom-modal-dialog">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h2 class="custom-modal-title">
+                    <i class="fas fa-shield-alt"></i>
+                    {{isEditMode ? 'Chỉnh sửa vai trò' : 'Tạo vai trò mới'}}
+                </h2>
+                <button type="button" class="custom-modal-close" ng-click="closeModal('roleFormModal')">
+                    &times;
+                </button>
+            </div>
+            
+            <form name="roleFormData" ng-submit="saveRole()">
+                <div class="custom-modal-body">
+                    <div class="custom-form-group">
+                        <label for="roleName">
+                            Tên vai trò <span style="color: #dc3545;">*</span>
+                        </label>
+                        <input type="text" 
+                               id="roleName" 
+                               class="custom-form-control" 
+                               ng-model="roleForm.roleName"
+                               placeholder="VD: Quản trị viên, Giảng viên, Sinh viên..."
+                               required>
+                    </div>
+                    
+                    <div class="custom-form-group">
+                        <label for="description">Mô tả</label>
+                        <textarea id="description" 
+                                  class="custom-form-control" 
+                                  ng-model="roleForm.description"
+                                  rows="3"
+                                  placeholder="Mô tả về vai trò này..."></textarea>
+                    </div>
+                    
+                    <div class="custom-form-group">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" ng-model="roleForm.isActive">
+                            <span class="custom-checkbox-label">Kích hoạt vai trò</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="custom-modal-footer">
+                    <button type="button" class="btn btn-secondary" ng-click="closeModal('roleFormModal')">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{isEditMode ? 'Cập nhật' : 'Tạo mới'}}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: MANAGE PERMISSIONS -->
+<!-- ============================================================ -->
+<div id="permissionModal" class="custom-modal">
+    <div class="custom-modal-backdrop" ng-click="closeModal('permissionModal')"></div>
+    <div class="custom-modal-dialog" style="max-width: 800px;">
+        <div class="custom-modal-content">
+            <div class="custom-modal-header">
+                <h2 class="custom-modal-title">
+                    <i class="fas fa-key"></i>
+                    Quản lý quyền - {{permissionManagement.roleName}}
+                </h2>
+                <button type="button" class="custom-modal-close" ng-click="closeModal('permissionModal')">
+                    &times;
+                </button>
+            </div>
+            <div class="custom-modal-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Chọn các quyền mà vai trò <strong>{{permissionManagement.roleName}}</strong> được phép thực hiện
+            </div>
+            
+            <div class="permission-list" style="max-height: 500px; overflow-y: auto;">
+                <div ng-if="permissionManagement.groupedPermissions.length === 0 && permissionManagement.permissions.length === 0" class="text-center" style="padding: 40px;">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p style="margin-top: 15px;">Đang tải danh sách quyền...</p>
+                </div>
+                
+                <!-- Hiển thị quyền theo nhóm sections - ĐƠN GIẢN HÓA -->
+                <div class="permission-section" 
+                     ng-repeat="section in permissionManagement.groupedPermissions"
+                     style="border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 12px; overflow: hidden; background: white;">
+                    
+                    <!-- Section Header - ĐƠN GIẢN -->
+                    <div class="section-header-simple" 
+                         style="padding: 12px 16px; display: flex; align-items: center; background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                        <!-- Chevron - CHỈ HIỂN THỊ KHI CÓ CHILDREN -->
+                        <button type="button" 
+                                ng-if="section.children && section.children.length > 0"
+                                style="background: none; border: none; padding: 4px; margin-right: 12px; cursor: pointer; color: #6b7280;"
+                                ng-click="toggleSectionExpandSimple(section.permissionCode)">
+                            <i class="fas" 
+                               ng-class="isSectionExpanded(section.permissionCode) ? 'fa-chevron-down' : 'fa-chevron-right'"
+                               style="width: 16px; display: inline-block;"></i>
+                        </button>
+                        <span ng-if="!section.children || section.children.length === 0" 
+                              style="width: 28px; display: inline-block;"></span>
+                        
+                        <!-- Checkbox -->
+                        <label style="display: flex; align-items: center; flex: 1; cursor: pointer; margin: 0;">
+                            <input type="checkbox" 
+                                   id="section-{{section.permissionCode}}"
+                                   ng-checked="getSectionState(section) === 'all'"
+                                   ng-attr-indeterminate="{{getSectionState(section) === 'partial' ? true : false}}"
+                                   style="margin-right: 10px; cursor: pointer;"
+                                   ng-click="toggleSection(section); $event.stopPropagation();">
+                            <i ng-class="section.icon" style="margin-right: 10px; color: #667eea; font-size: 1.1em;"></i>
+                            <strong style="font-size: 1.05em; color: #374151;">
+                                {{section.permissionName}}
+                            </strong>
+                            <span ng-if="section.children && section.children.length > 0" 
+                                  style="margin-left: 8px; color: #6b7280; font-size: 0.9em; font-weight: normal;">
+                                ({{section.children.length}} quyền)
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <!-- Section Children - SỬ DỤNG NG-IF THAY VÌ NG-SHOW -->
+                    <div ng-if="isSectionExpanded(section.permissionCode) && section.children && section.children.length > 0" 
+                         style="background: #f8f9fa; border-left: 3px solid #e0e7ff; padding: 8px;">
+                        
+                        <!-- Children permissions -->
+                        <div ng-repeat="child in section.children"
+                             style="padding: 10px 12px 10px 20px; border-bottom: 1px solid #f3f4f6;">
+                            <label style="display: flex; align-items: start; cursor: pointer; margin: 0;">
+                                <input type="checkbox" 
+                                       ng-checked="isPermissionSelected(child.permissionId)"
+                                       style="margin-right: 10px; margin-top: 4px; cursor: pointer;"
+                                       ng-click="togglePermission(child.permissionId); $event.stopPropagation();">
+                                <div style="flex: 1;">
+                                    <strong style="color: #1f2937; font-size: 0.95em; display: block;">
+                                        {{child.permissionName}}
+                                    </strong>
+                                    <div style="color: #6b7280; font-size: 0.85em; margin-top: 4px;">
+                                        <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; color: #667eea;">
+                                            {{child.permissionCode}}
+                                        </code>
+                                        <span ng-if="child.description" style="margin-left: 8px;">
+                                            - {{child.description}}
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Section permission itself (if exists) -->
+                        <div ng-if="section.permissionId" 
+                             style="padding: 10px 12px 10px 20px; border-top: 2px solid #e5e7eb; background: #fafafa;">
+                            <label style="display: flex; align-items: start; cursor: pointer; margin: 0;">
+                                <input type="checkbox" 
+                                       ng-checked="isPermissionSelected(section.permissionId)"
+                                       style="margin-right: 10px; margin-top: 4px; cursor: pointer;"
+                                       ng-click="togglePermission(section.permissionId); $event.stopPropagation();">
+                                <div style="flex: 1;">
+                                    <strong style="color: #1f2937; font-size: 0.95em; display: block;">
+                                        <i class="fas fa-shield-alt" style="margin-right: 6px; color: #667eea;"></i>
+                                        Quyền truy cập {{section.permissionName}}
+                                    </strong>
+                                    <div style="color: #6b7280; font-size: 0.85em; margin-top: 4px;">
+                                        <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; color: #667eea;">
+                                            {{section.permissionCode}}
+                                        </code>
+                                        <span style="margin-left: 8px; font-style: italic;">
+                                            (Quyền truy cập menu/nghiệp vụ)
+                                        </span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Standalone permission (không có children) -->
+                    <div ng-if="(!section.children || section.children.length === 0) && section.permissionId" 
+                         style="padding: 12px 16px; background: #f8f9fa; border-left: 3px solid #e0e7ff;">
+                        <label style="display: flex; align-items: start; cursor: pointer; margin: 0;">
+                            <input type="checkbox" 
+                                   ng-checked="isPermissionSelected(section.permissionId)"
+                                   style="margin-right: 10px; margin-top: 4px; cursor: pointer;"
+                                   ng-click="togglePermission(section.permissionId); $event.stopPropagation();">
+                            <div style="flex: 1;">
+                                <strong style="color: #1f2937; display: block;">
+                                    <i ng-class="section.icon" style="margin-right: 8px; color: #667eea;"></i>
+                                    {{section.permissionName}}
+                                </strong>
+                                <div style="color: #6b7280; font-size: 0.9em; margin-top: 4px;">
+                                    <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; color: #667eea;">
+                                        {{section.permissionCode}}
+                                    </code>
+                                    <span ng-if="section.description" style="margin-left: 10px;">
+                                        - {{section.description}}
+                                    </span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="custom-modal-footer">
+                <div style="text-align: left; flex: 1; color: #666;">
+                    <i class="fas fa-check-circle"></i>
+                    Đã chọn: <strong>{{permissionManagement.selectedPermissions.length}}</strong> quyền
+                </div>
+                <button type="button" class="btn btn-secondary" ng-click="closeModal('permissionModal')">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button type="button" class="btn btn-primary" ng-click="savePermissions()">
+                    <i class="fas fa-save"></i> Lưu quyền
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ============================================================
+   ROLE MANAGEMENT STYLES
+   ============================================================ */
+
+/* Card Actions */
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* ============================================================
+   PERMISSION SECTION DROPDOWN ANIMATION
+   ============================================================ */
+
+/* Section header - đơn giản */
+.section-header-simple {
+    user-select: none;
+}
+
+.section-header-simple button:hover {
+    background: #e5e7eb !important;
+    border-radius: 4px;
+}
+
+/* Hover effect for section header */
+.section-header {
+    transition: background-color 0.2s ease;
+}
+
+.section-header:hover {
+    background-color: #f3f4f6 !important;
+}
+
+/* Section header without children - có background color riêng */
+.section-header-no-children {
+    background: #f8f9fa !important;
+    border-left: 3px solid #e0e7ff !important;
+}
+
+.section-header-no-children:hover {
+    background: #f3f4f6 !important;
+}
+
+/* Smooth fade-in for child permissions */
+.permission-item.child-permission {
+    animation: fadeInUp 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+.permission-item.child-permission:nth-child(1) { animation-delay: 0.05s; }
+.permission-item.child-permission:nth-child(2) { animation-delay: 0.1s; }
+.permission-item.child-permission:nth-child(3) { animation-delay: 0.15s; }
+.permission-item.child-permission:nth-child(4) { animation-delay: 0.2s; }
+.permission-item.child-permission:nth-child(5) { animation-delay: 0.25s; }
+.permission-item.child-permission:nth-child(n+6) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-group {
+    display: flex;
+    gap: 5px;
+}
+
+/* ============================================================
+   CUSTOM MODAL STYLES - Chính giữa màn hình
+   ============================================================ */
+
+/* Modal Container - Hidden by default */
+.custom-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Show modal when has .show class */
+.custom-modal.show {
+    display: flex !important;
+}
+
+/* Modal Backdrop - Dark overlay */
+.custom-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Modal Dialog - Container for content */
+.custom-modal-dialog {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 600px;
+    animation: slideDown 0.3s ease;
+}
+
+/* Modal Content */
+.custom-modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal Header */
+.custom-modal-header {
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+}
+
+.custom-modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-modal-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.9;
+    transition: all 0.2s;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-modal-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Modal Body */
+.custom-modal-body {
+    padding: 28px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Modal Footer */
+.custom-modal-footer {
+    padding: 20px 28px;
+    border-top: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Form Groups */
+.custom-form-group {
+    margin-bottom: 24px;
+}
+
+.custom-form-group:last-child {
+    margin-bottom: 0;
+}
+
+.custom-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.custom-form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.custom-form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.custom-form-control::placeholder {
+    color: #9ca3af;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.custom-checkbox-label {
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-modal {
+        padding: 10px;
+    }
+    
+    .custom-modal-dialog {
+        max-width: 100%;
+    }
+    
+    .custom-modal-header {
+        padding: 20px;
+    }
+    
+    .custom-modal-body {
+        padding: 20px;
+    }
+    
+    .custom-modal-footer {
+        padding: 16px 20px;
+    }
+    
+    .custom-modal-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* Text Utilities */
+.text-center {
+    text-align: center;
+}
+
+/* ============================================================
+   PERMISSION SECTION STYLES
+   ============================================================ */
+
+.permission-section {
+    transition: all 0.2s ease;
+}
+
+.permission-section:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+    transition: background 0.2s ease;
+    user-select: none;
+}
+
+.section-header:hover {
+    background: #f3f4f6 !important;
+}
+
+.section-header:active {
+    background: #e5e7eb !important;
+}
+
+/* Section Children */
+.section-children {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+/* Child Permission Items */
+.child-permission {
+    transition: background 0.2s ease;
+}
+
+.child-permission:hover {
+    background: #f9fafb !important;
+}
+
+.child-permission:last-child {
+    border-bottom: none !important;
+}
+
+/* Standalone Permission */
+.permission-item.standalone-permission {
+    transition: background 0.2s ease;
+    background: #f8f9fa !important;
+    border-left: 3px solid #e0e7ff !important;
+}
+
+.permission-item.standalone-permission:hover {
+    background: #f3f4f6 !important;
+}
+
+/* Checkbox Container Styling */
+.checkbox-container {
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-container input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    accent-color: #667eea;
+}
+
+.checkbox-container input[type="checkbox"]:indeterminate {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.checkbox-container input[type="checkbox"]:indeterminate::before {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 2px;
+    background-color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Permission List Scrollbar */
+.permission-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permission-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.permission-list::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Section Icon Animation */
+.section-header i.fa-chevron-right,
+.section-header i.fa-chevron-down {
+    transition: transform 0.2s ease;
+}
+
+/* Permission Code Styling */
+code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .section-header {
+        padding: 12px !important;
+    }
+    
+    .child-permission {
+        padding-left: 36px !important;
+    }
+    
+    .section-children {
+        padding: 6px !important;
+    }
+}
+</style>

@@ -1,0 +1,472 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Duyệt đăng ký học phần/học lại"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{'active': activeTab === 'ENROLLMENT'}" 
+                       ng-click="switchTab('ENROLLMENT')" 
+                       href="javascript:void(0)">
+                        <i class="fas fa-user-graduate"></i> Duyệt đăng ký học phần
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" ng-class="{'active': activeTab === 'RETAKE'}" 
+                       ng-click="switchTab('RETAKE')" 
+                       href="javascript:void(0)">
+                        <i class="fas fa-redo"></i> Duyệt đăng ký học lại
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- Tab Content: Enrollment Approval -->
+            <div class="card tab-content" 
+                 ng-if="activeTab === 'ENROLLMENT'">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Danh sách đăng ký học phần chờ duyệt
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Success/Error Messages -->
+                    <div ng-if="successEnrollments" class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> {{successEnrollments}}
+                    </div>
+                    
+                    <div ng-if="errorEnrollments" class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> {{errorEnrollments}}
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Search Bar -->
+                            <search-bar 
+                                search-term="enrollmentPagination.searchTerm" 
+                                on-search="handleEnrollmentSearch()" 
+                                placeholder="Tìm kiếm theo MSSV, tên sinh viên, mã lớp, tên môn học...">
+                            </search-bar>
+                            
+                            <div class="filters-bar" style="margin-top: 20px;">
+                                <div class="filter-group">
+                                    <label class="filter-label">Sinh viên</label>
+                                    <select class="filter-select" ng-model="enrollmentFilters.studentId" ng-change="handleEnrollmentSearch()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="student in students" value="{{student.studentId}}">
+                                            {{student.studentCode}} - {{student.fullName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Lớp học</label>
+                                    <select class="filter-select" ng-model="enrollmentFilters.classId" ng-change="handleEnrollmentSearch()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="class in classes" value="{{class.classId}}">
+                                            {{class.classCode}} - {{class.className}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Môn học</label>
+                                    <select class="filter-select" ng-model="enrollmentFilters.subjectId" ng-change="handleEnrollmentSearch()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="subject in subjects" value="{{subject.subjectId}}">
+                                            {{subject.subjectCode}} - {{subject.subjectName}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Năm học</label>
+                                    <select class="filter-select" ng-model="enrollmentFilters.schoolYearId" ng-change="handleEnrollmentSearch()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="year in schoolYears" value="{{year.schoolYearId}}">
+                                            {{year.yearCode}}
+                                        </option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label class="filter-label">Học kỳ</label>
+                                    <select class="filter-select" ng-model="enrollmentFilters.semester" ng-change="handleEnrollmentSearch()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="sem in semesters" value="{{sem}}">
+                                            Học kỳ {{sem}}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Card -->
+                    <div class="row mb-4" ng-if="!loadingEnrollments">
+                        <div class="col-md-4">
+                            <div class="card stat-card">
+                                <div class="card-body">
+                                    <h5>Tổng số đăng ký chờ duyệt</h5>
+                                    <h2>{{enrollmentPagination.totalItems}}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enrollments List -->
+                    <div ng-if="loadingEnrollments" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                    
+                    <div ng-if="!loadingEnrollments && displayedEnrollments.length === 0" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="color: #999; margin-top: 10px;">Không có đăng ký nào chờ duyệt</p>
+                    </div>
+                    
+                    <div ng-if="!loadingEnrollments && displayedEnrollments.length > 0" class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">STT</th>
+                                    <th style="width: 120px;">MSSV</th>
+                                    <th style="width: 200px;">Tên sinh viên</th>
+                                    <th style="width: 120px;">Mã lớp</th>
+                                    <th style="width: 200px;">Tên môn học</th>
+                                    <th style="width: 80px;">TC</th>
+                                    <th style="width: 150px;">Giảng viên</th>
+                                    <th style="width: 150px;">Ngày đăng ký</th>
+                                    <th style="width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="enrollment in displayedEnrollments" 
+                                    ng-class="{'table-warning': isNewEnrollment(enrollment.enrollmentDate)}">
+                                    <td>{{($index + 1) + (enrollmentPagination.currentPage - 1) * enrollmentPagination.pageSize}}</td>
+                                    <td>
+                                        <strong>{{enrollment.studentCode}}</strong>
+                                        <span ng-if="isNewEnrollment(enrollment.enrollmentDate)" 
+                                              class="badge badge-warning" 
+                                              style="margin-left: 5px; font-size: 10px;">MỚI</span>
+                                    </td>
+                                    <td>{{enrollment.studentName}}</td>
+                                    <td>{{enrollment.classCode}}</td>
+                                    <td>
+                                        <strong>{{enrollment.subjectName}}</strong>
+                                        <br>
+                                        <small class="text-muted">{{enrollment.subjectCode}}</small>
+                                    </td>
+                                    <td>{{enrollment.credits || '-'}}</td>
+                                    <td>{{enrollment.lecturerName || '-'}}</td>
+                                    <td>
+                                        {{formatDate(enrollment.enrollmentDate)}}
+                                        <br>
+                                        <small class="text-muted">{{timeAgo(enrollment.enrollmentDate)}}</small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" 
+                                                ng-click="approveEnrollment(enrollment.enrollmentId)"
+                                                title="Duyệt đăng ký">
+                                            <i class="fas fa-check"></i> Duyệt
+                                        </button>
+                                        <button class="btn btn-sm btn-outline" 
+                                                ng-click="viewEnrollmentDetail(enrollment)"
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <pagination 
+                        ng-if="!loadingEnrollments && displayedEnrollments.length > 0"
+                        pagination="enrollmentPagination" 
+                        on-page-change="handleEnrollmentPageChange()">
+                    </pagination>
+                </div>
+            </div>
+
+            <!-- Tab Content: Retake Approval -->
+            <div class="card tab-content" 
+                 ng-if="activeTab === 'RETAKE'">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-redo"></i>
+                        Danh sách đăng ký học lại chờ duyệt
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Error Message -->
+                    <div ng-if="errorRetakes" class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> {{errorRetakes}}
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Lớp</label>
+                                    <select class="form-control" ng-model="retakeFilters.classId" ng-change="loadRetakes()">
+                                        <option value="">Tất cả</option>
+                                        <option ng-repeat="class in classes" value="{{class.classId}}">
+                                            {{class.className || class.classCode}}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select class="form-control" ng-model="retakeFilters.status" ng-change="loadRetakes()">
+                                        <option value="">Tất cả</option>
+                                        <option value="PENDING">Đang chờ</option>
+                                        <option value="APPROVED">Đã duyệt</option>
+                                        <option value="REJECTED">Đã từ chối</option>
+                                        <option value="COMPLETED">Đã hoàn thành</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label class="form-label">Lý do</label>
+                                    <select class="form-control" ng-model="retakeFilters.reason" ng-change="loadRetakes()">
+                                        <option value="">Tất cả</option>
+                                        <option value="ATTENDANCE">Vắng học</option>
+                                        <option value="GRADE">Điểm thấp</option>
+                                        <option value="BOTH">Cả hai</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Retakes List -->
+                    <div ng-if="loadingRetakes" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                    
+                    <!-- Empty state: Chỉ hiển thị khi không có dữ liệu (không có error) -->
+                    <div ng-if="!loadingRetakes && !errorRetakes && retakes.length === 0" class="text-center" style="padding: 40px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="color: #999; margin-top: 10px;">Không có bản ghi học lại</p>
+                    </div>
+                    
+                    <div ng-if="!loadingRetakes && retakes.length > 0" class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Sinh viên</th>
+                                    <th>Môn học</th>
+                                    <th>Lớp</th>
+                                    <th>Lý do</th>
+                                    <th>Giá trị</th>
+                                    <th>Ngưỡng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th style="width: 200px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="retake in retakes">
+                                    <td>
+                                        <strong>{{retake.studentCode}}</strong><br>
+                                        <small class="text-muted">{{retake.studentName}}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{retake.subjectName || retake.subjectCode}}</strong>
+                                    </td>
+                                    <td>
+                                        {{retake.className || retake.classCode}}
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{
+                                            'badge-warning': retake.reason === 'ATTENDANCE',
+                                            'badge-danger': retake.reason === 'GRADE',
+                                            'badge-danger': retake.reason === 'BOTH'
+                                        }">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">Vắng học</span>
+                                            <span ng-if="retake.reason === 'GRADE'">Điểm thấp</span>
+                                            <span ng-if="retake.reason === 'BOTH'">Cả hai</span>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong ng-if="retake.currentValue">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">{{retake.currentValue | number:1}}%</span>
+                                            <span ng-if="retake.reason === 'GRADE'">{{retake.currentValue | number:1}}</span>
+                                            <span ng-if="retake.reason === 'BOTH'">{{retake.currentValue | number:1}}%</span>
+                                        </strong>
+                                        <span ng-if="!retake.currentValue" class="text-muted">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span ng-if="retake.thresholdValue">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">{{retake.thresholdValue | number:1}}%</span>
+                                            <span ng-if="retake.reason === 'GRADE'">{{retake.thresholdValue | number:1}}</span>
+                                        </span>
+                                        <span ng-if="!retake.thresholdValue" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="getRetakeStatusBadgeClass(retake.status)">
+                                            {{getRetakeStatusText(retake.status)}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{retake.createdAt | date:'dd/MM/yyyy HH:mm'}}</small>
+                                    </td>
+                                    <td>
+                                        <div ng-if="retake.status === 'PENDING'">
+                                            <button class="btn btn-sm btn-success" ng-click="openRetakeDecisionModal(retake, 'APPROVED')" title="Duyệt">
+                                                <i class="fas fa-check"></i> Duyệt
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="openRetakeDecisionModal(retake, 'REJECTED')" title="Từ chối">
+                                                <i class="fas fa-times"></i> Từ chối
+                                            </button>
+                                        </div>
+                                        <span ng-if="retake.status !== 'PENDING'" class="text-muted">-</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container" ng-if="!loadingRetakes && retakes.length > 0 && retakePagination.totalPages > 1">
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item" ng-class="{'disabled': retakePagination.page === 1}">
+                                    <a class="page-link" ng-click="loadRetakes(retakePagination.page - 1)" href="javascript:void(0)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item" ng-repeat="n in getRetakePageNumbers() track by $index" 
+                                    ng-class="{'active': n === retakePagination.page}">
+                                    <a class="page-link" ng-click="loadRetakes(n)" href="javascript:void(0)">{{n}}</a>
+                                </li>
+                                <li class="page-item" ng-class="{'disabled': retakePagination.page === retakePagination.totalPages}">
+                                    <a class="page-link" ng-click="loadRetakes(retakePagination.page + 1)" href="javascript:void(0)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enrollment Detail Modal -->
+<div class="modal" ng-if="showEnrollmentDetailModal" ng-class="{'show': showEnrollmentDetailModal}">
+    <div class="modal-overlay" ng-click="closeEnrollmentDetailModal()"></div>
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h3>Chi tiết đăng ký học phần</h3>
+            <button class="modal-close" ng-click="closeEnrollmentDetailModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" ng-if="selectedEnrollment">
+            <div class="form-group">
+                <label><strong>MSSV:</strong></label>
+                <p>{{selectedEnrollment.studentCode}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Tên sinh viên:</strong></label>
+                <p>{{selectedEnrollment.studentName}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Mã lớp:</strong></label>
+                <p>{{selectedEnrollment.classCode}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Tên lớp:</strong></label>
+                <p>{{selectedEnrollment.className}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Môn học:</strong></label>
+                <p>{{selectedEnrollment.subjectCode}} - {{selectedEnrollment.subjectName}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Số tín chỉ:</strong></label>
+                <p>{{selectedEnrollment.credits || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Giảng viên:</strong></label>
+                <p>{{selectedEnrollment.lecturerName || '-'}}</p>
+            </div>
+            <div class="form-group">
+                <label><strong>Ngày đăng ký:</strong></label>
+                <p>{{formatDate(selectedEnrollment.enrollmentDate)}}</p>
+            </div>
+            <div class="form-group" ng-if="selectedEnrollment.notes">
+                <label><strong>Ghi chú:</strong></label>
+                <p>{{selectedEnrollment.notes}}</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="approveEnrollment(selectedEnrollment.enrollmentId)">
+                <i class="fas fa-check"></i> Duyệt đăng ký
+            </button>
+            <button class="btn btn-outline" ng-click="closeEnrollmentDetailModal()">
+                <i class="fas fa-times"></i> Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Retake Decision Modal -->
+<div class="modal" ng-class="{'show': showRetakeDecisionModal}" ng-if="showRetakeDecisionModal" style="display: block;" ng-click="closeRetakeDecisionModal($event)">
+    <div class="modal-dialog" ng-click="$event.stopPropagation()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <i class="fas" ng-class="{'fa-check': retakeDecisionData.status === 'APPROVED', 'fa-times': retakeDecisionData.status === 'REJECTED'}"></i>
+                    {{retakeDecisionData.status === 'APPROVED' ? 'Duyệt học lại' : 'Từ chối học lại'}}
+                </h4>
+                <button type="button" class="close" ng-click="closeRetakeDecisionModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div ng-if="selectedRetake">
+                    <p><strong>Sinh viên:</strong> {{selectedRetake.studentCode}} - {{selectedRetake.studentName}}</p>
+                    <p><strong>Môn học:</strong> {{selectedRetake.subjectName || selectedRetake.subjectCode}}</p>
+                    <p><strong>Lý do:</strong> 
+                        <span ng-if="selectedRetake.reason === 'ATTENDANCE'">Vắng học</span>
+                        <span ng-if="selectedRetake.reason === 'GRADE'">Điểm thấp</span>
+                        <span ng-if="selectedRetake.reason === 'BOTH'">Cả hai</span>
+                    </p>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Ghi chú (tùy chọn)</label>
+                    <textarea class="form-control" rows="3" ng-model="retakeDecisionData.advisorNotes" 
+                              placeholder="Nhập ghi chú nếu cần..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" ng-click="closeRetakeDecisionModal()">Hủy</button>
+                <button type="button" class="btn" 
+                        ng-class="{'btn-success': retakeDecisionData.status === 'APPROVED', 'btn-danger': retakeDecisionData.status === 'REJECTED'}"
+                        ng-click="saveRetakeDecision()" ng-disabled="savingRetake">
+                    <i class="fas fa-spinner fa-spin" ng-if="savingRetake"></i>
+                    <span ng-if="!savingRetake">{{retakeDecisionData.status === 'APPROVED' ? 'Duyệt' : 'Từ chối'}}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop" ng-if="showRetakeDecisionModal"></div>

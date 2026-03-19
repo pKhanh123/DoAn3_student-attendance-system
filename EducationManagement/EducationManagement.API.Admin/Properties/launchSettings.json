@@ -1,0 +1,52 @@
+﻿{
+    "$schema": "http://json.schemastore.org/launchsettings.json",
+    "iisSettings": {
+        "windowsAuthentication": false,
+        "anonymousAuthentication": true,
+        "iisExpress": {
+            "applicationUrl": "http://localhost:17848",
+            "sslPort": 44381
+        }
+    },
+    "profiles": {
+        // ============================================================
+        // 🔹 MAIN PROFILE (HTTP only - chạy nội bộ qua Gateway)
+        // ============================================================
+        "EducationManagement.API.Admin (HTTP Only)": {
+            "commandName": "Project",
+            "dotnetRunMessages": true,
+            "launchBrowser": true,
+            "launchUrl": "swagger",
+            "applicationUrl": "http://localhost:5227",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+
+        // ============================================================
+        // 🔹 FALLBACK PROFILE (HTTPS + HTTP) - dùng khi test riêng lẻ
+        // ============================================================
+        "EducationManagement.API.Admin (HTTPS + HTTP)": {
+            "commandName": "Project",
+            "dotnetRunMessages": true,
+            "launchBrowser": true,
+            "launchUrl": "swagger",
+            "applicationUrl": "https://localhost:7299;http://localhost:5227",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        },
+
+        // ============================================================
+        // 🔹 IIS Express (optional)
+        // ============================================================
+        "IIS Express": {
+            "commandName": "IISExpress",
+            "launchBrowser": true,
+            "launchUrl": "swagger",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
+    }
+}

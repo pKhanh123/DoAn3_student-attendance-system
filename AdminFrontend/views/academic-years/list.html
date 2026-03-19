@@ -1,0 +1,66 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="Quản lý Niên khóa"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success"><i class="fas fa-check-circle"></i> {{success}}</div>
+            <div ng-if="error" class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> {{error}}</div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Danh sách Niên khóa</h3>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" ng-click="goToCreate()">
+                            <i class="fas fa-plus"></i> Thêm niên khóa
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã niên khóa</th>
+                                    <th>Mô tả</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-if="loading">
+                                    <td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td>
+                                </tr>
+                                <tr ng-if="!loading && academicYears.length === 0">
+                                    <td colspan="4" class="text-center">Không có dữ liệu</td>
+                                </tr>
+                                <tr ng-repeat="year in academicYears" ng-if="!loading">
+                                    <td>{{year.cohortCode || year.yearName}}</td>
+                                    <td>{{year.description || year.yearName}}</td>
+                                    <td>
+                                        <span class="badge" ng-class="year.isActive ? 'badge-success' : 'badge-danger'">
+                                            {{year.isActive ? 'Hoạt động' : 'Không hoạt động'}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="btn btn-sm btn-primary" ng-click="goToEdit(year.academicYearId)">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" ng-click="deleteAcademicYear(year.academicYearId)">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

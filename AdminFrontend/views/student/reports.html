@@ -1,0 +1,328 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <div class="main-content">
+        <app-topbar page-title="Thống kê Học tập"></app-topbar>
+        
+        <div class="content-body">
+            <!-- Filter Bar -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="filters-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Năm học</label>
+                            <select ng-model="filters.schoolYearId" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="sy in schoolYears" value="{{sy.schoolYearId}}">{{sy.yearCode}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Học kỳ</label>
+                            <select ng-model="filters.semester" class="filter-select" ng-change="loadReports()">
+                                <option value="">-- Tất cả --</option>
+                                <option ng-repeat="s in semesters" value="{{s}}">Học kỳ {{s}}</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button ng-click="exportExcel()" class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Loading -->
+            <div ng-if="loading" class="text-center" style="padding: 60px;">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Đang tải thống kê...</p>
+            </div>
+
+            <!-- Report Content -->
+            <div ng-if="!loading && !error">
+                
+                <!-- 1. Tổng quan học tập (Cards) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Tổng quan học tập
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.overview.cumulativeGpa || '—'}}</h3>
+                                    <p>Điểm TB tích lũy (GPA)</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.overview.attendanceRate || 0}}%</h3>
+                                    <p>Tỷ lệ điểm danh</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon purple">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.overview.creditsEarned || 0}} / {{reports.creditDebt.requiredCredits || 120}}</h3>
+                                    <p>Tín chỉ đã tích lũy</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.overview.totalSubjects || 0}}</h3>
+                                    <p>Tổng số môn đã học</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chi tiết -->
+                        <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="padding: 16px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                                <strong>Môn đã đỗ:</strong> {{reports.overview.passedSubjects || 0}}
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                                <strong>Môn chưa đỗ:</strong> {{reports.overview.failedSubjects || 0}}
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                                <strong>Tín chỉ đã đăng ký:</strong> {{reports.overview.creditsRegistered || 0}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Xu hướng GPA theo học kỳ (Biểu đồ đường) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-line"></i>
+                            Xu hướng GPA theo học kỳ
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div ng-if="reports.gpaTrend.length === 0" class="text-center" style="padding: 40px;">
+                            <i class="fas fa-inbox fa-3x" style="color: var(--text-light); opacity: 0.5;"></i>
+                            <p>Chưa có dữ liệu</p>
+                        </div>
+                        
+                        <!-- Simple line chart representation -->
+                        <div ng-if="reports.gpaTrend.length > 0" style="padding: 20px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                            <div style="display: flex; align-items: flex-end; gap: 20px; height: 250px; margin-top: 20px; position: relative;">
+                                <!-- Y-axis labels -->
+                                <div style="width: 40px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding-right: 10px;">
+                                    <span style="font-size: 12px; color: var(--text-secondary);">4.0</span>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">3.0</span>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">2.0</span>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">1.0</span>
+                                    <span style="font-size: 12px; color: var(--text-secondary);">0</span>
+                                </div>
+                                
+                                <!-- Chart bars -->
+                                <div style="flex: 1; display: flex; align-items: flex-end; gap: 15px; height: 200px; position: relative;">
+                                    <!-- Grid lines -->
+                                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                                        <div style="border-top: 1px dashed var(--border-color);"></div>
+                                        <div style="border-top: 1px dashed var(--border-color);"></div>
+                                        <div style="border-top: 1px dashed var(--border-color);"></div>
+                                        <div style="border-top: 1px dashed var(--border-color);"></div>
+                                    </div>
+                                    
+                                    <!-- Data points -->
+                                    <div ng-repeat="point in reports.gpaTrend" style="flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1;">
+                                        <div style="width: 100%; height: 200px; display: flex; align-items: flex-end; justify-content: center;">
+                                            <div style="width: 30px; background: var(--primary-color); border-radius: 4px 4px 0 0; transition: height 0.3s; position: relative;"
+                                                 ng-style="{height: ((point.gpa / 4.0) * 200) + 'px'}"
+                                                 title="GPA: {{point.gpa}}">
+                                                <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 600;">
+                                                    {{point.gpa}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 10px; font-size: 11px; text-align: center; color: var(--text-secondary);">
+                                            {{point.semester}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Phân bố điểm số (Biểu đồ tròn) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Phân bố điểm số các môn học
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gradeDistribution.A || 0}}</h3>
+                                    <p>Điểm A - {{getGradePercentage('A')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gradeDistribution.B || 0}}</h3>
+                                    <p>Điểm B - {{getGradePercentage('B')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon orange">
+                                    <i class="fas fa-minus-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gradeDistribution.C || 0}}</h3>
+                                    <p>Điểm C - {{getGradePercentage('C')}}%</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.gradeDistribution.D || 0}}</h3>
+                                    <p>Điểm D - {{getGradePercentage('D')}}%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Simple pie chart representation -->
+                        <div style="margin-top: 24px; padding: 20px; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                            <h4>Biểu đồ phân bố điểm số</h4>
+                            <div style="display: flex; align-items: flex-end; gap: 10px; height: 200px; margin-top: 20px;">
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--success-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGradePercentage('A') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">A</small>
+                                    <small style="color: var(--text-secondary);">{{getGradePercentage('A')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--primary-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGradePercentage('B') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">B</small>
+                                    <small style="color: var(--text-secondary);">{{getGradePercentage('B')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--warning-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGradePercentage('C') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">C</small>
+                                    <small style="color: var(--text-secondary);">{{getGradePercentage('C')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: var(--danger-color); border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGradePercentage('D') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">D</small>
+                                    <small style="color: var(--text-secondary);">{{getGradePercentage('D')}}%</small>
+                                </div>
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <div style="width: 100%; background: #6b7280; border-radius: 4px 4px 0 0; margin-bottom: 10px; transition: height 0.3s;"
+                                         ng-style="{height: (getGradePercentage('F') / 100 * 180) + 'px'}">
+                                    </div>
+                                    <small style="font-weight: 600;">F</small>
+                                    <small style="color: var(--text-secondary);">{{getGradePercentage('F')}}%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Tín chỉ còn nợ (Card) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-credit-card"></i>
+                            Tín chỉ còn nợ
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon red">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.creditDebt.total || 0}}</h3>
+                                    <p>Số tín chỉ còn nợ</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon blue">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{getCreditProgress()}}%</h3>
+                                    <p>Tiến độ tích lũy</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon green">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.overview.creditsEarned || 0}}</h3>
+                                    <p>Tín chỉ đã tích lũy</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon purple">
+                                    <i class="fas fa-target"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{reports.creditDebt.requiredCredits || 120}}</h3>
+                                    <p>Tín chỉ cần để tốt nghiệp</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress bar -->
+                        <div style="margin-top: 24px;">
+                            <h4>Tiến độ tích lũy tín chỉ</h4>
+                            <div style="width: 100%; height: 30px; background: var(--bg-secondary); border-radius: 15px; overflow: hidden; position: relative; margin-top: 10px;">
+                                <div style="height: 100%; background: var(--gradient-primary); transition: width 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;"
+                                     ng-style="{width: getCreditProgress() + '%'}">
+                                    {{getCreditProgress()}}%
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary);">
+                                <span>Đã tích lũy: {{reports.overview.creditsEarned || 0}} tín chỉ</span>
+                                <span>Còn thiếu: {{reports.creditDebt.total || 0}} tín chỉ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

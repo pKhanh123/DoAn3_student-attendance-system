@@ -1,0 +1,59 @@
+<div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    
+    <div class="main-content">
+        <app-topbar page-title="{{isEditMode ? 'Sửa' : 'Thêm'}} Khoa"></app-topbar>
+        
+        <div class="content-body">
+            <div ng-if="success" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{success}}
+            </div>
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Thông tin Khoa</h3>
+                </div>
+                <div class="card-body">
+                    <form ng-submit="saveFaculty()">
+                        <div class="form-group">
+                            <label class="form-label required">Mã khoa</label>
+                            <input type="text" class="form-control" ng-model="faculty.facultyCode" 
+                                   ng-disabled="isEditMode" required>
+                            <small class="form-text">Ví dụ: CS, ENG, MATH</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label required">Tên khoa</label>
+                            <input type="text" class="form-control" ng-model="faculty.facultyName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" ng-model="faculty.description" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="isActive" ng-model="faculty.isActive">
+                                <label for="isActive">Đang hoạt động</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mt-30">
+                            <button type="submit" class="btn btn-primary" ng-disabled="loading">
+                                <i class="fas fa-save"></i> {{isEditMode ? 'Cập nhật' : 'Thêm mới'}}
+                            </button>
+                            <button type="button" class="btn btn-secondary" ng-click="cancel()">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

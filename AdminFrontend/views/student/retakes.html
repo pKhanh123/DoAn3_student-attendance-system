@@ -1,0 +1,171 @@
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <app-topbar page-title="Môn cần học lại"></app-topbar>
+        
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="loading-overlay" ng-if="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">Đang tải dữ liệu...</div>
+            </div>
+
+            <!-- Error Message -->
+            <div ng-if="error" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> {{error}}
+            </div>
+
+            <!-- Info Card -->
+            <div class="card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body">
+                    <h2 style="margin: 0; color: white;">
+                        <i class="fas fa-exclamation-triangle"></i> Danh sách môn cần học lại
+                    </h2>
+                    <p style="margin: 10px 0 0 0; opacity: 0.9;">
+                        Các môn học bạn cần học lại do vắng quá nhiều hoặc điểm không đạt yêu cầu
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3><i class="fas fa-filter"></i> Bộ lọc</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-control" ng-model="filters.status" ng-change="loadRetakes()">
+                                <option value="">Tất cả</option>
+                                <option value="PENDING">Đang chờ</option>
+                                <option value="APPROVED">Đã duyệt</option>
+                                <option value="REJECTED">Đã từ chối</option>
+                                <option value="COMPLETED">Đã hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0 0 auto; min-width: 150px;">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline" ng-click="clearFilters()" style="width: 100%;">
+                                <i class="fas fa-times"></i> Xóa lọc
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Retakes List -->
+            <div class="card" ng-if="!loading && retakes.length > 0">
+                <div class="card-header">
+                    <h3>Danh sách môn cần học lại ({{pagination.totalCount}})</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Môn học</th>
+                                    <th>Lớp</th>
+                                    <th>Lý do</th>
+                                    <th>Giá trị</th>
+                                    <th>Ngưỡng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="retake in retakes">
+                                    <td>
+                                        <strong>{{retake.subjectName || retake.subjectCode}}</strong><br>
+                                        <small class="text-muted">{{retake.schoolYearCode}} - Học kỳ {{retake.semester || 'N/A'}}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{retake.className || retake.classCode}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{
+                                            'badge-warning': retake.reason === 'ATTENDANCE',
+                                            'badge-danger': retake.reason === 'GRADE',
+                                            'badge-danger': retake.reason === 'BOTH'
+                                        }">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">Vắng học</span>
+                                            <span ng-if="retake.reason === 'GRADE'">Điểm thấp</span>
+                                            <span ng-if="retake.reason === 'BOTH'">Cả hai</span>
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong ng-if="retake.currentValue">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">{{retake.currentValue | number:1}}%</span>
+                                            <span ng-if="retake.reason === 'GRADE'">{{retake.currentValue | number:1}}</span>
+                                            <span ng-if="retake.reason === 'BOTH'">{{retake.currentValue | number:1}}%</span>
+                                        </strong>
+                                        <span ng-if="!retake.currentValue" class="text-muted">-</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span ng-if="retake.thresholdValue">
+                                            <span ng-if="retake.reason === 'ATTENDANCE'">{{retake.thresholdValue | number:1}}%</span>
+                                            <span ng-if="retake.reason === 'GRADE'">{{retake.thresholdValue | number:1}}</span>
+                                        </span>
+                                        <span ng-if="!retake.thresholdValue" class="text-muted">-</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" ng-class="{
+                                            'badge-warning': retake.status === 'PENDING',
+                                            'badge-success': retake.status === 'APPROVED',
+                                            'badge-danger': retake.status === 'REJECTED',
+                                            'badge-info': retake.status === 'COMPLETED'
+                                        }">
+                                            <span ng-if="retake.status === 'PENDING'">Đang chờ</span>
+                                            <span ng-if="retake.status === 'APPROVED'">Đã duyệt</span>
+                                            <span ng-if="retake.status === 'REJECTED'">Đã từ chối</span>
+                                            <span ng-if="retake.status === 'COMPLETED'">Đã hoàn thành</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{retake.createdAt | date:'dd/MM/yyyy HH:mm'}}</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-container" ng-if="pagination.totalPages > 1">
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item" ng-class="{'disabled': pagination.page === 1}">
+                                    <a class="page-link" ng-click="loadRetakes(pagination.page - 1)" href="javascript:void(0)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item" ng-repeat="n in getPageNumbers() track by $index" 
+                                    ng-class="{'active': n === pagination.page}">
+                                    <a class="page-link" ng-click="loadRetakes(n)" href="javascript:void(0)">{{n}}</a>
+                                </li>
+                                <li class="page-item" ng-class="{'disabled': pagination.page === pagination.totalPages}">
+                                    <a class="page-link" ng-click="loadRetakes(pagination.page + 1)" href="javascript:void(0)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="card" ng-if="!loading && retakes.length === 0">
+                <div class="card-body text-center" style="padding: 60px;">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h3>Không có môn nào cần học lại</h3>
+                    <p class="text-muted">Bạn đang học tốt! Không có môn nào cần học lại.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
