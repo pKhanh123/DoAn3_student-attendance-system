@@ -38,16 +38,44 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      const res = await authApi.login({ username: username.trim(), password })
-      const { token, refreshToken, user } = res.data
-      login(user, token, refreshToken, rememberMe)
+      // Dùng fetch trực tiếp thay vì authApi.login để tránh lỗi axios
+      const response = await fetch('/api-edu/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.message || `Lỗi ${response.status}`)
+      }
+
+      const res = await response.json()
+      // Backend trả về { data: { token, refreshToken, userId, username, role, fullName, avatarUrl } }
+      const payload = res.data ?? res
+      const { token, refreshToken, userId, username: uname, role, fullName, avatarUrl } = payload
+
+      if (!token || !userId) {
+        throw new Error('Phản hồi từ server không hợp lệ.')
+      }
+
+      const userData = {
+        userId,
+        username: uname,
+        email: '',
+        fullName,
+        role,
+        avatarUrl,
+      }
+
+      login(userData, token, refreshToken || '', rememberMe)
 
       if (from) {
         navigate(from, { replace: true })
         return
       }
 
-      switch (user.role) {
+      switch (role) {
         case ROLES.ADMIN:
           navigate('/admin/dashboard', { replace: true })
           break
@@ -71,101 +99,118 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-box">
-          <div className="login-logo">
-            <img src="/logo.png" alt="Logo" onError={(e) => { e.target.style.display = 'none' }} />
-            <h2>Quản lý Điểm danh Sinh viên</h2>
+    <div className="modern-login-page">
+      <div className="login-background" />
+
+      <div className="login-glass-container">
+        {/* Branding */}
+        <div className="login-brand">
+          <div className="login-logo-circle">
+            <i className="fas fa-graduation-cap" />
           </div>
+          <h1 className="login-brand-title">Quản lý Điểm danh</h1>
+          <p className="login-brand-subtitle">Hệ thống quản lý sinh viên</p>
+        </div>
 
-          <h3 className="login-title">Đăng nhập</h3>
+        {/* Success message */}
+        {location.state?.resetSuccess && (
+          <div className="login-success-message">
+            <i className="fas fa-check-circle" />
+            <span>Đặt lại mật khẩu thành công. Vui lòng đăng nhập.</span>
+          </div>
+        )}
 
-          {location.state?.resetSuccess && (
-            <div className="alert alert-success mb-3">
-              Đặt lại mật khẩu thành công. Vui lòng đăng nhập.
-            </div>
-          )}
+        {/* Error message */}
+        {error && (
+          <div className="login-error-message">
+            <i className="fas fa-exclamation-circle" />
+            <span>{error}</span>
+          </div>
+        )}
 
-          {error && <div className="alert alert-danger mb-3">{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="username">Tên đăng nhập</label>
+        {/* Form */}
+        <form className="login-glass-form" onSubmit={handleSubmit}>
+          {/* Username */}
+          <div className="login-input-group">
+            <div className="login-input-wrapper">
+              <i className="fas fa-user login-input-icon" />
               <input
                 type="text"
-                id="username"
-                className="form-control"
-                placeholder="Nhập tên đăng nhập"
+                className="login-input"
+                placeholder="Tên đăng nhập"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loading}
                 autoFocus
               />
             </div>
+          </div>
 
-            <div className="form-group">
-              <label htmlFor="password">Mật khẩu</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  className="form-control"
-                  placeholder="Nhập mật khẩu"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#999',
-                    padding: '0 4px',
-                  }}
-                >
-                  <i className={`fa fa-eye${showPassword ? '-slash' : ''}`}></i>
-                </button>
-              </div>
+          {/* Password */}
+          <div className="login-input-group">
+            <div className="login-input-wrapper">
+              <i className="fas fa-lock login-input-icon" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="login-input login-input-with-toggle"
+                placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                <i className={`fas fa-eye${showPassword ? '-slash' : ''}`} />
+              </button>
             </div>
+          </div>
 
-            <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Remember me */}
+          <div className="login-options">
+            <label className="login-checkbox">
               <input
                 type="checkbox"
-                id="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 disabled={loading}
               />
-              <label htmlFor="rememberMe" style={{ margin: 0, fontSize: '14px', cursor: 'pointer' }}>
-                Ghi nhớ đăng nhập
-              </label>
-            </div>
+              <span className="checkbox-custom" />
+              <span className="checkbox-label">Ghi nhớ đăng nhập</span>
+            </label>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-block"
-              disabled={loading}
-            >
-              {loading ? (
-                <span><i className="fa fa-spinner fa-spin"></i> Đang đăng nhập...</span>
-              ) : (
-                <span>Đăng nhập</span>
-              )}
-            </button>
-          </form>
-
-          <div className="login-footer">
-            <a href="/auth/forgot-password">Quên mật khẩu?</a>
+            <a href="/auth/forgot-password" className="login-link-accent">
+              Quên mật khẩu?
+            </a>
           </div>
-        </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            className="login-btn-primary"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <i className="fas fa-spinner fa-spin" />
+                Đang đăng nhập...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-sign-in-alt" />
+                Đăng nhập
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <p className="login-footer-text">
+          Hệ thống Quản lý Điểm danh Sinh viên © 2026
+        </p>
       </div>
     </div>
   )

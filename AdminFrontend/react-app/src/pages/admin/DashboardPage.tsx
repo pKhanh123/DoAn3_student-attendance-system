@@ -59,12 +59,14 @@ export default function DashboardPage() {
     queryKey: ['admin-dashboard-stats'],
     queryFn: () => apiClient.get('/dashboard/admin/stats').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   const { data: auditLogs, isLoading: loadingAudit } = useQuery<AuditLog[]>({
     queryKey: ['admin-audit-logs'],
-    queryFn: () => apiClient.get('/audit-logs/recent?pageSize=10').then((r) => r.data),
+    queryFn: () => apiClient.get('/audit-logs', { params: { page: 1, pageSize: 10 } }).then((r) => r.data?.data || []),
     staleTime: 30 * 1000,
+    retry: false,
   })
 
   return (
@@ -91,7 +93,7 @@ export default function DashboardPage() {
               <div className="stat-details">
                 <div className="stat-label">{cfg.label}</div>
                 <div className="stat-value">
-                  {loadingStats ? <i className="fas fa-spinner fa-spin"></i> : (value || 0)}
+                  {loadingStats ? '—' : (value || 0)}
                 </div>
               </div>
             </div>
@@ -124,7 +126,7 @@ export default function DashboardPage() {
               <div className="stat-details">
                 <div className="stat-label">{cfg.label || label}</div>
                 <div className="stat-value">
-                  {loadingStats ? <i className="fas fa-spinner fa-spin"></i> : (value || 0)}
+                  {loadingStats ? '—' : (value || 0)}
                 </div>
               </div>
             </div>

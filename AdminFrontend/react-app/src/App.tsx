@@ -30,7 +30,6 @@ import AcademicYearFormPage from './pages/admin/academic-years/AcademicYearFormP
 import SchoolYearListPage from './pages/admin/school-years/SchoolYearListPage'
 import SchoolYearFormPage from './pages/admin/school-years/SchoolYearFormPage'
 import RegistrationPeriodPage from './pages/admin/registration-periods/RegistrationPeriodPage'
-import SubjectPrerequisitePage from './pages/admin/subject-prerequisites/SubjectPrerequisitePage'
 import EnrollmentAdminPage from './pages/admin/enrollments/EnrollmentAdminPage'
 import AdvisorManagePage from './pages/admin/advisors/AdvisorManagePage'
 import SubjectListPage from './pages/admin/subjects/SubjectListPage'
@@ -153,7 +152,6 @@ export default function App() {
         <Route path="school-years/new" element={<SchoolYearFormPage />} />
         <Route path="school-years/:id/edit" element={<SchoolYearFormPage />} />
         <Route path="registration-periods" element={<RegistrationPeriodPage />} />
-        <Route path="subject-prerequisites" element={<SubjectPrerequisitePage />} />
         <Route path="enrollments" element={<EnrollmentAdminPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         <Route path="notifications" element={<NotificationPage />} />

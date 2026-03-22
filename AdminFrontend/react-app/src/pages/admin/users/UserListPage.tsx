@@ -55,16 +55,22 @@ export default function UserListPage(): React.JSX.Element {
   const pageSize = 10
 
   // Fetch users
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => userApi.getAll().then((r) => r.data),
+    queryFn: () => userApi.getAll().then((r) => {
+      const data = r.data as any;
+      return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+    }),
     staleTime: 30 * 1000,
   })
 
   // Fetch roles for filter dropdown
   const { data: roles = [] } = useQuery<Role[]>({
     queryKey: ['roles'],
-    queryFn: () => userApi.getRoles().then((r) => r.data),
+    queryFn: () => userApi.getRoles().then((r) => {
+      const data = r.data as any;
+      return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+    }),
     staleTime: 5 * 60 * 1000,
   })
 

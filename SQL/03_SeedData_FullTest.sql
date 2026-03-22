@@ -86,7 +86,10 @@ MERGE dbo.users AS target
 USING (VALUES
     -- ✅ User admin chính (USER001) - dùng để đăng nhập với username 'admin'
     ('USER001',       'admin',              '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin@example.com',           '0901234567', N'Nguyễn Văn Admin',            'ROLE_ADMIN',   1),
-    -- User admin cho full test (USR_ADMIN_FT) - giữ lại để test
+    UPDATE dbo.users
+SET password_hash = '$2a$10$8CdMxAqXf4HLczcz2uZyr.sw00O9I7RpJmMV2b2oSuJ7Id9FTM6YC'
+WHERE username = 'admin'
+	-- User admin cho full test (USR_ADMIN_FT) - giữ lại để test
     ('USR_ADMIN_FT',  'admin_fulltest',     '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin.ft@example.com',        '0901000000', N'Nguyen Minh Quan Tri',        'ROLE_ADMIN',   1),
     ('USR_SUPPORT_FT','support_academic',   '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'support.academic@example.com','0901000001', N'Trần Hoài Thu',               'ROLE_ADVISOR', 1),
     ('USR_LEC_01',    'lecturer_hung',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'hung.lecturer@example.com',   '0909000001', N'Nguyen Huu Hung',             'ROLE_LECTURER',1),
