@@ -1,46 +1,91 @@
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../../api'
 import '../../assets/css/dashboard.css'
 
-const SCHEDULE_STATUS = {
+// ─── Local Types ────────────────────────────────────────────────────────────
+
+interface StudentInfo {
+  fullName?: string
+  studentCode?: string
+  className?: string
+  faculty?: string
+  academicYear?: string
+  gpa?: number
+  credits?: number
+  attendanceRate?: number
+}
+
+interface TodayScheduleItem {
+  id?: number
+  status?: string
+  period?: string | number
+  startTime?: string
+  endTime?: string
+  subjectName?: string
+  lecturerName?: string
+  room?: string
+}
+
+interface UpcomingSession {
+  id?: number
+  period?: string | number
+  startTime?: string
+  endTime?: string
+  subjectName?: string
+  lecturerName?: string
+  room?: string
+}
+
+interface UpcomingDay {
+  dayName?: string
+  sessions: UpcomingSession[]
+}
+
+const SCHEDULE_STATUS: Record<string, { label: string; class: string }> = {
   completed: { label: 'Đã kết thúc', class: 'badge-success' },
   in_progress: { label: 'Đang diễn ra', class: 'badge-warning' },
   pending: { label: 'Sắp diễn ra', class: 'badge-secondary' },
 }
 
-function getGPAClass(gpa) {
+function getGPAClass(gpa: number): string {
   if (gpa >= 3.0) return 'text-success'
   if (gpa >= 2.0) return 'text-warning'
   return 'text-danger'
 }
 
-function getAttendanceClass(rate) {
+function getAttendanceClass(rate: number): string {
   if (rate >= 90) return 'text-success'
   if (rate >= 80) return 'text-warning'
   return 'text-danger'
 }
 
-export default function StudentDashboardPage() {
+// ─── Component ───────────────────────────────────────────────────────────────
+
+export default function StudentDashboardPage(): React.JSX.Element {
   const navigate = useNavigate()
 
-  const { data: studentInfo, isLoading: loadingInfo } = useQuery({
+  const { data: studentInfo, isLoading: loadingInfo } = useQuery<StudentInfo>({
     queryKey: ['student-info'],
-    queryFn: () => apiClient.get('/dashboard/student/info').then((r) => r.data),
+    queryFn: () => apiClient.get<StudentInfo>('/dashboard/student/info').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: todaySchedule, isLoading: loadingToday } = useQuery({
+  const { data: todayScheduleRaw, isLoading: loadingToday } = useQuery<unknown>({
     queryKey: ['student-today-schedule'],
     queryFn: () => apiClient.get('/dashboard/student/today-schedule').then((r) => r.data),
     staleTime: 30 * 1000,
   })
 
-  const { data: upcomingSchedule, isLoading: loadingUpcoming } = useQuery({
+  const { data: upcomingScheduleRaw, isLoading: loadingUpcoming } = useQuery<unknown>({
     queryKey: ['student-upcoming-schedule'],
     queryFn: () => apiClient.get('/dashboard/student/upcoming-schedule').then((r) => r.data),
     staleTime: 60 * 1000,
   })
+
+  const todaySchedule = Array.isArray(todayScheduleRaw) ? todayScheduleRaw as TodayScheduleItem[] : []
+  const upcomingSchedule = Array.isArray(upcomingScheduleRaw) ? upcomingScheduleRaw as UpcomingDay[] : []
 
   const loading = loadingInfo || loadingToday
 
@@ -95,7 +140,7 @@ export default function StudentDashboardPage() {
               <i className="fas fa-spinner fa-spin fa-2x"></i>
               <p>Đang tải lịch học...</p>
             </div>
-          ) : !todaySchedule?.length ? (
+          ) : !todaySchedule.length ? (
             <div className="text-center" style={{ padding: '40px' }}>
               <i className="fas fa-calendar-times fa-3x" style={{ color: '#94a3b8' }}></i>
               <p>Không có lịch học hôm nay</p>
@@ -103,7 +148,7 @@ export default function StudentDashboardPage() {
           ) : (
             <div className="schedule-list">
               {todaySchedule.map((schedule) => {
-                const statusCfg = SCHEDULE_STATUS[schedule.status] || SCHEDULE_STATUS.pending
+                const statusCfg = SCHEDULE_STATUS[schedule.status ?? ''] || SCHEDULE_STATUS.pending
                 return (
                   <div key={schedule.id} className="schedule-item">
                     <div className="schedule-time">
@@ -133,7 +178,7 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* Upcoming Schedule Notifications */}
-      {upcomingSchedule?.length > 0 && (
+      {upcomingSchedule.length > 0 && (
         <div className="card">
           <div className="card-header" style={{ background: '#17a2b8', color: 'white' }}>
             <h2><i className="fas fa-bell"></i> Thông báo lịch học sắp tới</h2>
