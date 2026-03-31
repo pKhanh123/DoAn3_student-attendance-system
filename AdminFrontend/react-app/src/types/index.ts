@@ -630,6 +630,11 @@ export interface Role {
   roleId: number
   roleName: string
   description?: string
+  isActive?: boolean
+  createdAt?: string
+  createdBy?: string
+  updatedAt?: string
+  updatedBy?: string
 }
 
 // ============================================================
