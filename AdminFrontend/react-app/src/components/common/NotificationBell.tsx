@@ -43,7 +43,17 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
   // Fetch unread notifications
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
     queryKey: ['notifications-unread'],
-    queryFn: () => apiClient.get('/notifications/unread').then(r => r.data),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get('/notifications/unread')
+        const data = response.data
+        // Ensure data is an array
+        return Array.isArray(data) ? data : []
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error)
+        return []
+      }
+    },
     refetchInterval: 60000, // Refresh every minute
   })
 
@@ -66,7 +76,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.isRead).length : 0
 
   const markAndView = (notif: NotificationItem) => {
     markAsReadMutation.mutate(Number(notif.notificationId))
@@ -106,13 +116,13 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
                 <div className="text-center" style={{ padding: '20px' }}>
                   <i className="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
-              ) : notifications.length === 0 ? (
+              ) : !Array.isArray(notifications) || notifications.length === 0 ? (
                 <div className="empty-notifications">
                   <i className="fas fa-inbox"></i>
                   <p>Không có thông báo mới</p>
                 </div>
               ) : (
-                notifications.map((notif) => {
+                (notifications || []).map((notif) => {
                   const notifId = notif.notificationId || notif.id
                   const content = notif.content || notif.message || ''
                   return (

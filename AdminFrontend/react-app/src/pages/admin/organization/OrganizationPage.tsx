@@ -953,7 +953,7 @@ export default function OrganizationPage(): React.JSX.Element {
     <div>
       {/* Tab navigation */}
       <ul className="nav nav-tabs mb-3">
-        <li className="nav-item">
+        <li key="faculties-tab" className="nav-item">
           <button
             className={`nav-link${activeTab === 'faculties' ? ' active' : ''}`}
             onClick={() => setActiveTab('faculties')}
@@ -961,7 +961,7 @@ export default function OrganizationPage(): React.JSX.Element {
             <i className="fas fa-university me-1"></i> Khoa
           </button>
         </li>
-        <li className="nav-item">
+        <li key="departments-tab" className="nav-item">
           <button
             className={`nav-link${activeTab === 'departments' ? ' active' : ''}`}
             onClick={() => setActiveTab('departments')}
@@ -969,7 +969,7 @@ export default function OrganizationPage(): React.JSX.Element {
             <i className="fas fa-building me-1"></i> Bộ môn
           </button>
         </li>
-        <li className="nav-item">
+        <li key="majors-tab" className="nav-item">
           <button
             className={`nav-link${activeTab === 'majors' ? ' active' : ''}`}
             onClick={() => setActiveTab('majors')}
