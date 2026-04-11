@@ -56,6 +56,10 @@ builder.Services.AddScoped<EducationManagement.BLL.Services.RoomService>();
 // ✅ Register Exam Reminder Notification Background Service (for scheduled notifications)
 builder.Services.AddHostedService<EducationManagement.BLL.Services.ExamReminderNotificationService>();
 
+// ✅ Register Graduation Module (Phase 5)
+builder.Services.AddScoped<EducationManagement.DAL.Repositories.GraduationRepository>();
+builder.Services.AddScoped<EducationManagement.BLL.Services.GraduationService>();
+
 // ============================================================
 // 🔹 2.5️⃣ REDIS CACHING (OPTIONAL - Fallback to Memory Cache if Redis unavailable)
 // ============================================================
