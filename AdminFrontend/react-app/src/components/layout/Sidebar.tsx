@@ -34,6 +34,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
     { section: 'QUẢN LÝ HỌC TẬP', items: [
       { label: 'Đăng ký học phần', icon: 'fas fa-clipboard-check', path: '/admin/enrollments' },
       { label: 'Đợt đăng ký', icon: 'fas fa-clock', path: '/admin/registration-periods' },
+      { label: 'Học phí', icon: 'fas fa-file-invoice-dollar', path: '/admin/tuition' },
     ]},
     { section: 'LỊCH TRÌNH', items: [{ label: 'Thời khóa biểu', icon: 'fas fa-clock', path: '/admin/timetable' }] },
     { section: 'BÁO CÁO', items: [{ label: 'Báo cáo', icon: 'fas fa-chart-bar', path: '/admin/reports' }] },
@@ -86,6 +87,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
     ]},
     { section: 'ĐĂNG KÝ', items: [
       { label: 'Đăng ký học phần', icon: 'fas fa-plus-circle', path: '/student/course-register' },
+      { label: 'Học phí', icon: 'fas fa-file-invoice-dollar', path: '/student/tuition' },
       { label: 'Học lại', icon: 'fas fa-redo', path: '/student/retakes' },
       { label: 'Đăng ký học lại', icon: 'fas fa-redo', path: '/student/retake-register' },
     ]},
