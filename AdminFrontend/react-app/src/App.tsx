@@ -34,6 +34,7 @@ import EnrollmentAdminPage from './pages/admin/enrollments/EnrollmentAdminPage'
 import AdvisorManagePage from './pages/admin/advisors/AdvisorManagePage'
 import SubjectListPage from './pages/admin/subjects/SubjectListPage'
 import TuitionManagementPage from './pages/admin/tuition/TuitionManagementPage'
+import GraduationManagementPage from './pages/admin/graduation/GraduationManagementPage'
 
 // Lecturer Pages
 import LecturerDashboardPage from './pages/lecturer/DashboardPage'
@@ -73,6 +74,7 @@ import CourseRegisterPage from './pages/student/enrollment/CourseRegisterPage'
 import StudentProfilePage from './pages/student/profile/ProfilePage'
 import StudentReportPage from './pages/student/reports/ReportPage'
 import StudentTuitionPage from './pages/student/tuition/StudentTuitionPage'
+import StudentGraduationPage from './pages/student/graduation/StudentGraduationPage'
 
 // Route guards
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
@@ -156,6 +158,7 @@ export default function App() {
         <Route path="registration-periods" element={<RegistrationPeriodPage />} />
         <Route path="enrollments" element={<EnrollmentAdminPage />} />
         <Route path="tuition" element={<TuitionManagementPage />} />
+        <Route path="graduation" element={<GraduationManagementPage />} />
         <Route path="audit-logs" element={<AuditLogPage />} />
         <Route path="notifications" element={<NotificationPage />} />
       </Route>
@@ -187,6 +190,7 @@ export default function App() {
         <Route path="exam-schedules" element={<AdvisorExamSchedulePage />} />
         <Route path="exam-scores" element={<AdvisorExamScorePage />} />
         <Route path="reports" element={<AdvisorReportPage />} />
+        <Route path="graduation" element={<GraduationManagementPage />} />
       </Route>
 
       {/* Student */}
@@ -201,6 +205,7 @@ export default function App() {
         <Route path="retake-register" element={<StudentRetakeRegisterPage />} />
         <Route path="course-register" element={<CourseRegisterPage />} />
         <Route path="tuition" element={<StudentTuitionPage />} />
+        <Route path="graduation" element={<StudentGraduationPage />} />
         <Route path="profile" element={<StudentProfilePage />} />
         <Route path="reports" element={<StudentReportPage />} />
       </Route>

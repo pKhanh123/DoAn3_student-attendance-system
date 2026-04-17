@@ -35,6 +35,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
       { label: 'Đăng ký học phần', icon: 'fas fa-clipboard-check', path: '/admin/enrollments' },
       { label: 'Đợt đăng ký', icon: 'fas fa-clock', path: '/admin/registration-periods' },
       { label: 'Học phí', icon: 'fas fa-file-invoice-dollar', path: '/admin/tuition' },
+      { label: 'Xét tốt nghiệp', icon: 'fas fa-graduation-cap', path: '/admin/graduation' },
     ]},
     { section: 'LỊCH TRÌNH', items: [{ label: 'Thời khóa biểu', icon: 'fas fa-clock', path: '/admin/timetable' }] },
     { section: 'BÁO CÁO', items: [{ label: 'Báo cáo', icon: 'fas fa-chart-bar', path: '/admin/reports' }] },
@@ -74,6 +75,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
       { label: 'Duyệt đăng ký', icon: 'fas fa-clipboard-check', path: '/advisor/enrollment-approval' },
       { label: 'Quản lý đăng ký', icon: 'fas fa-list-ul', path: '/advisor/enrollments' },
     ]},
+    { section: 'TỐT NGHIỆP', items: [{ label: 'Xét tốt nghiệp', icon: 'fas fa-graduation-cap', path: '/advisor/graduation' }] },
     { section: 'BÁO CÁO', items: [{ label: 'Báo cáo', icon: 'fas fa-chart-bar', path: '/advisor/reports' }] },
   ],
 
@@ -88,6 +90,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
     { section: 'ĐĂNG KÝ', items: [
       { label: 'Đăng ký học phần', icon: 'fas fa-plus-circle', path: '/student/course-register' },
       { label: 'Học phí', icon: 'fas fa-file-invoice-dollar', path: '/student/tuition' },
+      { label: 'Xét tốt nghiệp', icon: 'fas fa-graduation-cap', path: '/student/graduation' },
       { label: 'Học lại', icon: 'fas fa-redo', path: '/student/retakes' },
       { label: 'Đăng ký học lại', icon: 'fas fa-redo', path: '/student/retake-register' },
     ]},
