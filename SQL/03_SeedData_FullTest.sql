@@ -282,9 +282,9 @@ GO
 
 MERGE dbo.departments AS target
 USING (VALUES
-    ('DEP_SE',  'SE',      N'Bo mon Cong nghe Phan mem',     'FAC_IT',  N'Quan ly chuong trinh phan mem'),
-    ('DEP_DS',  'DS',      N'Bo mon Khoa hoc Du lieu',        'FAC_IT',  N'Nghien cuu va day du lieu'),
-    ('DEP_BUS', 'BUS-MGT', N'Bo mon Quan tri Kinh doanh',     'FAC_BUS', N'Phu trach cac hoc phan kinh doanh')
+    ('DEP_SE',  'SE-DEPT',  N'Bo mon Cong nghe Phan mem',     'FAC_IT',  N'Quan ly chuong trinh phan mem'),
+    ('DEP_DS',  'DS-DEPT',  N'Bo mon Khoa hoc Du lieu',        'FAC_IT',  N'Nghien cuu va day du lieu'),
+    ('DEP_BUS', 'BUS-DEPT', N'Bo mon Quan tri Kinh doanh',     'FAC_BUS', N'Phu trach cac hoc phan kinh doanh')
 ) AS src(department_id, department_code, department_name, faculty_id, description)
 ON target.department_id = src.department_id
 WHEN MATCHED THEN
@@ -367,21 +367,22 @@ GO
 
 MERGE dbo.majors AS target
 USING (VALUES
-    ('MAJ_SE',  N'Cong nghe Phan mem',  'SE',  'FAC_IT',  N'Chuong trinh ky su phan mem'),
-    ('MAJ_DS',  N'Khoa hoc Du lieu',   'DS',  'FAC_IT',  N'Chuong trinh phan tich du lieu'),
-    ('MAJ_MKT', N'Marketing So',       'MKT', 'FAC_BUS', N'Chuong trinh marketing hien dai')
-) AS src(major_id, major_name, major_code, faculty_id, description)
+    ('MAJ_SE',  N'Cong nghe Phan mem',  'SE-MAJ',  'FAC_IT',  'DEP_SE',  N'Chuong trinh ky su phan mem'),
+    ('MAJ_DS',  N'Khoa hoc Du lieu',   'DS-MAJ',  'FAC_IT',  'DEP_DS',  N'Chuong trinh phan tich du lieu'),
+    ('MAJ_MKT', N'Marketing So',       'MKT-MAJ', 'FAC_BUS', 'DEP_BUS', N'Chuong trinh marketing hien dai')
+) AS src(major_id, major_name, major_code, faculty_id, department_id, description)
 ON target.major_id = src.major_id
 WHEN MATCHED THEN
     UPDATE SET major_name = src.major_name,
                major_code = src.major_code,
                faculty_id = src.faculty_id,
+               department_id = src.department_id,
                description = src.description,
                updated_at = GETDATE(),
                updated_by = 'seed_full_test'
 WHEN NOT MATCHED THEN
-    INSERT (major_id, major_name, major_code, faculty_id, description, created_by)
-    VALUES (src.major_id, src.major_name, src.major_code, src.faculty_id, src.description, 'seed_full_test');
+    INSERT (major_id, major_name, major_code, faculty_id, department_id, description, created_by)
+    VALUES (src.major_id, src.major_name, src.major_code, src.faculty_id, src.department_id, src.description, 'seed_full_test');
 GO
 
 -- ===========================================
