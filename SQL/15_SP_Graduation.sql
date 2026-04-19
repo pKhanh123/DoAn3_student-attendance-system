@@ -48,8 +48,7 @@ BEGIN
     SELECT TOP 1
         @RequiredCredits = required_credits,
         @MinGPA10 = minimum_gpa10,
-        @MinGPA4 = minimum_gpa4,
-        @ProgramDuration = program_duration_years
+        @MinGPA4 = minimum_gpa4
     FROM graduation_requirements
     WHERE major_id = @MajorId
       AND is_active = 1
@@ -172,9 +171,7 @@ BEGIN
         @FailedSubjectsCount AS failed_subjects_count,
         @HasDebt AS has_debt,
         @TotalDebt AS total_debt,
-        @CohortYear AS cohort_year,
-        @ProgramDuration AS program_duration_years,
-        (@CohortYear + @ProgramDuration) AS expected_graduation_year;
+        @CohortYear AS cohort_year;
 END;
 GO
 
@@ -198,7 +195,6 @@ BEGIN
         gr.required_credits,
         gr.minimum_gpa10,
         gr.minimum_gpa4,
-        gr.program_duration_years,
         gr.is_active,
         gr.created_at,
         gr.created_by
@@ -567,12 +563,13 @@ BEGIN
         CASE WHEN ISNULL(credit_summary.current_gpa10, 0) >= ISNULL(gr.minimum_gpa10, 5.0) THEN 1 ELSE 0 END AS gpa_met,
         ISNULL(debt_summary.total_debt, 0) AS total_debt,
         CASE WHEN ISNULL(debt_summary.total_debt, 0) > 0 THEN 1 ELSE 0 END AS has_debt,
-        gr.status AS graduation_status,
-        gr.request_date
+        greq.status AS graduation_status,
+        greq.request_date
     FROM students s
     INNER JOIN majors m ON s.major_id = m.major_id
     LEFT JOIN academic_years ay ON s.academic_year_id = ay.academic_year_id
     LEFT JOIN graduation_requirements gr ON s.major_id = gr.major_id AND gr.is_active = 1 AND gr.deleted_at IS NULL
+    LEFT JOIN graduation_requests greq ON s.student_id = greq.student_id AND greq.deleted_at IS NULL
     OUTER APPLY (
         SELECT
             ISNULL(SUM(CASE WHEN g.total_score >= 5.0 THEN subj.credits ELSE 0 END), 0) AS accumulated_credits,
