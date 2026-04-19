@@ -198,8 +198,8 @@ GO
 -- Bước 2: MERGE faculties (chỉ INSERT hoặc UPDATE các trường khác, không UPDATE faculty_id)
 MERGE dbo.faculties AS target
 USING (VALUES
-    ('FAC_IT',  'CNTT', N'Cong nghe Thong tin', N'Khoa dao tao cong nghe', 1),
-    ('FAC_BUS', 'BUS',  N'Kinh doanh So',      N'Khoa kinh doanh va quan tri', 1)
+    ('FAC_IT',  'FAC-IT',  N'Cong nghe Thong tin', N'Khoa dao tao cong nghe', 1),
+    ('FAC_BUS', 'FAC-BUS', N'Kinh doanh So',      N'Khoa kinh doanh va quan tri', 1)
 ) AS src(faculty_id, faculty_code, faculty_name, description, is_active)
 ON target.faculty_id = src.faculty_id
 WHEN MATCHED THEN
