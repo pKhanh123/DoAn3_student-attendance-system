@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,9 +26,18 @@ namespace EducationManagement.Common.Models
         [MaxLength(50)]
         public string FacultyId { get; set; } = string.Empty;
 
-        // 🔹 Thêm để map kết quả SP (f.faculty_name)
+        [Column("department_id")]
+        [MaxLength(50)]
+        public string? DepartmentId { get; set; }
+
         [NotMapped]
         public string? FacultyName { get; set; }
+
+        [NotMapped]
+        public string? DepartmentName { get; set; }
+
+        [NotMapped]
+        public string? DepartmentCode { get; set; }
 
         [Column("description")]
         [MaxLength(255)]

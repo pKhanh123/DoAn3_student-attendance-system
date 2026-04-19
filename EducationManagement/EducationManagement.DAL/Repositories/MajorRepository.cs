@@ -107,7 +107,9 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@MajorName", major.MajorName),
                 new SqlParameter("@FacultyId", major.FacultyId),
-                new SqlParameter("@CreatedBy", major.CreatedBy)
+                new SqlParameter("@DepartmentId", (object?)major.DepartmentId ?? DBNull.Value),
+                new SqlParameter("@Description", (object?)major.Description ?? DBNull.Value),
+                new SqlParameter("@CreatedBy", (object?)major.CreatedBy ?? DBNull.Value)
             };
 
             await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_CreateMajor", parameters);
@@ -124,7 +126,9 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@MajorName", major.MajorName),
                 new SqlParameter("@FacultyId", major.FacultyId),
-                new SqlParameter("@UpdatedBy", major.UpdatedBy)
+                new SqlParameter("@DepartmentId", (object?)major.DepartmentId ?? DBNull.Value),
+                new SqlParameter("@Description", (object?)major.Description ?? DBNull.Value),
+                new SqlParameter("@UpdatedBy", (object?)major.UpdatedBy ?? DBNull.Value)
             };
 
             return await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_UpdateMajor", parameters);
@@ -174,18 +178,28 @@ namespace EducationManagement.DAL.Repositories
                 MajorCode = row["major_code"].ToString()!,
                 MajorName = row["major_name"].ToString()!,
                 FacultyId = row["faculty_id"].ToString()!,
-                FacultyName = row.Table.Columns.Contains("faculty_name") 
-                    ? row["faculty_name"]?.ToString() 
+                FacultyName = row.Table.Columns.Contains("faculty_name")
+                    ? row["faculty_name"]?.ToString()
                     : null,
+                DepartmentId = row.Table.Columns.Contains("department_id") && row["department_id"] != DBNull.Value
+                    ? row["department_id"]?.ToString()
+                    : null,
+                DepartmentName = row.Table.Columns.Contains("department_name")
+                    ? row["department_name"]?.ToString()
+                    : null,
+                DepartmentCode = row.Table.Columns.Contains("department_code")
+                    ? row["department_code"]?.ToString()
+                    : null,
+                Description = row.Table.Columns.Contains("description") ? row["description"]?.ToString() : null,
                 IsActive = row.Table.Columns.Contains("is_active") && row["is_active"] != DBNull.Value
                     ? Convert.ToBoolean(row["is_active"])
                     : true,
-                CreatedAt = row.Table.Columns.Contains("created_at") && row["created_at"] != DBNull.Value 
-                    ? Convert.ToDateTime(row["created_at"]) 
+                CreatedAt = row.Table.Columns.Contains("created_at") && row["created_at"] != DBNull.Value
+                    ? Convert.ToDateTime(row["created_at"])
                     : (DateTime?)null,
                 CreatedBy = row.Table.Columns.Contains("created_by") ? row["created_by"]?.ToString() : null,
-                UpdatedAt = row.Table.Columns.Contains("updated_at") && row["updated_at"] != DBNull.Value 
-                    ? Convert.ToDateTime(row["updated_at"]) 
+                UpdatedAt = row.Table.Columns.Contains("updated_at") && row["updated_at"] != DBNull.Value
+                    ? Convert.ToDateTime(row["updated_at"])
                     : (DateTime?)null,
                 UpdatedBy = row.Table.Columns.Contains("updated_by") ? row["updated_by"]?.ToString() : null
             };

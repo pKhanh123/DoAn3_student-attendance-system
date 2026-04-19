@@ -131,7 +131,7 @@ namespace EducationManagement.BLL.Services
                     var cohort = await AutoCreateCohortAsync(year, durationYears, createdBy);
                     cohorts.Add(cohort);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // Skip if already exists
                 }

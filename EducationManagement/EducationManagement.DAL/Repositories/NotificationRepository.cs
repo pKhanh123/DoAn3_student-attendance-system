@@ -84,7 +84,7 @@ namespace EducationManagement.DAL.Repositories
                 
                 return (notifications, totalCount);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return (notifications, 0);
             }
@@ -105,7 +105,7 @@ namespace EducationManagement.DAL.Repositories
                 foreach (DataRow row in dt.Rows)
                     notifications.Add(MapToNotification(row));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -128,7 +128,7 @@ namespace EducationManagement.DAL.Repositories
                     return Convert.ToInt32(dt.Rows[0]["count"]);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -145,7 +145,7 @@ namespace EducationManagement.DAL.Repositories
                 if (dt.Rows.Count > 0)
                     return MapToNotification(dt.Rows[0]);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -185,7 +185,7 @@ namespace EducationManagement.DAL.Repositories
                     throw new Exception("Không tìm thấy notification hoặc đã bị xóa");
                 }
             }
-            catch (SqlException sqlEx)
+            catch (SqlException)
             {
                 // Re-throw SQL exceptions (including error 50001 from stored procedure)
                 throw;
@@ -223,7 +223,7 @@ namespace EducationManagement.DAL.Repositories
                     return Convert.ToInt32(dt.Rows[0]["updated_count"]);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -243,7 +243,7 @@ namespace EducationManagement.DAL.Repositories
             {
                 await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_DeleteNotification", parameters);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

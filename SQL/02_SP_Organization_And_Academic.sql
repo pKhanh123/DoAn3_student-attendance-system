@@ -155,13 +155,14 @@
 		@MajorName NVARCHAR(150),
 		@MajorCode VARCHAR(20),
 		@FacultyId VARCHAR(50),
+		@DepartmentId VARCHAR(50) = NULL,
 		@Description NVARCHAR(500) = NULL,
 		@CreatedBy VARCHAR(50) = 'system'
 	AS
 	BEGIN
-		INSERT INTO dbo.majors (major_id, major_name, major_code, faculty_id, description,
+		INSERT INTO dbo.majors (major_id, major_name, major_code, faculty_id, department_id, description,
 								created_at, created_by)
-		VALUES (@MajorId, @MajorName, @MajorCode, @FacultyId, @Description, GETDATE(), @CreatedBy);
+		VALUES (@MajorId, @MajorName, @MajorCode, @FacultyId, @DepartmentId, @Description, GETDATE(), @CreatedBy);
 	END
 	GO
 
@@ -476,28 +477,32 @@
 	AS
 	BEGIN
 		SET NOCOUNT ON;
-    
+
 		DECLARE @Offset INT = (@Page - 1) * @PageSize;
-    
+
 		-- Total count
 		SELECT COUNT(*) AS TotalCount
 		FROM dbo.majors m
 		LEFT JOIN dbo.faculties f ON m.faculty_id = f.faculty_id
+		LEFT JOIN dbo.departments d ON m.department_id = d.department_id
 		WHERE m.deleted_at IS NULL
-			AND (@Search IS NULL OR 
-				 m.major_code LIKE '%' + @Search + '%' OR 
+			AND (@Search IS NULL OR
+				 m.major_code LIKE '%' + @Search + '%' OR
 				 m.major_name LIKE '%' + @Search + '%' OR
-				 f.faculty_name LIKE '%' + @Search + '%');
-    
+				 f.faculty_name LIKE '%' + @Search + '%' OR
+				 d.department_name LIKE '%' + @Search + '%');
+
 		-- Data with pagination
-		SELECT m.*, f.faculty_name, f.faculty_code
+		SELECT m.*, f.faculty_name, f.faculty_code, d.department_name, d.department_code
 		FROM dbo.majors m
 		LEFT JOIN dbo.faculties f ON m.faculty_id = f.faculty_id
+		LEFT JOIN dbo.departments d ON m.department_id = d.department_id
 		WHERE m.deleted_at IS NULL
-			AND (@Search IS NULL OR 
-				 m.major_code LIKE '%' + @Search + '%' OR 
+			AND (@Search IS NULL OR
+				 m.major_code LIKE '%' + @Search + '%' OR
 				 m.major_name LIKE '%' + @Search + '%' OR
-				 f.faculty_name LIKE '%' + @Search + '%')
+				 f.faculty_name LIKE '%' + @Search + '%' OR
+				 d.department_name LIKE '%' + @Search + '%')
 		ORDER BY m.major_name
 		OFFSET @Offset ROWS
 		FETCH NEXT @PageSize ROWS ONLY;
@@ -534,9 +539,10 @@
 		@MajorId VARCHAR(50)
 	AS
 	BEGIN
-		SELECT m.*, f.faculty_name
+		SELECT m.*, f.faculty_name, d.department_name, d.department_code
 		FROM dbo.majors m
 		LEFT JOIN dbo.faculties f ON m.faculty_id = f.faculty_id
+		LEFT JOIN dbo.departments d ON m.department_id = d.department_id
 		WHERE m.major_id = @MajorId AND m.deleted_at IS NULL;
 	END
 	GO
@@ -547,9 +553,11 @@
 		@FacultyId VARCHAR(50)
 	AS
 	BEGIN
-		SELECT * FROM dbo.majors
-		WHERE faculty_id = @FacultyId AND deleted_at IS NULL
-		ORDER BY major_name;
+		SELECT m.*, d.department_name, d.department_code
+		FROM dbo.majors m
+		LEFT JOIN dbo.departments d ON m.department_id = d.department_id
+		WHERE m.faculty_id = @FacultyId AND m.deleted_at IS NULL
+		ORDER BY m.major_name;
 	END
 	GO
 
@@ -703,13 +711,14 @@
 		@MajorName NVARCHAR(150),
 		@MajorCode VARCHAR(20),
 		@FacultyId VARCHAR(50),
+		@DepartmentId VARCHAR(50) = NULL,
 		@Description NVARCHAR(500) = NULL,
 		@UpdatedBy VARCHAR(50) = 'system'
 	AS
 	BEGIN
 		UPDATE dbo.majors
 		SET major_name = @MajorName, major_code = @MajorCode, faculty_id = @FacultyId,
-			description = @Description, updated_at = GETDATE(), updated_by = @UpdatedBy
+			department_id = @DepartmentId, description = @Description, updated_at = GETDATE(), updated_by = @UpdatedBy
 		WHERE major_id = @MajorId AND deleted_at IS NULL;
 	END
 	GO

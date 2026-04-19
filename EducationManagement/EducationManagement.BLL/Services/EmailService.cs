@@ -80,7 +80,7 @@ namespace EducationManagement.BLL.Services
 
                 await client.SendMailAsync(message);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log error silently
                 throw;

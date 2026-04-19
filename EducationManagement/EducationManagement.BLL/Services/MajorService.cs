@@ -13,11 +13,13 @@ namespace EducationManagement.BLL.Services
     {
         private readonly MajorRepository _repo;
         private readonly FacultyRepository _facultyRepo;
+        private readonly DepartmentRepository _departmentRepo;
 
-        public MajorService(MajorRepository repo, FacultyRepository facultyRepo)
+        public MajorService(MajorRepository repo, FacultyRepository facultyRepo, DepartmentRepository departmentRepo)
         {
             _repo = repo;
             _facultyRepo = facultyRepo;
+            _departmentRepo = departmentRepo;
         }
 
         public async Task<List<Major>> GetAllAsync() => await _repo.GetAllAsync();
@@ -71,16 +73,27 @@ namespace EducationManagement.BLL.Services
             // ✅ Format validation
             ValidateCodeFormat(major.MajorCode, "Mã ngành");
             ValidateNameFormat(major.MajorName, "Tên ngành");
-            
+
             // ✅ Ràng buộc nghiệp vụ: Faculty phải tồn tại
             var faculty = await _facultyRepo.GetByIdAsync(major.FacultyId);
             if (faculty == null)
                 throw new Exception("Khoa không tồn tại!");
 
+            if (!string.IsNullOrWhiteSpace(major.DepartmentId))
+            {
+                var department = await _departmentRepo.GetByIdAsync(major.DepartmentId);
+                if (department == null)
+                    throw new Exception("Bộ môn không tồn tại!");
+
+                if (department.FacultyId != major.FacultyId)
+                    throw new Exception("Bộ môn không thuộc khoa đã chọn!");
+            }
+
             // Auto uppercase mã code
             major.MajorCode = major.MajorCode.ToUpper().Trim();
             major.MajorName = major.MajorName.Trim();
-            
+            major.DepartmentId = string.IsNullOrWhiteSpace(major.DepartmentId) ? null : major.DepartmentId.Trim();
+
             major.MajorId = Guid.NewGuid().ToString();
             major.CreatedAt = DateTime.Now;
 
@@ -92,16 +105,27 @@ namespace EducationManagement.BLL.Services
             // ✅ Format validation
             ValidateCodeFormat(major.MajorCode, "Mã ngành");
             ValidateNameFormat(major.MajorName, "Tên ngành");
-            
+
             // ✅ Validate: Faculty phải tồn tại khi update
             var faculty = await _facultyRepo.GetByIdAsync(major.FacultyId);
             if (faculty == null)
                 throw new Exception("Khoa không tồn tại!");
-            
+
+            if (!string.IsNullOrWhiteSpace(major.DepartmentId))
+            {
+                var department = await _departmentRepo.GetByIdAsync(major.DepartmentId);
+                if (department == null)
+                    throw new Exception("Bộ môn không tồn tại!");
+
+                if (department.FacultyId != major.FacultyId)
+                    throw new Exception("Bộ môn không thuộc khoa đã chọn!");
+            }
+
             // Auto uppercase mã code
             major.MajorCode = major.MajorCode.ToUpper().Trim();
             major.MajorName = major.MajorName.Trim();
-            
+            major.DepartmentId = string.IsNullOrWhiteSpace(major.DepartmentId) ? null : major.DepartmentId.Trim();
+
             major.UpdatedAt = DateTime.Now;
             await _repo.UpdateAsync(major);
         }

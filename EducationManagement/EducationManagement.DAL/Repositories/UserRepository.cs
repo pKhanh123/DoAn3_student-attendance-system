@@ -128,7 +128,7 @@ namespace EducationManagement.DAL.Repositories
                 
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -224,7 +224,7 @@ namespace EducationManagement.DAL.Repositories
                 var rowsAffected = await cmd.ExecuteNonQueryAsync();
                 return rowsAffected > 0;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -310,7 +310,7 @@ namespace EducationManagement.DAL.Repositories
                         userIds.Add(userId);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 
@@ -350,7 +350,7 @@ namespace EducationManagement.DAL.Repositories
                         users.Add((userId, email, fullName));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 

@@ -75,13 +75,13 @@ namespace EducationManagement.BLL.Services
                             {
                                 await _advisorService.CheckAndSendWarningAfterAttendance(studentId, classId);
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                             }
                         });
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

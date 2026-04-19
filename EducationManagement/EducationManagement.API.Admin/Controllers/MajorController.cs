@@ -74,7 +74,8 @@ namespace EducationManagement.API.Admin.Controllers
                 await LogCreateAsync("Major", model.MajorId, new {
                     major_code = model.MajorCode,
                     major_name = model.MajorName,
-                    faculty_id = model.FacultyId
+                    faculty_id = model.FacultyId,
+                    department_id = model.DepartmentId
                 });
 
                 return Ok(new { message = "Thêm ngành học thành công!" });
@@ -107,8 +108,8 @@ namespace EducationManagement.API.Admin.Controllers
 
                 // ✅ Audit Log: Update Major
                 await LogUpdateAsync("Major", model.MajorId,
-                    new { major_name = oldMajor.MajorName, faculty_id = oldMajor.FacultyId },
-                    new { major_name = model.MajorName, faculty_id = model.FacultyId });
+                    new { major_name = oldMajor.MajorName, faculty_id = oldMajor.FacultyId, department_id = oldMajor.DepartmentId },
+                    new { major_name = model.MajorName, faculty_id = model.FacultyId, department_id = model.DepartmentId });
 
                 return Ok(new { message = "Cập nhật ngành học thành công!" });
             }

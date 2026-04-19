@@ -1046,8 +1046,8 @@ new { Start = TimeSpan.FromHours(15), End = TimeSpan.FromHours(17) },  // 15:00-
 
     public class TimetableCreateInput : TimetableConflictCheckInput
     {
-        public int? PeriodFrom { get; set; }
-        public int? PeriodTo { get; set; }
+        public new int? PeriodFrom { get; set; }
+        public new int? PeriodTo { get; set; }
         public string? Recurrence { get; set; }
         public string? Status { get; set; }
         public string? Actor { get; set; }
