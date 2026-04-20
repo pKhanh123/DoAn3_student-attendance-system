@@ -19,27 +19,32 @@ namespace EducationManagement.DAL.Repositories
 
         public async Task<string> CreateRequirementAsync(string majorId, int requiredCredits, decimal minGpa, string createdBy)
         {
+            var requirementId = "GR_" + Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+            var sql = @"
+                INSERT INTO graduation_requirements (requirement_id, major_id, required_credits, minimum_gpa10, minimum_gpa4, is_active, created_by)
+                VALUES (@RequirementId, @MajorId, @RequiredCredits, @MinGpa10, @MinGpa4, 1, @CreatedBy);";
             var parameters = new[]
             {
-                new SqlParameter("@RequirementId", SqlDbType.VarChar, 50) { Direction = ParameterDirection.Output },
+                new SqlParameter("@RequirementId", requirementId),
                 new SqlParameter("@MajorId", majorId),
                 new SqlParameter("@RequiredCredits", requiredCredits),
-                new SqlParameter("@MinGpa", minGpa),
+                new SqlParameter("@MinGpa10", minGpa),
+                new SqlParameter("@MinGpa4", minGpa / 2.5m),
                 new SqlParameter("@CreatedBy", createdBy)
             };
-
-            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_CreateGraduationRequirement", parameters);
-            return parameters[0].Value?.ToString() ?? string.Empty;
+            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, sql, parameters);
+            return requirementId;
         }
 
         public async Task<DataTable> GetRequirementByMajorAsync(string majorId)
         {
+            Console.WriteLine($"[DEBUG] GetRequirementByMajorAsync called with majorId={majorId}, calling sp_GetGraduationConfigByMajor");
             var parameters = new[]
             {
                 new SqlParameter("@MajorId", majorId)
             };
 
-            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationRequirement", parameters);
+            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationConfigByMajor", parameters);
         }
 
         public async Task<DataTable> CheckEligibilityAsync(string studentId)
@@ -47,12 +52,10 @@ namespace EducationManagement.DAL.Repositories
             var parameters = new[]
             {
                 new SqlParameter("@StudentId", studentId),
-                new SqlParameter("@IsEligible", SqlDbType.Bit) { Direction = ParameterDirection.Output },
-                new SqlParameter("@Reason", SqlDbType.NVarChar, 500) { Direction = ParameterDirection.Output }
+                new SqlParameter("@AcademicYearId", DBNull.Value)
             };
 
-            var result = await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_CheckGraduationEligibility", parameters);
-            return result;
+            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_CheckGraduationEligibility", parameters);
         }
 
         public async Task<string> CreateApplicationAsync(string studentId, string schoolYearId, int semester, string createdBy)
@@ -66,7 +69,7 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@CreatedBy", createdBy)
             };
 
-            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_CreateGraduationApplication", parameters);
+            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_CreateGraduationRequest", parameters);
             return parameters[0].Value?.ToString() ?? string.Empty;
         }
 
@@ -77,30 +80,24 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@StudentId", studentId)
             };
 
-            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationApplicationsByStudent", parameters);
+            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationRequestsByStudent", parameters);
         }
 
         public async Task<DataTable> GetApplicationByIdAsync(string applicationId)
         {
-            var parameters = new[]
-            {
-                new SqlParameter("@ApplicationId", applicationId)
-            };
-
-            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationApplicationById", parameters);
+            var sql = "SELECT * FROM graduation_requests WHERE request_id = @ApplicationId AND deleted_at IS NULL";
+            var parameters = new[] { new SqlParameter("@ApplicationId", applicationId) };
+            return await DatabaseHelper.ExecuteRawQueryAsync(_connectionString, sql, parameters);
         }
 
-        public async Task<DataTable> GetAllApplicationsAsync(string? status = null, int pageNumber = 1, int pageSize = 20)
+        public async Task<DataTable> GetAllApplicationsAsync(string? academicYearId = null, int pageNumber = 1, int pageSize = 20)
         {
             var parameters = new[]
             {
-                new SqlParameter("@Status", (object?)status ?? DBNull.Value),
-                new SqlParameter("@PageNumber", pageNumber),
-                new SqlParameter("@PageSize", pageSize),
-                new SqlParameter("@TotalRecords", SqlDbType.Int) { Direction = ParameterDirection.Output }
+                new SqlParameter("@AcademicYearId", (object?)academicYearId ?? DBNull.Value)
             };
 
-            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetAllGraduationApplications", parameters);
+            return await DatabaseHelper.ExecuteQueryAsync(_connectionString, "sp_GetGraduationCandidateList", parameters);
         }
 
         public async Task UpdateApplicationStatusAsync(string applicationId, string status, string? verifiedBy, string? approvedBy, string? note)
@@ -114,11 +111,17 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@Note", (object?)note ?? DBNull.Value)
             };
 
-            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_UpdateGraduationApplicationStatus", parameters);
+            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_UpdateGraduationStatus", parameters);
         }
 
         public async Task IssueDiplomaAsync(string applicationId, string diplomaNumber, DateTime issueDate, string issuedBy)
         {
+            var sql = @"UPDATE graduation_requests
+                       SET diploma_number = @DiplomaNumber,
+                           issue_date = @IssueDate,
+                           updated_by = @IssuedBy,
+                           updated_at = GETDATE()
+                       WHERE request_id = @ApplicationId";
             var parameters = new[]
             {
                 new SqlParameter("@ApplicationId", applicationId),
@@ -126,8 +129,7 @@ namespace EducationManagement.DAL.Repositories
                 new SqlParameter("@IssueDate", issueDate),
                 new SqlParameter("@IssuedBy", issuedBy)
             };
-
-            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, "sp_IssueDiploma", parameters);
+            await DatabaseHelper.ExecuteNonQueryAsync(_connectionString, sql, parameters);
         }
     }
 }

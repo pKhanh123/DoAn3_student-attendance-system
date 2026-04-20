@@ -40,7 +40,7 @@ BEGIN
 
     IF @MajorId IS NULL
     BEGIN
-        SELECT 0 AS is_eligible, 'Sinh viên không tồn tại' AS eligibility_note;
+        SELECT 0 AS is_eligible, N'Sinh viên không tồn tại' AS eligibility_note;
         RETURN;
     END
 
@@ -57,7 +57,7 @@ BEGIN
 
     IF @RequiredCredits IS NULL
     BEGIN
-        SELECT 0 AS is_eligible, 'Chưa cấu hình điều kiện tốt nghiệp cho ngành này' AS eligibility_note;
+        SELECT 0 AS is_eligible, N'Chưa cấu hình điều kiện tốt nghiệp cho ngành này' AS eligibility_note;
         RETURN;
     END
 
@@ -119,31 +119,31 @@ BEGIN
     IF @AccumulatedCredits < @RequiredCredits
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'Thiếu ' + CAST(@RequiredCredits - @AccumulatedCredits AS VARCHAR(10)) + ' tín chỉ; ';
+        SET @EligibilityNote = @EligibilityNote + N'Thiếu ' + CAST(@RequiredCredits - @AccumulatedCredits AS VARCHAR(10)) + N' tín chỉ; ';
     END
 
     IF @CurrentGPA10 < @MinGPA10
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'GPA10 ' + CAST(@CurrentGPA10 AS VARCHAR(5)) + ' < mức tối thiểu ' + CAST(@MinGPA10 AS VARCHAR(5)) + '; ';
+        SET @EligibilityNote = @EligibilityNote + N'GPA10 ' + CAST(@CurrentGPA10 AS VARCHAR(5)) + N' < mức tối thiểu ' + CAST(@MinGPA10 AS VARCHAR(5)) + N'; ';
     END
 
     IF @CurrentGPA4 < @MinGPA4
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'GPA4 ' + CAST(@CurrentGPA4 AS VARCHAR(4)) + ' < mức tối thiểu ' + CAST(@MinGPA4 AS VARCHAR(4)) + '; ';
+        SET @EligibilityNote = @EligibilityNote + N'GPA4 ' + CAST(@CurrentGPA4 AS VARCHAR(4)) + N' < mức tối thiểu ' + CAST(@MinGPA4 AS VARCHAR(4)) + N'; ';
     END
 
     IF @FailedSubjectsCount > 0
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'Còn ' + CAST(@FailedSubjectsCount AS VARCHAR(5)) + ' môn chưa đạt; ';
+        SET @EligibilityNote = @EligibilityNote + N'Còn ' + CAST(@FailedSubjectsCount AS VARCHAR(5)) + N' môn chưa đạt; ';
     END
 
     IF @HasDebt = 1
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'Sinh viên còn nợ học phí ' + CAST(@TotalDebt AS VARCHAR(20)) + ' VNĐ; ';
+        SET @EligibilityNote = @EligibilityNote + N'Sinh viên còn nợ học phí ' + CAST(@TotalDebt AS VARCHAR(20)) + N' VNĐ; ';
     END
 
     -- Check program duration (cohort_year + duration <= current year)
@@ -151,11 +151,11 @@ BEGIN
     IF @CohortYear + @ProgramDuration > @CurrentYear
     BEGIN
         SET @IsEligible = 0;
-        SET @EligibilityNote = @EligibilityNote + 'Chưa đủ thời gian đào tạo (' + CAST(@ProgramDuration AS VARCHAR(2)) + ' năm); ';
+        SET @EligibilityNote = @EligibilityNote + N'Chưa đủ thời gian đào tạo (' + CAST(@ProgramDuration AS VARCHAR(2)) + N' năm); ';
     END
 
     IF @EligibilityNote = ''
-        SET @EligibilityNote = 'Đủ điều kiện xét tốt nghiệp';
+        SET @EligibilityNote = N'Đủ điều kiện xét tốt nghiệp';
 
     -- Return eligibility result
     SELECT

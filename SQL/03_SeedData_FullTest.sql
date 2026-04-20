@@ -86,10 +86,7 @@ MERGE dbo.users AS target
 USING (VALUES
     -- ✅ User admin chính (USER001) - dùng để đăng nhập với username 'admin'
     ('USER001',       'admin',              '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin@example.com',           '0901234567', N'Nguyễn Văn Admin',            'ROLE_ADMIN',   1),
-    UPDATE dbo.users
-SET password_hash = '$2a$10$8CdMxAqXf4HLczcz2uZyr.sw00O9I7RpJmMV2b2oSuJ7Id9FTM6YC'
-WHERE username = 'admin'
-	-- User admin cho full test (USR_ADMIN_FT) - giữ lại để test
+    -- User admin cho full test (USR_ADMIN_FT) - giữ lại để test
     ('USR_ADMIN_FT',  'admin_fulltest',     '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin.ft@example.com',        '0901000000', N'Nguyen Minh Quan Tri',        'ROLE_ADMIN',   1),
     ('USR_SUPPORT_FT','support_academic',   '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'support.academic@example.com','0901000001', N'Trần Hoài Thu',               'ROLE_ADVISOR', 1),
     ('USR_LEC_01',    'lecturer_hung',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'hung.lecturer@example.com',   '0909000001', N'Nguyen Huu Hung',             'ROLE_LECTURER',1),
@@ -926,29 +923,29 @@ MERGE dbo.grade_appeals AS target
 USING (VALUES
     -- 1. PENDING: Student vừa tạo, chưa có lecturer response (test Student tạo phúc khảo)
     ('APL_FT_001', 'GRD_FT_001', 'ENR_FT_001', 'STU_K24_001', 'CLS_SE101_2024',
-        N'Không đồng ý điểm cuối kỳ vì nghi ngờ lỗi chấm', 8.8, 9.5, N'files/appeal_k24_001.pdf',
-        'PENDING', 'HIGH', NULL, NULL, NULL,
+        N'Không đồng ý điểm cuối kỳ vì nghi ngờ lỗi chấm', 8.8, 9.5,
+        'PENDING', NULL, NULL, NULL,
         NULL, NULL, NULL,
         NULL, NULL, 'USR_STU_24A', NULL, NULL, NULL),
     
     -- 2. REVIEWING: Lecturer đã đề xuất APPROVE, chờ advisor quyết định
     ('APL_FT_002', 'GRD_FT_002', 'ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024',
-        N'Xin xem lại điểm giữa kỳ vì nhập sai', 7.3, 7.8, N'files/appeal_k24_002.pdf',
-        'REVIEWING', 'NORMAL', N'Đã xác minh bài thi, đề xuất chấp nhận', 'LEC_FT_02', 'APPROVE',
+        N'Xin xem lại điểm giữa kỳ vì nhập sai', 7.3, 7.8,
+        'REVIEWING', N'Đã xác minh bài thi, đề xuất chấp nhận', 'LEC_FT_02', 'APPROVE',
         NULL, NULL, NULL,
         NULL, NULL, 'USR_STU_24A', 'USR_LEC_02', NULL, NULL),
     
     -- 3. REVIEWING: Lecturer đã đề xuất REJECT, chờ advisor quyết định
     ('APL_FT_003', 'GRD_FT_003', 'ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024',
-        N'Xin nâng điểm vì bài thi khó', 8.0, 9.0, NULL,
-        'REVIEWING', 'NORMAL', N'Điểm đã chấm đúng, đề xuất từ chối', 'LEC_FT_01', 'REJECT',
+        N'Xin nâng điểm vì bài thi khó', 8.0, 9.0,
+        'REVIEWING', N'Điểm đã chấm đúng, đề xuất từ chối', 'LEC_FT_01', 'REJECT',
         NULL, NULL, NULL,
         NULL, NULL, 'USR_STU_23A', 'USR_LEC_01', NULL, NULL),
     
     -- 4. REVIEWING: Lecturer đã đề xuất NEED_REVIEW, chờ advisor quyết định
     ('APL_FT_004', 'GRD_FT_004', 'ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024',
-        N'Không đồng ý điểm cuối kỳ vì nghi ngờ lỗi chấm', 6.2, 7.0, N'files/appeal_k21_001.pdf',
-        'REVIEWING', 'HIGH', N'Cần xem xét thêm tài liệu đính kèm', 'LEC_FT_02', 'NEED_REVIEW',
+        N'Không đồng ý điểm cuối kỳ vì nghi ngờ lỗi chấm', 6.2, 7.0,
+        'REVIEWING', N'Cần xem xét thêm tài liệu đính kèm', 'LEC_FT_02', 'NEED_REVIEW',
         NULL, NULL, NULL,
         NULL, NULL, 'USR_STU_21A', 'USR_LEC_02', NULL, NULL),
     
@@ -956,27 +953,28 @@ USING (VALUES
     -- Note: APL_FT_002 và APL_FT_005 đều dùng ENR_FT_002 nhưng khác status (REVIEWING vs APPROVED)
     -- Điều này đúng vì cùng một enrollment có thể có nhiều appeals ở các trạng thái khác nhau (test case)
     ('APL_FT_005', 'GRD_FT_005', 'ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024',
-        N'Xin xem lại điểm giữa kỳ vì nhập sai (case đã duyệt)', 7.3, 7.8, N'files/appeal_k24_003.pdf',
-        'APPROVED', 'NORMAL', N'Đã xác minh bài thi, đề xuất chấp nhận', 'LEC_FT_02', 'APPROVE',
+        N'Xin xem lại điểm giữa kỳ vì nhập sai (case đã duyệt)', 7.3, 7.8,
+        'APPROVED', N'Đã xác minh bài thi, đề xuất chấp nhận', 'LEC_FT_02', 'APPROVE',
         'LEC_FT_ADV', N'Đồng ý điều chỉnh điểm theo đề xuất của giảng viên', 'APPROVE',
         7.8, N'Đã cập nhật điểm trong hệ thống', 'USR_STU_24A', 'LEC_FT_ADV', DATEADD(DAY, -2, GETDATE()), 'LEC_FT_ADV'),
     
     -- 6. REJECTED: Advisor đã từ chối (sau khi lecturer đề xuất REJECT)
     ('APL_FT_006', 'GRD_FT_003', 'ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024',
-        N'Xin nâng điểm vì bài thi khó (case đã từ chối)', 8.0, 9.0, NULL,
-        'REJECTED', 'NORMAL', N'Điểm đã chấm đúng, đề xuất từ chối', 'LEC_FT_01', 'REJECT',
+        N'Xin nâng điểm vì bài thi khó (case đã từ chối)', 8.0, 9.0,
+        'REJECTED', N'Điểm đã chấm đúng, đề xuất từ chối', 'LEC_FT_01', 'REJECT',
         'LEC_FT_ADV', N'Không đồng ý điều chỉnh điểm, điểm hiện tại đã công bằng', 'REJECT',
         NULL, N'Giữ nguyên điểm', 'USR_STU_23A', 'LEC_FT_ADV', DATEADD(DAY, -1, GETDATE()), 'LEC_FT_ADV'),
     
     -- 7. APPROVED: Advisor đã duyệt (sau khi lecturer đề xuất NEED_REVIEW)
     ('APL_FT_007', 'GRD_FT_004', 'ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024',
-        N'Không đồng ý điểm cuối kỳ (case đã duyệt sau xem xét)', 6.2, 7.0, N'files/appeal_k21_002.pdf',
-        'APPROVED', 'HIGH', N'Sau khi xem xét kỹ, đề xuất chấp nhận', 'LEC_FT_02', 'NEED_REVIEW',
+        N'Không đồng ý điểm cuối kỳ (case đã duyệt sau xem xét)', 6.2, 7.0,
+        'APPROVED', N'Sau khi xem xét kỹ, đề xuất chấp nhận', 'LEC_FT_02', 'NEED_REVIEW',
         'LEC_FT_ADV', N'Đồng ý điều chỉnh điểm sau khi xem xét lại tài liệu', 'APPROVE',
         7.0, N'Đã xác minh và cập nhật điểm', 'USR_STU_21A', 'LEC_FT_ADV', DATEADD(DAY, -3, GETDATE()), 'LEC_FT_ADV')
 ) AS src(appeal_id, grade_id, enrollment_id, student_id, class_id,
-          appeal_reason, current_score, expected_score, supporting_docs,
-          status, priority, lecturer_response, lecturer_id, lecturer_decision,
+          appeal_reason, current_score, expected_score,
+          status,
+          lecturer_response, lecturer_id, lecturer_decision,
           advisor_id, advisor_response, advisor_decision,
           final_score, resolution_notes, created_by, updated_by, resolved_at, resolved_by)
 ON target.appeal_id = src.appeal_id
@@ -988,9 +986,7 @@ WHEN MATCHED THEN
                appeal_reason = src.appeal_reason,
                current_score = src.current_score,
                expected_score = src.expected_score,
-               supporting_docs = src.supporting_docs,
                status = src.status,
-               priority = src.priority,
                lecturer_response = src.lecturer_response,
                lecturer_id = src.lecturer_id,
                lecturer_decision = src.lecturer_decision,
@@ -1005,13 +1001,15 @@ WHEN MATCHED THEN
                resolved_by = src.resolved_by
 WHEN NOT MATCHED THEN
     INSERT (appeal_id, grade_id, enrollment_id, student_id, class_id,
-            appeal_reason, current_score, expected_score, supporting_docs,
-            status, priority, lecturer_response, lecturer_id, lecturer_decision,
+            appeal_reason, current_score, expected_score,
+            status,
+            lecturer_response, lecturer_id, lecturer_decision,
             advisor_id, advisor_response, advisor_decision,
             final_score, resolution_notes, created_at, created_by, updated_by, resolved_at, resolved_by)
     VALUES (src.appeal_id, src.grade_id, src.enrollment_id, src.student_id, src.class_id,
-            src.appeal_reason, src.current_score, src.expected_score, src.supporting_docs,
-            src.status, src.priority, src.lecturer_response, src.lecturer_id, src.lecturer_decision,
+            src.appeal_reason, src.current_score, src.expected_score,
+            src.status,
+            src.lecturer_response, src.lecturer_id, src.lecturer_decision,
             src.advisor_id, src.advisor_response, src.advisor_decision,
             src.final_score, src.resolution_notes, GETDATE(), src.created_by, src.updated_by, src.resolved_at, src.resolved_by);
 GO

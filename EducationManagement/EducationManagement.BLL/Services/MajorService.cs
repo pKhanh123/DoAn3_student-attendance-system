@@ -94,7 +94,8 @@ namespace EducationManagement.BLL.Services
             major.MajorName = major.MajorName.Trim();
             major.DepartmentId = string.IsNullOrWhiteSpace(major.DepartmentId) ? null : major.DepartmentId.Trim();
 
-            major.MajorId = Guid.NewGuid().ToString();
+            if (string.IsNullOrWhiteSpace(major.MajorId))
+                major.MajorId = Guid.NewGuid().ToString();
             major.CreatedAt = DateTime.Now;
 
             await _repo.AddAsync(major);

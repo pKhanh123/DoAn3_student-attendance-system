@@ -140,11 +140,11 @@ namespace EducationManagement.API.Admin.Controllers
 
         [HttpGet("applications")]
         [RequireAnyPermission("ADMIN_GRADUATION", "ADVISOR_GRADUATION")]
-        public async Task<IActionResult> GetAllApplications([FromQuery] string? status = null, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetAllApplications([FromQuery] string? academicYearId = null, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
         {
             try
             {
-                var dt = await _service.GetAllApplicationsAsync(status, pageNumber, pageSize);
+                var dt = await _service.GetAllApplicationsAsync(academicYearId, pageNumber, pageSize);
                 var data = DataTableToList(dt);
                 return Ok(new { success = true, data, totalCount = data.Count });
             }

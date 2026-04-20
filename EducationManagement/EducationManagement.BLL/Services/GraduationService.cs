@@ -93,7 +93,7 @@ namespace EducationManagement.BLL.Services
             return await _repository.GetApplicationByIdAsync(applicationId);
         }
 
-        public async Task<DataTable> GetAllApplicationsAsync(string? status = null, int pageNumber = 1, int pageSize = 20)
+        public async Task<DataTable> GetAllApplicationsAsync(string? academicYearId = null, int pageNumber = 1, int pageSize = 20)
         {
             if (pageNumber < 1)
                 throw new ArgumentException("Page number phải lớn hơn 0");
@@ -101,7 +101,7 @@ namespace EducationManagement.BLL.Services
             if (pageSize < 1 || pageSize > 100)
                 throw new ArgumentException("Page size phải từ 1 đến 100");
 
-            return await _repository.GetAllApplicationsAsync(status, pageNumber, pageSize);
+            return await _repository.GetAllApplicationsAsync(academicYearId, pageNumber, pageSize);
         }
 
         public async Task UpdateApplicationStatusAsync(string applicationId, string status, string? verifiedBy, string? approvedBy, string? note)

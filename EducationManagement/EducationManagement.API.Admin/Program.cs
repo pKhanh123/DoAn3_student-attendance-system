@@ -163,8 +163,8 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // ✅ Configure JSON serialization to use camelCase (JavaScript convention)
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
     });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

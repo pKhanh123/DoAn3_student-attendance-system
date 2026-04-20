@@ -104,8 +104,8 @@ namespace EducationManagement.DAL.Repositories
             var parameters = new[]
             {
                 new SqlParameter("@MajorId", major.MajorId),
-                new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@MajorName", major.MajorName),
+                new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@FacultyId", major.FacultyId),
                 new SqlParameter("@DepartmentId", (object?)major.DepartmentId ?? DBNull.Value),
                 new SqlParameter("@Description", (object?)major.Description ?? DBNull.Value),
@@ -123,8 +123,8 @@ namespace EducationManagement.DAL.Repositories
             var parameters = new[]
             {
                 new SqlParameter("@MajorId", major.MajorId),
-                new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@MajorName", major.MajorName),
+                new SqlParameter("@MajorCode", major.MajorCode),
                 new SqlParameter("@FacultyId", major.FacultyId),
                 new SqlParameter("@DepartmentId", (object?)major.DepartmentId ?? DBNull.Value),
                 new SqlParameter("@Description", (object?)major.Description ?? DBNull.Value),
