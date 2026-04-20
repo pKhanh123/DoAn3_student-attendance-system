@@ -87,17 +87,17 @@ USING (VALUES
     -- ✅ User admin chính (USER001) - dùng để đăng nhập với username 'admin'
     ('USER001',       'admin',              '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin@example.com',           '0901234567', N'Nguyễn Văn Admin',            'ROLE_ADMIN',   1),
     -- User admin cho full test (USR_ADMIN_FT) - giữ lại để test
-    ('USR_ADMIN_FT',  'admin_fulltest',     '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin.ft@example.com',        '0901000000', N'Nguyen Minh Quan Tri',        'ROLE_ADMIN',   1),
+    ('USR_ADMIN_FT',  'admin_fulltest',     '$2a$10$h5gvrNjE2bhwhHn6Ofofq.Ppr0hvpLY5Q3mbY1OjkkGL8CMxm2VBm', 'admin.ft@example.com',        '0901000000', N'Nguyễn Minh Quản Trị',        'ROLE_ADMIN',   1),
     ('USR_SUPPORT_FT','support_academic',   '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'support.academic@example.com','0901000001', N'Trần Hoài Thu',               'ROLE_ADVISOR', 1),
-    ('USR_LEC_01',    'lecturer_hung',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'hung.lecturer@example.com',   '0909000001', N'Nguyen Huu Hung',             'ROLE_LECTURER',1),
-    ('USR_LEC_02',    'lecturer_thao',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'thao.lecturer@example.com',   '0909000002', N'Pham Thao Nhu',               'ROLE_LECTURER',1),
-    ('USR_ADV_01',    'advisor_toan',       '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'advisor.toan@example.com',    '0909000003', N'Dang Quoc Toan',              'ROLE_ADVISOR', 1),
-    ('USR_STU_21A',   'student_k21_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.001@example.com',      '0911000001', N'Tran Nhat Minh',              'ROLE_STUDENT', 1),
-    ('USR_STU_21B',   'student_k21_b',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.002@example.com',      '0911000002', N'Ngo Dieu Anh',                'ROLE_STUDENT', 1),
-    ('USR_STU_22A',   'student_k22_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k22.010@example.com',      '0912000001', N'Pham Huu Long',               'ROLE_STUDENT', 1),
-    ('USR_STU_23A',   'student_k23_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k23.005@example.com',      '0913000001', N'Luu Gia Khanh',              'ROLE_STUDENT', 1),
-    ('USR_STU_24A',   'student_k24_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.015@example.com',      '0914000001', N'Do Quynh Nhi',                'ROLE_STUDENT', 1),
-    ('USR_STU_24B',   'student_k24_b',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.099@example.com',      '0914000002', N'Le Minh Triet',               'ROLE_STUDENT', 1)
+    ('USR_LEC_01',    'lecturer_hung',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'hung.lecturer@example.com',   '0909000001', N'Nguyễn Hữu Hùng',             'ROLE_LECTURER',1),
+    ('USR_LEC_02',    'lecturer_thao',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'thao.lecturer@example.com',   '0909000002', N'Phạm Thảo Như',               'ROLE_LECTURER',1),
+    ('USR_ADV_01',    'advisor_toan',       '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'advisor.toan@example.com',    '0909000003', N'Đặng Quốc Toàn',              'ROLE_ADVISOR', 1),
+    ('USR_STU_21A',   'student_k21_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.001@example.com',      '0911000001', N'Trần Nhật Minh',              'ROLE_STUDENT', 1),
+    ('USR_STU_21B',   'student_k21_b',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.002@example.com',      '0911000002', N'Ngô Diệu Anh',                'ROLE_STUDENT', 1),
+    ('USR_STU_22A',   'student_k22_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k22.010@example.com',      '0912000001', N'Phạm Hữu Long',               'ROLE_STUDENT', 1),
+    ('USR_STU_23A',   'student_k23_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k23.005@example.com',      '0913000001', N'Lưu Gia Khánh',              'ROLE_STUDENT', 1),
+    ('USR_STU_24A',   'student_k24_a',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.015@example.com',      '0914000001', N'Đỗ Quỳnh Nhi',                'ROLE_STUDENT', 1),
+    ('USR_STU_24B',   'student_k24_b',      '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.099@example.com',      '0914000002', N'Lê Minh Triết',               'ROLE_STUDENT', 1)
 ) AS src(user_id, username, password_hash, email, phone, full_name, role_id, is_active)
 ON target.user_id = src.user_id
 WHEN MATCHED THEN
@@ -133,7 +133,7 @@ BEGIN
         BEGIN
             -- Tạm thời INSERT với code tạm, sau đó sẽ UPDATE lại
             INSERT INTO dbo.faculties (faculty_id, faculty_code, faculty_name, description, is_active, created_by)
-            VALUES ('FAC_IT', 'CNTT_TEMP', N'Cong nghe Thong tin', N'Khoa dao tao cong nghe', 1, 'seed_full_test');
+            VALUES ('FAC_IT', 'CNTT_TEMP', N'Công nghệ Thông tin', N'Khoa đào tạo công nghệ', 1, 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -165,7 +165,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.faculties WHERE faculty_id = 'FAC_BUS')
         BEGIN
             INSERT INTO dbo.faculties (faculty_id, faculty_code, faculty_name, description, is_active, created_by)
-            VALUES ('FAC_BUS', 'BUS_TEMP', N'Kinh doanh So', N'Khoa kinh doanh va quan tri', 1, 'seed_full_test');
+            VALUES ('FAC_BUS', 'BUS_TEMP', N'Kinh doanh Số', N'Khoa kinh doanh và quản trị', 1, 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -195,8 +195,8 @@ GO
 -- Bước 2: MERGE faculties (chỉ INSERT hoặc UPDATE các trường khác, không UPDATE faculty_id)
 MERGE dbo.faculties AS target
 USING (VALUES
-    ('FAC_IT',  'FAC-IT',  N'Cong nghe Thong tin', N'Khoa dao tao cong nghe', 1),
-    ('FAC_BUS', 'FAC-BUS', N'Kinh doanh So',      N'Khoa kinh doanh va quan tri', 1)
+    ('FAC_IT',  'FAC-IT',  N'Công nghệ Thông tin', N'Khoa đào tạo công nghệ', 1),
+    ('FAC_BUS', 'FAC-BUS', N'Kinh doanh Số',      N'Khoa kinh doanh và quản trị', 1)
 ) AS src(faculty_id, faculty_code, faculty_name, description, is_active)
 ON target.faculty_id = src.faculty_id
 WHEN MATCHED THEN
@@ -224,7 +224,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE department_id = 'DEP_SE')
         BEGIN
             INSERT INTO dbo.departments (department_id, department_code, department_name, faculty_id, description, created_by)
-            VALUES ('DEP_SE', 'SE_TEMP', N'Bo mon Cong nghe Phan mem', 'FAC_IT', N'Quan ly chuong trinh phan mem', 'seed_full_test');
+            VALUES ('DEP_SE', 'SE_TEMP', N'Bộ môn Công nghệ Phần mềm', 'FAC_IT', N'Quản lý chương trình phần mềm', 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -253,7 +253,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.departments WHERE department_id = 'DEP_DS')
         BEGIN
             INSERT INTO dbo.departments (department_id, department_code, department_name, faculty_id, description, created_by)
-            VALUES ('DEP_DS', 'DS_TEMP', N'Bo mon Khoa hoc Du lieu', 'FAC_IT', N'Nghien cuu va day du lieu', 'seed_full_test');
+            VALUES ('DEP_DS', 'DS_TEMP', N'Bộ môn Khoa học Dữ liệu', 'FAC_IT', N'Nghiên cứu và dạy dữ liệu', 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -279,9 +279,9 @@ GO
 
 MERGE dbo.departments AS target
 USING (VALUES
-    ('DEP_SE',  'SE-DEPT',  N'Bo mon Cong nghe Phan mem',     'FAC_IT',  N'Quan ly chuong trinh phan mem'),
-    ('DEP_DS',  'DS-DEPT',  N'Bo mon Khoa hoc Du lieu',        'FAC_IT',  N'Nghien cuu va day du lieu'),
-    ('DEP_BUS', 'BUS-DEPT', N'Bo mon Quan tri Kinh doanh',     'FAC_BUS', N'Phu trach cac hoc phan kinh doanh')
+    ('DEP_SE',  'SE-DEPT',  N'Bộ môn Công nghệ Phần mềm',     'FAC_IT',  N'Quản lý chương trình phần mềm'),
+    ('DEP_DS',  'DS-DEPT',  N'Bộ môn Khoa học Dữ liệu',        'FAC_IT',  N'Nghiên cứu và dạy dữ liệu'),
+    ('DEP_BUS', 'BUS-DEPT', N'Bộ môn Quản trị Kinh doanh',     'FAC_BUS', N'Phụ trách các học phần kinh doanh')
 ) AS src(department_id, department_code, department_name, faculty_id, description)
 ON target.department_id = src.department_id
 WHEN MATCHED THEN
@@ -309,7 +309,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.majors WHERE major_id = 'MAJ_SE')
         BEGIN
             INSERT INTO dbo.majors (major_id, major_name, major_code, faculty_id, description, created_by)
-            VALUES ('MAJ_SE', N'Cong nghe Phan mem', 'SE_TEMP', 'FAC_IT', N'Chuong trinh ky su phan mem', 'seed_full_test');
+            VALUES ('MAJ_SE', N'Công nghệ Phần mềm', 'SE_TEMP', 'FAC_IT', N'Chương trình kỹ sư phần mềm', 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -338,7 +338,7 @@ BEGIN
         IF NOT EXISTS (SELECT 1 FROM dbo.majors WHERE major_id = 'MAJ_DS')
         BEGIN
             INSERT INTO dbo.majors (major_id, major_name, major_code, faculty_id, description, created_by)
-            VALUES ('MAJ_DS', N'Khoa hoc Du lieu', 'DS_TEMP', 'FAC_IT', N'Chuong trinh phan tich du lieu', 'seed_full_test');
+            VALUES ('MAJ_DS', N'Khoa học Dữ liệu', 'DS_TEMP', 'FAC_IT', N'Chương trình phân tích dữ liệu', 'seed_full_test');
         END
         ELSE
         BEGIN
@@ -364,9 +364,9 @@ GO
 
 MERGE dbo.majors AS target
 USING (VALUES
-    ('MAJ_SE',  N'Cong nghe Phan mem',  'SE-MAJ',  'FAC_IT',  'DEP_SE',  N'Chuong trinh ky su phan mem'),
-    ('MAJ_DS',  N'Khoa hoc Du lieu',   'DS-MAJ',  'FAC_IT',  'DEP_DS',  N'Chuong trinh phan tich du lieu'),
-    ('MAJ_MKT', N'Marketing So',       'MKT-MAJ', 'FAC_BUS', 'DEP_BUS', N'Chuong trinh marketing hien dai')
+    ('MAJ_SE',  N'Công nghệ Phần mềm',  'SE-MAJ',  'FAC_IT',  'DEP_SE',  N'Chương trình kỹ sư phần mềm'),
+    ('MAJ_DS',  N'Khoa học Dữ liệu',   'DS-MAJ',  'FAC_IT',  'DEP_DS',  N'Chương trình phân tích dữ liệu'),
+    ('MAJ_MKT', N'Marketing Số',       'MKT-MAJ', 'FAC_BUS', 'DEP_BUS', N'Chương trình marketing hiện đại')
 ) AS src(major_id, major_name, major_code, faculty_id, department_id, description)
 ON target.major_id = src.major_id
 WHEN MATCHED THEN
@@ -410,17 +410,17 @@ GO
 
 MERGE dbo.school_years AS target
 USING (VALUES
-    ('SY2022', 'SY2022', N'Nam hoc 2022-2023', 'AY2022',
+    ('SY2022', 'SY2022', N'Năm học 2022-2023', 'AY2022',
         DATEFROMPARTS(2022,9,1), DATEFROMPARTS(2023,8,31),
         DATEFROMPARTS(2022,9,1), DATEFROMPARTS(2022,12,31),
         DATEFROMPARTS(2023,1,2), DATEFROMPARTS(2023,5,31),
         0, NULL),
-    ('SY2023', 'SY2023', N'Nam hoc 2023-2024', 'AY2023',
+    ('SY2023', 'SY2023', N'Năm học 2023-2024', 'AY2023',
         DATEFROMPARTS(2023,9,1), DATEFROMPARTS(2024,8,31),
         DATEFROMPARTS(2023,9,1), DATEFROMPARTS(2023,12,31),
         DATEFROMPARTS(2024,1,2), DATEFROMPARTS(2024,5,31),
         0, NULL),
-    ('SY2024', 'SY2024', N'Nam hoc 2024-2025', 'AY2024',
+    ('SY2024', 'SY2024', N'Năm học 2024-2025', 'AY2024',
         DATEFROMPARTS(2024,9,1), DATEFROMPARTS(2025,8,31),
         DATEFROMPARTS(2024,9,1), DATEFROMPARTS(2024,12,31),
         DATEFROMPARTS(2025,1,2), DATEFROMPARTS(2025,5,31),
@@ -454,12 +454,12 @@ GO
 -- ===========================================
 MERGE dbo.lecturers AS target
 USING (VALUES
-    ('LEC_FT_01', 'GVFT01', N'Nguyen Huu Hung', 'hung.lecturer@example.com', '0909000001', 'DEP_SE', 'USR_LEC_01',
+    ('LEC_FT_01', 'GVFT01', N'Nguyễn Hữu Hùng', 'hung.lecturer@example.com', '0909000001', 'DEP_SE', 'USR_LEC_01',
         N'TS', N'Tien si', N'Phan mem doanh nghiep', N'Truong bo mon', DATEFROMPARTS(2013,8,1)),
-    ('LEC_FT_02', 'GVFT02', N'Pham Thao Nhu', 'thao.lecturer@example.com', '0909000002', 'DEP_DS', 'USR_LEC_02',
+    ('LEC_FT_02', 'GVFT02', N'Phạm Thảo Như', 'thao.lecturer@example.com', '0909000002', 'DEP_DS', 'USR_LEC_02',
         N'ThS', N'Thac si', N'Phan tich du lieu', N'Giang vien chinh', DATEFROMPARTS(2016,9,1)),
-    ('LEC_FT_ADV', 'ADFT01', N'Dang Quoc Toan', 'advisor.toan@example.com', '0909000003', 'DEP_SE', 'USR_ADV_01',
-        N'TS', N'Tien si', N'Quan tri dao tao', N'Co van hoc tap', DATEFROMPARTS(2010,5,1))
+    ('LEC_FT_ADV', 'ADFT01', N'Đặng Quốc Toàn', 'advisor.toan@example.com', '0909000003', 'DEP_SE', 'USR_ADV_01',
+        N'TS', N'Tien si', N'Quan tri dao tao', N'Cố vấn học tập', DATEFROMPARTS(2010,5,1))
 ) AS src(lecturer_id, lecturer_code, full_name, email, phone, department_id, user_id,
           academic_title, degree, specialization, position, join_date)
 ON target.lecturer_id = src.lecturer_id
@@ -522,12 +522,12 @@ GO
 -- ===========================================
 MERGE dbo.students AS target
 USING (VALUES
-    ('STU_K21_001', 'K21SE001', N'Tran Nhat Minh',  DATEFROMPARTS(2003,2,11),  N'Nam', 'st.k21.001@example.com', '0911000001', N'Quan 1, TP HCM',  'MAJ_SE',  'AY2021', 'LEC_FT_ADV', 'USR_STU_21A', 'FAC_IT',  'ADM_K21_SE_A', 2021, 1),
-    ('STU_K21_002', 'K21SE002', N'Ngo Dieu Anh',    DATEFROMPARTS(2003,7,30),  N'Nu',  'st.k21.002@example.com', '0911000002', N'Quan 3, TP HCM',  'MAJ_SE',  'AY2021', 'LEC_FT_ADV', 'USR_STU_21B', 'FAC_IT',  'ADM_K21_SE_A', 2021, 1),
-    ('STU_K22_001', 'K22SE010', N'Pham Huu Long',   DATEFROMPARTS(2004,5,15),  N'Nam', 'st.k22.010@example.com', '0912000001', N'Thu Duc, TP HCM','MAJ_SE',  'AY2022', 'LEC_FT_ADV', 'USR_STU_22A', 'FAC_IT',  'ADM_K22_SE_B', 2022, 1),
-    ('STU_K23_001', 'K23DS005', N'Luu Gia Khanh',   DATEFROMPARTS(2005,4,2),   N'Nam', 'st.k23.005@example.com', '0913000001', N'Quan 7, TP HCM',  'MAJ_DS',  'AY2023', 'LEC_FT_02',  'USR_STU_23A', 'FAC_IT',  'ADM_K23_DS_A', 2023, 1),
-    ('STU_K24_001', 'K24SE015', N'Do Quynh Nhi',    DATEFROMPARTS(2006,10,19), N'Nu',  'st.k24.015@example.com', '0914000001', N'Quan Binh Thanh','MAJ_SE',  'AY2024', 'LEC_FT_01',  'USR_STU_24A', 'FAC_IT',  'ADM_K24_SE_A', 2024, 1),
-    ('STU_K24_002', 'K24MKT099',N'Le Minh Triet',   DATEFROMPARTS(2006,12,1),  N'Nam', 'st.k24.099@example.com', '0914000002', N'Quan Phu Nhuan', 'MAJ_MKT', 'AY2024', 'LEC_FT_02',  'USR_STU_24B', 'FAC_BUS', 'ADM_K24_MKT_A', 2024, 1)
+    ('STU_K21_001', 'K21SE001', N'Trần Nhật Minh',  DATEFROMPARTS(2003,2,11),  N'Nam', 'st.k21.001@example.com', '0911000001', N'Quận 1, TP HCM',  'MAJ_SE',  'AY2021', 'LEC_FT_ADV', 'USR_STU_21A', 'FAC_IT',  'ADM_K21_SE_A', 2021, 1),
+    ('STU_K21_002', 'K21SE002', N'Ngô Diệu Anh',    DATEFROMPARTS(2003,7,30),  N'Nữ',  'st.k21.002@example.com', '0911000002', N'Quận 3, TP HCM',  'MAJ_SE',  'AY2021', 'LEC_FT_ADV', 'USR_STU_21B', 'FAC_IT',  'ADM_K21_SE_A', 2021, 1),
+    ('STU_K22_001', 'K22SE010', N'Phạm Hữu Long',   DATEFROMPARTS(2004,5,15),  N'Nam', 'st.k22.010@example.com', '0912000001', N'Thủ Đức, TP HCM','MAJ_SE',  'AY2022', 'LEC_FT_ADV', 'USR_STU_22A', 'FAC_IT',  'ADM_K22_SE_B', 2022, 1),
+    ('STU_K23_001', 'K23DS005', N'Lưu Gia Khánh',   DATEFROMPARTS(2005,4,2),   N'Nam', 'st.k23.005@example.com', '0913000001', N'Quận 7, TP HCM',  'MAJ_DS',  'AY2023', 'LEC_FT_02',  'USR_STU_23A', 'FAC_IT',  'ADM_K23_DS_A', 2023, 1),
+    ('STU_K24_001', 'K24SE015', N'Đỗ Quỳnh Nhi',    DATEFROMPARTS(2006,10,19), N'Nữ',  'st.k24.015@example.com', '0914000001', N'Quận Bình Thạnh','MAJ_SE',  'AY2024', 'LEC_FT_01',  'USR_STU_24A', 'FAC_IT',  'ADM_K24_SE_A', 2024, 1),
+    ('STU_K24_002', 'K24MKT099',N'Lê Minh Triết',   DATEFROMPARTS(2006,12,1),  N'Nam', 'st.k24.099@example.com', '0914000002', N'Quận Phú Nhuận', 'MAJ_MKT', 'AY2024', 'LEC_FT_02',  'USR_STU_24B', 'FAC_BUS', 'ADM_K24_MKT_A', 2024, 1)
 ) AS src(student_id, student_code, full_name, date_of_birth, gender, email, phone, address,
           major_id, academic_year_id, advisor_id, user_id, faculty_id, admin_class_id, cohort_year, is_active)
 ON target.student_id = src.student_id
@@ -564,7 +564,7 @@ USING (VALUES
     ('SUB_SE101', N'Lap trinh .NET co ban',          'SE101', 3, 'DEP_SE',  N'Mon nhap mon lap trinh .NET'),
     ('SUB_SE201', N'Phan tich thiet ke he thong',    'SE201', 3, 'DEP_SE',  N'Mon dac thuyet phan tich phan mem'),
     ('SUB_SE301', N'Do an web nang cao',             'SE301', 4, 'DEP_SE',  N'Do an tot nghiep lap trinh web'),
-    ('SUB_DS101', N'Nhap mon Khoa hoc Du lieu',      'DS101', 3, 'DEP_DS',  N'Co ban ve phan tich du lieu'),
+    ('SUB_DS101', N'Nhập môn Khoa học Dữ liệu',      'DS101', 3, 'DEP_DS',  N'Cơ bản về phân tích dữ liệu'),
     ('SUB_BUS201',N'Marketing so 1',                 'BUS201',3, 'DEP_BUS', N'Ky nang digital marketing')
 ) AS src(subject_id, subject_name, subject_code, credits, department_id, description)
 ON target.subject_id = src.subject_id
@@ -583,9 +583,9 @@ GO
 
 MERGE dbo.subject_prerequisites AS target
 USING (VALUES
-    ('PREREQ_SE201_SE101', 'SUB_SE201', 'SUB_SE101', 5.0, 1, N'Can hoan thanh SE101 truoc khi hoc SE201'),
-    ('PREREQ_SE301_SE201', 'SUB_SE301', 'SUB_SE201', 6.0, 1, N'Can hoan thanh SE201 truoc khi lam do an'),
-    ('PREREQ_DS101_SE101', 'SUB_DS101', 'SUB_SE101', 5.5, 0, N'Co kha nang lap trinh co ban truoc khi vao du lieu')
+    ('PREREQ_SE201_SE101', 'SUB_SE201', 'SUB_SE101', 5.0, 1, N'Cần hoàn thành SE101 trước khi học SE201'),
+    ('PREREQ_SE301_SE201', 'SUB_SE301', 'SUB_SE201', 6.0, 1, N'Cần hoàn thành SE201 trước khi làm đồ án'),
+    ('PREREQ_DS101_SE101', 'SUB_DS101', 'SUB_SE101', 5.5, 0, N'Có khả năng lập trình cơ bản trước khi vào dữ liệu')
 ) AS src(prerequisite_id, subject_id, prerequisite_subject_id, minimum_grade, is_required, description)
 ON target.prerequisite_id = src.prerequisite_id
 WHEN MATCHED THEN
@@ -779,12 +779,12 @@ GO
 -- ===========================================
 MERGE dbo.enrollments AS target
 USING (VALUES
-    ('ENR_FT_001', 'STU_K24_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,9,9),  N'Dang hoc lan dau',                    NULL),
-    ('ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc song song ky nang du lieu',      NULL),
-    ('ENR_FT_003', 'STU_K24_002', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Cho duyet','PENDING',  DATEFROMPARTS(2024,9,9),  N'Doi advisor phe duyet',               NULL),
-    ('ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Sinh vien khoa 23 hoc nang cao',     NULL),
-    ('ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Dang hoc', 'APPROVED', DATEFROMPARTS(2025,1,19), N'Do an tot nghiep',                   NULL),
-    ('ENR_FT_006', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Da huy',   'DROPPED',  DATEFROMPARTS(2025,1,19), N'Bi canh bao vang mat',               N'Vuot qua 30 phan tram vang mat'),
+    ('ENR_FT_001', 'STU_K24_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9),  N'Dang hoc lan dau',                    NULL),
+    ('ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc song song ky nang du lieu',      NULL),
+    ('ENR_FT_003', 'STU_K24_002', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Chờ duyệt','PENDING',  DATEFROMPARTS(2024,9,9),  N'Doi advisor phe duyet',               NULL),
+    ('ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Sinh viên khóa 23 học nâng cao',     NULL),
+    ('ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Đang học', 'APPROVED', DATEFROMPARTS(2025,1,19), N'Do an tot nghiep',                   NULL),
+    ('ENR_FT_006', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Da huy',   'DROPPED',  DATEFROMPARTS(2025,1,19), N'Bị cảnh báo vắng mặt',               N'Vuot qua 30 phan tram vang mat'),
     ('ENR_FT_007', 'STU_K22_001', 'CLS_BUS201_2024',DATEFROMPARTS(2024,8,1),  N'Xin rut',  'WITHDRAWN',DATEFROMPARTS(2024,8,20), N'Nop don xin rut vi lich thuc tap',   N'Da rut truoc han')
 ) AS src(enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status, drop_deadline, notes, drop_reason)
 ON target.enrollment_id = src.enrollment_id
@@ -808,7 +808,7 @@ GO
 
 MERGE dbo.attendances AS target
 USING (VALUES
-    ('ATT_FT_001', 'ENR_FT_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,5),  N'Present', N'Co mat dung gio'),
+    ('ATT_FT_001', 'ENR_FT_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,5),  N'Present', N'Có mặt đúng giờ'),
     ('ATT_FT_002', 'ENR_FT_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,12), N'Late',    N'Tre 5 phut'),
     ('ATT_FT_003', 'ENR_FT_002', 'CLS_DS101_2024', DATEFROMPARTS(2024,9,6),  N'Present', N'Tra bai tap du'),
     ('ATT_FT_004', 'ENR_FT_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,5),  N'Absent',  N'Xin nghi co phe duyet'),
@@ -886,8 +886,8 @@ GO
 -- ===========================================
 MERGE dbo.grade_formula_config AS target
 USING (VALUES
-    ('GFC_SUB_SE101',  'SUB_SE101', NULL, 'SY2024', 0.30, 0.50, 0.20, 0.00, 0.00, N'midterm*0.3+final*0.5+assignment*0.2', 'STANDARD', 1, N'Mac dinh cho SE101', 1),
-    ('GFC_CLASS_SE301',NULL, 'CLS_SE301_2024', 'SY2024', 0.40, 0.60, 0.00, 0.00, 0.00, N'midterm*0.4+final*0.6', 'CEILING', 2, N'Ap dung rieng cho do an SE301', 0)
+    ('GFC_SUB_SE101',  'SUB_SE101', NULL, 'SY2024', 0.30, 0.50, 0.20, 0.00, 0.00, N'midterm*0.3+final*0.5+assignment*0.2', 'STANDARD', 1, N'Mặc định cho SE101', 1),
+    ('GFC_CLASS_SE301',NULL, 'CLS_SE301_2024', 'SY2024', 0.40, 0.60, 0.00, 0.00, 0.00, N'midterm*0.4+final*0.6', 'CEILING', 2, N'Áp dụng riêng cho đồ án SE301', 0)
 ) AS src(config_id, subject_id, class_id, school_year_id,
           midterm_weight, final_weight, assignment_weight, quiz_weight, project_weight,
           custom_formula, rounding_method, decimal_places, description, is_default)
@@ -1020,12 +1020,12 @@ GO
 -- ===========================================
 MERGE dbo.notifications AS target
 USING (VALUES
-    ('NOTIF_FT_001', 'USR_STU_24A', N'Ban vui long hoan tat hoc phi truoc 20/09', N'SYSTEM',
-        'USR_STU_24A', N'Nhac nop hoc phi', N'Ban vui long hoan tat hoc phi truoc 20/09 de giu lich hoc', N'STUDENT', 0, DATEFROMPARTS(2024,9,1), 1, 'seed_full_test'),
+    ('NOTIF_FT_001', 'USR_STU_24A', N'Bạn vui lòng hoàn tất học phí trước 20/09', N'SYSTEM',
+        'USR_STU_24A', N'Nhac nop hoc phi', N'Bạn vui lòng hoàn tất học phí trước 20/09 để giữ lịch học', N'STUDENT', 0, DATEFROMPARTS(2024,9,1), 1, 'seed_full_test'),
     ('NOTIF_FT_002', 'USR_LEC_01', N'He thong da tao lich cham diem cho lop SE201', N'SYSTEM',
         'USR_LEC_01', N'Nhac cham diem', N'Vui long hoan thanh cham diem truoc 30/11', N'LECTURER', 0, DATEFROMPARTS(2024,11,5), 1, 'seed_full_test'),
-    ('NOTIF_FT_003', 'USR_ADMIN_FT', N'Bao cao tong hop dang ky HK1 da san sang', N'SYSTEM',
-        'USR_ADMIN_FT', N'Bao cao dang ky', N'Bao cao dang ky HK1 2024-2025 da duoc luu', N'ADMIN', 1, DATEFROMPARTS(2024,8,16), 1, 'seed_full_test')
+    ('NOTIF_FT_003', 'USR_ADMIN_FT', N'Báo cáo tổng hợp đăng ký HK1 đã sẵn sàng', N'SYSTEM',
+        'USR_ADMIN_FT', N'Báo cáo đăng ký', N'Báo cáo đăng ký HK1 2024-2025 đã được lưu', N'ADMIN', 1, DATEFROMPARTS(2024,8,16), 1, 'seed_full_test')
 ) AS src(notification_id, user_id, message, notification_type,
           recipient_id, title, content, type, is_read, sent_date, is_active, created_by)
 ON target.notification_id = src.notification_id
@@ -1270,7 +1270,7 @@ WHERE NOT EXISTS (
 
 INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent)
 SELECT 'USR_SUPPORT_FT', 'UPDATE_PERIOD', 'registration_periods', 'PER_SY2024_HK1',
-       N'Trang thai: UPCOMING', N'Trang thai: OPEN', '10.0.0.11', 'Seed Script'
+       N'Trạng thái: UPCOMING', N'Trạng thái: OPEN', '10.0.0.11', 'Seed Script'
 WHERE NOT EXISTS (
     SELECT 1 FROM dbo.audit_logs WHERE user_id = 'USR_SUPPORT_FT' AND action = 'UPDATE_PERIOD' AND entity_id = 'PER_SY2024_HK1'
 );
@@ -1312,10 +1312,10 @@ GO
 -- Cần thêm: 4 students với GPA average và weak
 MERGE dbo.users AS target
 USING (VALUES
-    ('USR_STU_21C', 'student_k21_c', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.003@example.com', '0911000003', N'Nguyen Van Dung', 'ROLE_STUDENT', 1),
-    ('USR_STU_22B', 'student_k22_b', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k22.011@example.com', '0912000002', N'Tran Thi Hang', 'ROLE_STUDENT', 1),
-    ('USR_STU_23B', 'student_k23_b', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k23.006@example.com', '0913000002', N'Pham Van Khanh', 'ROLE_STUDENT', 1),
-    ('USR_STU_24C', 'student_k24_c', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.016@example.com', '0914000003', N'Le Thi Mai', 'ROLE_STUDENT', 1)
+    ('USR_STU_21C', 'student_k21_c', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k21.003@example.com', '0911000003', N'Nguyễn Văn Dũng', 'ROLE_STUDENT', 1),
+    ('USR_STU_22B', 'student_k22_b', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k22.011@example.com', '0912000002', N'Trần Thị Hằng', 'ROLE_STUDENT', 1),
+    ('USR_STU_23B', 'student_k23_b', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k23.006@example.com', '0913000002', N'Phạm Văn Khánh', 'ROLE_STUDENT', 1),
+    ('USR_STU_24C', 'student_k24_c', '$2a$10$Ya6MFL1CGpg2/y088u6t7.ACYkMJdmA1869rbBmAnyn6OQi0hTBue', 'st.k24.016@example.com', '0914000003', N'Lê Thị Mai', 'ROLE_STUDENT', 1)
 ) AS src(user_id, username, password_hash, email, phone, full_name, role_id, is_active)
 ON target.user_id = src.user_id
 WHEN NOT MATCHED THEN
@@ -1326,11 +1326,11 @@ GO
 MERGE dbo.students AS target
 USING (VALUES
     -- Average GPA students (2.5-2.9)
-    ('STU_K21_003', 'K21SE003', N'Nguyen Van Dung', DATEFROMPARTS(2003,3,15), N'Nam', 'st.k21.003@example.com', '0911000003', N'Quan 2, TP HCM', 'MAJ_SE', 'AY2021', 'LEC_FT_ADV', 'USR_STU_21C', 'FAC_IT', 'ADM_K21_SE_A', 2021, 1),
-    ('STU_K22_002', 'K22SE011', N'Tran Thi Hang', DATEFROMPARTS(2004,6,20), N'Nu', 'st.k22.011@example.com', '0912000002', N'Quan 10, TP HCM', 'MAJ_SE', 'AY2022', 'LEC_FT_ADV', 'USR_STU_22B', 'FAC_IT', 'ADM_K22_SE_B', 2022, 1),
+    ('STU_K21_003', 'K21SE003', N'Nguyễn Văn Dũng', DATEFROMPARTS(2003,3,15), N'Nam', 'st.k21.003@example.com', '0911000003', N'Quận 2, TP HCM', 'MAJ_SE', 'AY2021', 'LEC_FT_ADV', 'USR_STU_21C', 'FAC_IT', 'ADM_K21_SE_A', 2021, 1),
+    ('STU_K22_002', 'K22SE011', N'Trần Thị Hằng', DATEFROMPARTS(2004,6,20), N'Nữ', 'st.k22.011@example.com', '0912000002', N'Quan 10, TP HCM', 'MAJ_SE', 'AY2022', 'LEC_FT_ADV', 'USR_STU_22B', 'FAC_IT', 'ADM_K22_SE_B', 2022, 1),
     -- Weak GPA students (< 2.0)
-    ('STU_K23_002', 'K23DS006', N'Pham Van Khanh', DATEFROMPARTS(2005,5,10), N'Nam', 'st.k23.006@example.com', '0913000002', N'Quan 8, TP HCM', 'MAJ_DS', 'AY2023', 'LEC_FT_02', 'USR_STU_23B', 'FAC_IT', 'ADM_K23_DS_A', 2023, 1),
-    ('STU_K24_003', 'K24SE016', N'Le Thi Mai', DATEFROMPARTS(2006,11,25), N'Nu', 'st.k24.016@example.com', '0914000003', N'Quan Tan Binh, TP HCM', 'MAJ_SE', 'AY2024', 'LEC_FT_01', 'USR_STU_24C', 'FAC_IT', 'ADM_K24_SE_A', 2024, 1)
+    ('STU_K23_002', 'K23DS006', N'Phạm Văn Khánh', DATEFROMPARTS(2005,5,10), N'Nam', 'st.k23.006@example.com', '0913000002', N'Quan 8, TP HCM', 'MAJ_DS', 'AY2023', 'LEC_FT_02', 'USR_STU_23B', 'FAC_IT', 'ADM_K23_DS_A', 2023, 1),
+    ('STU_K24_003', 'K24SE016', N'Lê Thị Mai', DATEFROMPARTS(2006,11,25), N'Nữ', 'st.k24.016@example.com', '0914000003', N'Quan Tan Binh, TP HCM', 'MAJ_SE', 'AY2024', 'LEC_FT_01', 'USR_STU_24C', 'FAC_IT', 'ADM_K24_SE_A', 2024, 1)
 ) AS src(student_id, student_code, full_name, date_of_birth, gender, email, phone, address,
           major_id, academic_year_id, advisor_id, user_id, faculty_id, admin_class_id, cohort_year, is_active)
 ON target.student_id = src.student_id
@@ -1346,20 +1346,20 @@ GO
 MERGE dbo.enrollments AS target
 USING (VALUES
     -- Enrollments cho students mới với grades D và F
-    ('ENR_FT_008', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc lai', NULL),
-    ('ENR_FT_009', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc binh thuong', NULL),
-    ('ENR_FT_010', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc lai', NULL),
-    ('ENR_FT_011', 'STU_K24_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc binh thuong', NULL),
+    ('ENR_FT_008', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc lai', NULL),
+    ('ENR_FT_009', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc binh thuong', NULL),
+    ('ENR_FT_010', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc lai', NULL),
+    ('ENR_FT_011', 'STU_K24_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc binh thuong', NULL),
     -- Thêm enrollments cho students cũ để tạo nợ tín chỉ và xu hướng GPA
-    ('ENR_FT_012', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc them', NULL),
+    ('ENR_FT_012', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc them', NULL),
     ('ENR_FT_013', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2023,8,25), N'Da hoan thanh', 'APPROVED', DATEFROMPARTS(2023,9,9), N'Hoc nam truoc', NULL),
     -- Enrollments cho sinh viên đăng ký học lại (trong đợt đăng ký học lại)
-    ('ENR_RETAKE_001', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,22), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE301 - trượt do vắng mặt', NULL),
-    ('ENR_RETAKE_002', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2025,1,23), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE101 - trượt cả điểm và vắng mặt', NULL),
-    ('ENR_RETAKE_003', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,24), N'Dang hoc', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE201 - trượt do điểm', NULL),
+    ('ENR_RETAKE_001', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,22), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE301 - trượt do vắng mặt', NULL),
+    ('ENR_RETAKE_002', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2025,1,23), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE101 - trượt cả điểm và vắng mặt', NULL),
+    ('ENR_RETAKE_003', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,24), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE201 - trượt do điểm', NULL),
     ('ENR_RETAKE_004', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,22), N'Da hoan thanh', 'APPROVED', DATEFROMPARTS(2024,9,5), N'Da hoan thanh hoc lai SE101', NULL),
-    ('ENR_RETAKE_005', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2025,1,25), N'Cho duyet', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai DS101', NULL),
-    ('ENR_RETAKE_006', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,26), N'Cho duyet', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai SE201', NULL)
+    ('ENR_RETAKE_005', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2025,1,25), N'Chờ duyệt', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai DS101', NULL),
+    ('ENR_RETAKE_006', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,26), N'Chờ duyệt', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai SE201', NULL)
 ) AS src(enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status, drop_deadline, notes, drop_reason)
 ON target.enrollment_id = src.enrollment_id
 WHEN NOT MATCHED THEN
@@ -1377,7 +1377,7 @@ MERGE dbo.retake_records AS target
 USING (VALUES
     -- Trượt do vắng mặt (ATTENDANCE) - đã được duyệt
     ('RETAKE_FT_001', 'ENR_FT_006', 'STU_K21_002', 'CLS_SE301_2024', 'SUB_SE301',
-        'ATTENDANCE', 20.0, 35.0, 'APPROVED', N'Cho phep hoc lai o hoc ky tiep theo',
+        'ATTENDANCE', 20.0, 35.0, 'APPROVED', N'Cho phép học lại ở học kỳ tiếp theo',
         DATEADD(DAY, -5, GETDATE()), 'LEC_FT_ADV'),
     -- Trượt do điểm (GRADE) - đang chờ duyệt
     ('RETAKE_FT_002', 'ENR_FT_007', 'STU_K22_001', 'CLS_BUS201_2024', 'SUB_BUS201',
@@ -1488,8 +1488,8 @@ USING (VALUES
     ('ATT_FT_013', 'ENR_FT_011', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,5), N'Absent', N'Vang mat'),
     ('ATT_FT_014', 'ENR_FT_011', 'CLS_SE101_2024', DATEFROMPARTS(2024,9,12), N'Absent', N'Vang mat'),
     -- Attendance records tốt cho excellent GPA students
-    ('ATT_FT_015', 'ENR_FT_012', 'CLS_SE201_2024', DATEFROMPARTS(2024,9,11), N'Present', N'Co mat dung gio'),
-    ('ATT_FT_016', 'ENR_FT_012', 'CLS_SE201_2024', DATEFROMPARTS(2024,9,18), N'Present', N'Co mat dung gio')
+    ('ATT_FT_015', 'ENR_FT_012', 'CLS_SE201_2024', DATEFROMPARTS(2024,9,11), N'Present', N'Có mặt đúng giờ'),
+    ('ATT_FT_016', 'ENR_FT_012', 'CLS_SE201_2024', DATEFROMPARTS(2024,9,18), N'Present', N'Có mặt đúng giờ')
 ) AS src(attendance_id, enrollment_id, class_id, attendance_date, status, note)
 ON target.attendance_id = src.attendance_id
 WHEN NOT MATCHED THEN
