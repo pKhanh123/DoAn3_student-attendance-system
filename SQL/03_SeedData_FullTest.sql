@@ -3,6 +3,7 @@ USE EducationManagement;
 GO
 
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON;
 PRINT 'Bat dau seed full test dataset';
 
 -- ===========================================
@@ -779,20 +780,19 @@ GO
 -- ===========================================
 MERGE dbo.enrollments AS target
 USING (VALUES
-    ('ENR_FT_001', 'STU_K24_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9),  N'Dang hoc lan dau',                    NULL),
-    ('ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc song song ky nang du lieu',      NULL),
-    ('ENR_FT_003', 'STU_K24_002', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Chờ duyệt','PENDING',  DATEFROMPARTS(2024,9,9),  N'Doi advisor phe duyet',               NULL),
-    ('ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Sinh viên khóa 23 học nâng cao',     NULL),
-    ('ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Đang học', 'APPROVED', DATEFROMPARTS(2025,1,19), N'Do an tot nghiep',                   NULL),
-    ('ENR_FT_006', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  N'Da huy',   'DROPPED',  DATEFROMPARTS(2025,1,19), N'Bị cảnh báo vắng mặt',               N'Vuot qua 30 phan tram vang mat'),
-    ('ENR_FT_007', 'STU_K22_001', 'CLS_BUS201_2024',DATEFROMPARTS(2024,8,1),  N'Xin rut',  'WITHDRAWN',DATEFROMPARTS(2024,8,20), N'Nop don xin rut vi lich thuc tap',   N'Da rut truoc han')
-) AS src(enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status, drop_deadline, notes, drop_reason)
+    ('ENR_FT_001', 'STU_K24_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), 'APPROVED', DATEFROMPARTS(2024,9,9),  N'Dang hoc lan dau',                    NULL),
+    ('ENR_FT_002', 'STU_K24_001', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc song song ky nang du lieu',      NULL),
+    ('ENR_FT_003', 'STU_K24_002', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), 'PENDING',  DATEFROMPARTS(2024,9,9),  N'Doi advisor phe duyet',               NULL),
+    ('ENR_FT_004', 'STU_K23_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), 'APPROVED', DATEFROMPARTS(2024,8,15), N'Sinh viên khóa 23 học nâng cao',     NULL),
+    ('ENR_FT_005', 'STU_K21_001', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  'APPROVED', DATEFROMPARTS(2025,1,19), N'Do an tot nghiep',                   NULL),
+    ('ENR_FT_006', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,5),  'DROPPED',  DATEFROMPARTS(2025,1,19), N'Bị cảnh báo vắng mặt',               N'Vuot qua 30 phan tram vang mat'),
+    ('ENR_FT_007', 'STU_K22_001', 'CLS_BUS201_2024',DATEFROMPARTS(2024,8,1),  'WITHDRAWN',DATEFROMPARTS(2024,8,20), N'Nop don xin rut vi lich thuc tap',   N'Da rut truoc han')
+) AS src(enrollment_id, student_id, class_id, enrollment_date, enrollment_status, drop_deadline, notes, drop_reason)
 ON target.enrollment_id = src.enrollment_id
 WHEN MATCHED THEN
     UPDATE SET student_id = src.student_id,
                class_id = src.class_id,
                enrollment_date = src.enrollment_date,
-               status = src.status,
                enrollment_status = src.enrollment_status,
                drop_deadline = src.drop_deadline,
                notes = src.notes,
@@ -800,9 +800,9 @@ WHEN MATCHED THEN
                updated_at = GETDATE(),
                updated_by = 'seed_full_test'
 WHEN NOT MATCHED THEN
-    INSERT (enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status,
+    INSERT (enrollment_id, student_id, class_id, enrollment_date, enrollment_status,
             drop_deadline, notes, drop_reason, created_by)
-    VALUES (src.enrollment_id, src.student_id, src.class_id, src.enrollment_date, src.status, src.enrollment_status,
+    VALUES (src.enrollment_id, src.student_id, src.class_id, src.enrollment_date, src.enrollment_status,
             src.drop_deadline, src.notes, src.drop_reason, 'seed_full_test');
 GO
 
@@ -1346,26 +1346,26 @@ GO
 MERGE dbo.enrollments AS target
 USING (VALUES
     -- Enrollments cho students mới với grades D và F
-    ('ENR_FT_008', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc lai', NULL),
-    ('ENR_FT_009', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc binh thuong', NULL),
-    ('ENR_FT_010', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc lai', NULL),
-    ('ENR_FT_011', 'STU_K24_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc binh thuong', NULL),
+    ('ENR_FT_008', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc lai', NULL),
+    ('ENR_FT_009', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc binh thuong', NULL),
+    ('ENR_FT_010', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2024,8,26), 'APPROVED', DATEFROMPARTS(2024,9,10), N'Hoc lai', NULL),
+    ('ENR_FT_011', 'STU_K24_003', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,25), 'APPROVED', DATEFROMPARTS(2024,9,9), N'Hoc binh thuong', NULL),
     -- Thêm enrollments cho students cũ để tạo nợ tín chỉ và xu hướng GPA
-    ('ENR_FT_012', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), N'Đang học', 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc them', NULL),
-    ('ENR_FT_013', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2023,8,25), N'Da hoan thanh', 'APPROVED', DATEFROMPARTS(2023,9,9), N'Hoc nam truoc', NULL),
+    ('ENR_FT_012', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2024,7,30), 'APPROVED', DATEFROMPARTS(2024,8,15), N'Hoc them', NULL),
+    ('ENR_FT_013', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2023,8,25), 'APPROVED', DATEFROMPARTS(2023,9,9), N'Hoc nam truoc', NULL),
     -- Enrollments cho sinh viên đăng ký học lại (trong đợt đăng ký học lại)
-    ('ENR_RETAKE_001', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,22), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE301 - trượt do vắng mặt', NULL),
-    ('ENR_RETAKE_002', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2025,1,23), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE101 - trượt cả điểm và vắng mặt', NULL),
-    ('ENR_RETAKE_003', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,24), N'Đang học', 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE201 - trượt do điểm', NULL),
-    ('ENR_RETAKE_004', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,22), N'Da hoan thanh', 'APPROVED', DATEFROMPARTS(2024,9,5), N'Da hoan thanh hoc lai SE101', NULL),
-    ('ENR_RETAKE_005', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2025,1,25), N'Chờ duyệt', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai DS101', NULL),
-    ('ENR_RETAKE_006', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,26), N'Chờ duyệt', 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai SE201', NULL)
-) AS src(enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status, drop_deadline, notes, drop_reason)
+    ('ENR_RETAKE_001', 'STU_K21_002', 'CLS_SE301_2024', DATEFROMPARTS(2025,1,22), 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE301 - trượt do vắng mặt', NULL),
+    ('ENR_RETAKE_002', 'STU_K21_003', 'CLS_SE101_2024', DATEFROMPARTS(2025,1,23), 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE101 - trượt cả điểm và vắng mặt', NULL),
+    ('ENR_RETAKE_003', 'STU_K22_002', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,24), 'APPROVED', DATEFROMPARTS(2025,2,10), N'Dang ky hoc lai SE201 - trượt do điểm', NULL),
+    ('ENR_RETAKE_004', 'STU_K23_001', 'CLS_SE101_2024', DATEFROMPARTS(2024,8,22), 'APPROVED', DATEFROMPARTS(2024,9,5), N'Da hoan thanh hoc lai SE101', NULL),
+    ('ENR_RETAKE_005', 'STU_K23_002', 'CLS_DS101_2024', DATEFROMPARTS(2025,1,25), 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai DS101', NULL),
+    ('ENR_RETAKE_006', 'STU_K24_001', 'CLS_SE201_2024', DATEFROMPARTS(2025,1,26), 'PENDING', DATEFROMPARTS(2025,2,10), N'Cho duyet dang ky hoc lai SE201', NULL)
+) AS src(enrollment_id, student_id, class_id, enrollment_date, enrollment_status, drop_deadline, notes, drop_reason)
 ON target.enrollment_id = src.enrollment_id
 WHEN NOT MATCHED THEN
-    INSERT (enrollment_id, student_id, class_id, enrollment_date, status, enrollment_status,
+    INSERT (enrollment_id, student_id, class_id, enrollment_date, enrollment_status,
             drop_deadline, notes, drop_reason, created_by)
-    VALUES (src.enrollment_id, src.student_id, src.class_id, src.enrollment_date, src.status, src.enrollment_status,
+    VALUES (src.enrollment_id, src.student_id, src.class_id, src.enrollment_date, src.enrollment_status,
             src.drop_deadline, src.notes, src.drop_reason, 'seed_full_test');
 GO
 

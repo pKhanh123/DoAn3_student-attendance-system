@@ -38,7 +38,7 @@ SELECT
     g.letter_grade,
     l.full_name as lecturer_name,
     e.enrollment_date,
-    e.status as enrollment_status
+    e.enrollment_status as enrollment_status
 FROM dbo.students s
 INNER JOIN dbo.enrollments e ON s.student_id = e.student_id
 INNER JOIN dbo.classes c ON e.class_id = c.class_id
@@ -227,7 +227,7 @@ SELECT
     s.email as student_email,
     m.major_name,
     e.enrollment_date,
-    e.status as enrollment_status,
+    e.enrollment_status as enrollment_status,
     g.midterm_score,
     g.final_score,
     g.total_score,

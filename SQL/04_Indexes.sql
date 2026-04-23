@@ -445,7 +445,7 @@ IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollments_Student_Cl
 BEGIN
     CREATE NONCLUSTERED INDEX IX_Enrollments_Student_Class
     ON dbo.enrollments(student_id, class_id)
-    INCLUDE (status, enrollment_date)
+    INCLUDE (enrollment_status, enrollment_date)
     WHERE deleted_at IS NULL;
     PRINT '   ✅ Created: IX_Enrollments_Student_Class';
 END
@@ -483,28 +483,28 @@ ELSE
     PRINT '   ⏭️  Skipped: IX_Students_Major_Active_Covering (already exists)';
 
 -- Covering index cho enrollments by class and status
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollments_Class_Status_Covering')
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollments_Class_EnrollmentStatus_Covering')
 BEGIN
-    CREATE NONCLUSTERED INDEX IX_Enrollments_Class_Status_Covering
-    ON dbo.enrollments(class_id, status)
+    CREATE NONCLUSTERED INDEX IX_Enrollments_Class_EnrollmentStatus_Covering
+    ON dbo.enrollments(class_id, enrollment_status)
     INCLUDE (student_id, enrollment_date, enrollment_id)
     WHERE deleted_at IS NULL;
-    PRINT '   ✅ Created: IX_Enrollments_Class_Status_Covering';
+    PRINT '   ✅ Created: IX_Enrollments_Class_EnrollmentStatus_Covering';
 END
 ELSE
-    PRINT '   ⏭️  Skipped: IX_Enrollments_Class_Status_Covering (already exists)';
+    PRINT '   ⏭️  Skipped: IX_Enrollments_Class_EnrollmentStatus_Covering (already exists)';
 
 -- ✅ THÊM: Index cho thống kê enrollment theo lớp và status (với created_at)
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollments_Class_Status_CreatedAt')
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollments_Class_EnrollmentStatus_CreatedAt')
 BEGIN
-    CREATE NONCLUSTERED INDEX IX_Enrollments_Class_Status_CreatedAt
+    CREATE NONCLUSTERED INDEX IX_Enrollments_Class_EnrollmentStatus_CreatedAt
     ON dbo.enrollments(class_id, enrollment_status, enrollment_date DESC)
     INCLUDE (student_id, enrollment_id)
     WHERE deleted_at IS NULL;
-    PRINT '   ✅ Created: IX_Enrollments_Class_Status_CreatedAt';
+    PRINT '   ✅ Created: IX_Enrollments_Class_EnrollmentStatus_CreatedAt';
 END
 ELSE
-    PRINT '   ⏭️  Skipped: IX_Enrollments_Class_Status_CreatedAt (already exists)';
+    PRINT '   ⏭️  Skipped: IX_Enrollments_Class_EnrollmentStatus_CreatedAt (already exists)';
 
 -- =============================================
 -- 12. ROLE_PERMISSIONS TABLE INDEXES
