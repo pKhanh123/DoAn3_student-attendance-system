@@ -187,6 +187,7 @@ CREATE TABLE dbo.majors (
     major_name   NVARCHAR(150) NOT NULL,
     major_code   VARCHAR(20) NOT NULL UNIQUE,
     faculty_id   VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES dbo.faculties(faculty_id),
+    department_id  VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.departments(department_id),
     description  NVARCHAR(500) NULL,
     created_at   DATETIME NOT NULL DEFAULT(GETDATE()),
     created_by   VARCHAR(50) NULL,
@@ -265,7 +266,10 @@ CREATE TABLE dbo.students (
     phone            VARCHAR(20) NULL,
     address          NVARCHAR(300) NULL,
     major_id         VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.majors(major_id),
+    faculty_id       VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.faculties(faculty_id),
     academic_year_id VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.academic_years(academic_year_id),
+    cohort_year      INT NULL CHECK (cohort_year >= 2000 AND cohort_year <= 2100),
+    admin_class_id   VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.administrative_classes(admin_class_id),
     advisor_id       VARCHAR(50) NULL,
     user_id          VARCHAR(50) NULL FOREIGN KEY REFERENCES dbo.users(user_id),
     last_warning_sent DATETIME NULL,
@@ -377,11 +381,19 @@ CREATE TABLE dbo.enrollments (
     student_id      VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES dbo.students(student_id),
     class_id        VARCHAR(50) NOT NULL FOREIGN KEY REFERENCES dbo.classes(class_id),
     enrollment_date DATETIME NOT NULL DEFAULT(GETDATE()),
-    status          NVARCHAR(50) NULL,
+    enrollment_status NVARCHAR(20) DEFAULT 'APPROVED' NOT NULL,
+    drop_deadline   DATE NULL,
+    notes           NVARCHAR(500) NULL,
+    drop_reason     NVARCHAR(500) NULL,
     created_at      DATETIME NOT NULL DEFAULT(GETDATE()),
     created_by      VARCHAR(50) NULL,
+    updated_at      DATETIME NULL,
+    updated_by      VARCHAR(50) NULL,
     deleted_at      DATETIME NULL,
-    deleted_by      VARCHAR(50) NULL
+    deleted_by      VARCHAR(50) NULL,
+    -- Constraints
+    CONSTRAINT CHK_Enrollment_Status
+        CHECK (enrollment_status IN ('PENDING', 'APPROVED', 'DROPPED', 'WITHDRAWN'))
 );
 GO
 
@@ -757,6 +769,7 @@ GO
 IF COL_LENGTH('dbo.students','phone_number') IS NULL
 BEGIN
     PRINT '⚠ Adding computed column: students.phone_number AS ([phone]) PERSISTED';
+    SET QUOTED_IDENTIFIER ON;
     ALTER TABLE dbo.students ADD phone_number AS ([phone]) PERSISTED;
 END
 GO
@@ -983,108 +996,6 @@ BEGIN
     PRINT '✓ Created index: IX_Class_CurrentEnrollment';
 END
 GO
-
--- Update existing data
-UPDATE c
-SET c.current_enrollment = ISNULL(e.enrollment_count, 0)
-FROM classes c
-LEFT JOIN (
-    SELECT 
-        class_id,
-        COUNT(*) AS enrollment_count
-    FROM enrollments
-    WHERE deleted_at IS NULL
-    GROUP BY class_id
-) e ON c.class_id = e.class_id
-WHERE c.deleted_at IS NULL;
-
-PRINT '✓ Updated existing enrollment counts';
-GO
-
--- =============================================
--- 4. UPDATE TABLE: enrollments (add status fields)
--- =============================================
-
-PRINT 'Updating enrollments table...';
-
--- Add enrollment_status column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'enrollment_status')
-BEGIN
-    ALTER TABLE enrollments ADD enrollment_status NVARCHAR(20) DEFAULT 'APPROVED' NOT NULL;
-    PRINT '✓ Added column: enrollments.enrollment_status';
-END
-
--- Add drop_deadline column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'drop_deadline')
-BEGIN
-    ALTER TABLE enrollments ADD drop_deadline DATE NULL;
-    PRINT '✓ Added column: enrollments.drop_deadline';
-END
-
--- Add notes column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'notes')
-BEGIN
-    ALTER TABLE enrollments ADD notes NVARCHAR(500) NULL;
-    PRINT '✓ Added column: enrollments.notes';
-END
-
--- Add drop_reason column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'drop_reason')
-BEGIN
-    ALTER TABLE enrollments ADD drop_reason NVARCHAR(500) NULL;
-    PRINT '✓ Added column: enrollments.drop_reason';
-END
-
--- Add updated_at column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'updated_at')
-BEGIN
-    ALTER TABLE enrollments ADD updated_at DATETIME NULL;
-    PRINT '✓ Added column: enrollments.updated_at';
-END
-
--- Add updated_by column
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('enrollments') AND name = 'updated_by')
-BEGIN
-    ALTER TABLE enrollments ADD updated_by VARCHAR(50) NULL;
-    PRINT '✓ Added column: enrollments.updated_by';
-END
-GO
-
--- Add check constraint
-IF NOT EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CHK_Enrollment_Status')
-BEGIN
-    ALTER TABLE enrollments 
-    ADD CONSTRAINT CHK_Enrollment_Status 
-    CHECK (enrollment_status IN ('PENDING', 'APPROVED', 'DROPPED', 'WITHDRAWN'));
-    PRINT '✓ Added constraint: CHK_Enrollment_Status';
-END
-GO
-
--- Create indexes
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollment_Status' AND object_id = OBJECT_ID('enrollments'))
-    CREATE INDEX IX_Enrollment_Status ON enrollments(enrollment_status);
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollment_StatusActive' AND object_id = OBJECT_ID('enrollments'))
-    CREATE INDEX IX_Enrollment_StatusActive ON enrollments(enrollment_status, deleted_at);
-
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Enrollment_DropDeadline' AND object_id = OBJECT_ID('enrollments'))
-    CREATE INDEX IX_Enrollment_DropDeadline ON enrollments(drop_deadline);
-
-PRINT '✓ Indexes created for enrollments';
-GO
-
--- Migrate existing data
-UPDATE enrollments
-SET enrollment_status = 'APPROVED'
-WHERE enrollment_status IS NULL OR enrollment_status = 'APPROVED';
-
-UPDATE e
-SET e.drop_deadline = CAST(DATEADD(WEEK, 2, e.enrollment_date) AS DATE)
-FROM enrollments e
-WHERE e.drop_deadline IS NULL
-AND e.enrollment_status = 'APPROVED'
-AND e.deleted_at IS NULL
-AND e.enrollment_date IS NOT NULL;
 
 PRINT '✓ Migrated existing enrollment data';
 GO

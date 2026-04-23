@@ -1654,17 +1654,17 @@ BEGIN
     SET NOCOUNT ON;
     
     BEGIN TRY
-        SELECT 
+        SELECT
             s.student_id,
             s.student_code,
             s.full_name,
             e.enrollment_id,
             e.enrollment_date,
-            e.status as enrollment_status
+            e.enrollment_status
         FROM dbo.students s
         INNER JOIN dbo.enrollments e ON s.student_id = e.student_id
         WHERE e.class_id = @ClassId
-            AND e.status = 'APPROVED'  -- Chỉ lấy enrollment đã được duyệt
+            AND e.enrollment_status = 'APPROVED'  -- Chỉ lấy enrollment đã được duyệt
             AND e.deleted_at IS NULL
             AND s.deleted_at IS NULL
         ORDER BY s.student_code;
@@ -1698,7 +1698,7 @@ BEGIN
         DECLARE @IsQualified BIT = 1;
         
         -- Tính tỷ lệ chuyên cần
-        SELECT 
+        SELECT
             @TotalSessions = COUNT(*),
             @AbsentSessions = COUNT(CASE WHEN a.status = 'Absent' THEN 1 END)
         FROM dbo.enrollments e
@@ -1706,7 +1706,7 @@ BEGIN
             AND a.deleted_at IS NULL
         WHERE e.student_id = @StudentId
             AND e.class_id = @ClassId
-            AND e.status = 'APPROVED'
+            AND e.enrollment_status = 'APPROVED'
             AND e.deleted_at IS NULL;
         
         -- Tính tỷ lệ vắng mặt
@@ -2307,7 +2307,7 @@ BEGIN
         FROM dbo.students s
         INNER JOIN dbo.enrollments e ON s.student_id = e.student_id
         WHERE e.class_id = @ClassId
-            AND e.status = 'APPROVED'
+            AND e.enrollment_status = 'APPROVED'
             AND e.deleted_at IS NULL
             AND s.deleted_at IS NULL
         ORDER BY s.student_code;
@@ -2427,7 +2427,7 @@ BEGIN
         SELECT @TotalStudents = COUNT(*)
         FROM dbo.enrollments e
         WHERE e.class_id = @ClassId
-            AND e.status = 'APPROVED'
+            AND e.enrollment_status = 'APPROVED'
             AND e.deleted_at IS NULL;
         
         -- Tính số ca thi cần thiết

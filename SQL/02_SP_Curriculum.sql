@@ -190,12 +190,11 @@ CREATE PROCEDURE sp_GetAllEnrollments
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT 
+    SELECT
         e.enrollment_id,
         e.student_id,
         e.class_id,
         e.enrollment_date,
-        e.status,
         e.enrollment_status,
         e.drop_deadline,
         e.notes,
@@ -418,12 +417,11 @@ CREATE PROCEDURE sp_GetEnrollmentById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT 
+    SELECT
         e.enrollment_id,
         e.student_id,
         e.class_id,
         e.enrollment_date,
-        e.status,
         e.enrollment_status,
         e.drop_deadline,
         e.notes,

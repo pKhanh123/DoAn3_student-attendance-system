@@ -179,7 +179,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, new_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'enrollments', i.enrollment_id,
-            (SELECT i.enrollment_id, i.student_id, i.class_id, i.status, i.enrollment_date FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.enrollment_id, i.student_id, i.class_id, i.enrollment_status, i.enrollment_date FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM inserted i;
     END
@@ -190,7 +190,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'enrollments', d.enrollment_id,
-            (SELECT d.enrollment_id, d.student_id, d.class_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT d.enrollment_id, d.student_id, d.class_id, d.enrollment_status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM deleted d;
     END
@@ -201,8 +201,8 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'enrollments', i.enrollment_id,
-            (SELECT d.student_id, d.class_id, d.status, d.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-            (SELECT i.student_id, i.class_id, i.status, i.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT d.student_id, d.class_id, d.enrollment_status, d.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.student_id, i.class_id, i.enrollment_status, i.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM inserted i
         INNER JOIN deleted d ON i.enrollment_id = d.enrollment_id;
@@ -688,7 +688,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, new_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'exam_schedules', i.exam_id,
-            (SELECT i.exam_id, i.exam_name, i.class_id, i.exam_date, i.exam_type FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.exam_id, i.class_id, i.subject_id, i.exam_date, i.exam_type, i.room_id, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM inserted i;
     END
@@ -699,7 +699,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'exam_schedules', d.exam_id,
-            (SELECT d.exam_id, d.exam_name, d.exam_date FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT d.exam_id, d.class_id, d.subject_id, d.exam_date, d.exam_type, d.room_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM deleted d;
     END
@@ -828,7 +828,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, new_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'retake_records', i.retake_id,
-            (SELECT i.retake_id, i.enrollment_id, i.retake_fee, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.retake_id, i.enrollment_id, i.student_id, i.class_id, i.subject_id, i.reason, i.threshold_value, i.current_value, i.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM inserted i;
     END
@@ -839,7 +839,7 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'retake_records', d.retake_id,
-            (SELECT d.retake_id, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT d.retake_id, d.enrollment_id, d.student_id, d.class_id, d.subject_id, d.reason, d.status FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM deleted d;
     END
@@ -850,8 +850,8 @@ BEGIN
         INSERT INTO dbo.audit_logs (user_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent)
         SELECT
             @UserId, @Action, 'retake_records', i.retake_id,
-            (SELECT d.status, d.retake_fee, d.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
-            (SELECT i.status, i.retake_fee, i.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT d.status, d.advisor_notes, d.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
+            (SELECT i.status, i.advisor_notes, i.deleted_at FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
             NULL, NULL
         FROM inserted i
         INNER JOIN deleted d ON i.retake_id = d.retake_id;
