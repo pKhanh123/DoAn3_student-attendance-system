@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import studentApi from '../../../api/studentApi'
+import { useAuth } from '../../../hooks/useAuth'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -82,6 +83,7 @@ function getPages(currentPage: number, totalPages: number): number[] {
 export default function StudentListPage(): React.JSX.Element {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   const [search, setSearch] = useState<string>('')
   const [filterFaculty, setFilterFaculty] = useState<string>('')
@@ -152,7 +154,7 @@ export default function StudentListPage(): React.JSX.Element {
 
   // Delete mutation
   const deleteMutation = useMutation<unknown, ApiError, string>({
-    mutationFn: (studentId: string) => studentApi.delete({ studentId, deletedBy: 'current_user' }),
+    mutationFn: (id: string) => studentApi.delete({ studentId: id, deletedBy: String(user?.userId ?? '') }),
     onSuccess: () => {
       toast.success('Xóa sinh viên thành công!')
       queryClient.invalidateQueries({ queryKey: ['students'] })
