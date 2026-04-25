@@ -49,7 +49,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
 
   // Mark notification as read
   const markAsReadMutation = useMutation({
-    mutationFn: (notificationId: number) => 
+    mutationFn: (notificationId: string | number) => 
       apiClient.put(`/notifications/${notificationId}/read`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications-unread'] })
@@ -69,7 +69,8 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const markAndView = (notif: NotificationItem) => {
-    markAsReadMutation.mutate(notif.notificationId)
+    const id = notif.notificationId ?? notif.id
+    if (id != null) markAsReadMutation.mutate(id)
   }
 
   return (
@@ -102,7 +103,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
             </div>
 
             <div className="notification-dropdown-body">
-              {loading ? (
+              {isLoading ? (
                 <div className="text-center" style={{ padding: '20px' }}>
                   <i className="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
