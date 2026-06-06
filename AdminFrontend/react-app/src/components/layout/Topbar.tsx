@@ -20,7 +20,7 @@ export default function Topbar({
 }) {
   // Lấy user từ AuthContext
   let auth: ReturnType<typeof useAuth> | null = null
-  let user: { fullName?: string; userName?: string; role?: string; avatarUrl?: string } | null = null
+  let user: { fullName?: string; username?: string; role?: string; avatarUrl?: string } | null = null
   try {
     auth = useAuth()
     user = auth?.user ?? null
@@ -29,7 +29,7 @@ export default function Topbar({
   }
 
   const roleLabel = ROLE_DISPLAY[user?.role ?? ''] ?? user?.role ?? 'Người dùng'
-  const initials = (user?.fullName || user?.userName || 'U').charAt(0).toUpperCase()
+  const initials = (user?.fullName || user?.username || 'U').charAt(0).toUpperCase()
 
   return (
     <header className="header">
@@ -50,10 +50,7 @@ export default function Topbar({
         </div>
 
         <div className="header-right">
-          <div className="user-info" role="button" tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && (window as unknown as { openAvatarModal?: () => void }).openAvatarModal?.()}
-            onClick={() => (window as unknown as { openAvatarModal?: () => void }).openAvatarModal?.()}
-          >
+          <div className="user-info">
             <div className="user-avatar">
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="Avatar" />
@@ -62,7 +59,7 @@ export default function Topbar({
               )}
             </div>
             <div className="user-details">
-              <span className="user-name">{user?.fullName || user?.userName || 'User'}</span>
+              <span className="user-name">{user?.fullName || user?.username || 'User'}</span>
               <span className="user-role">{roleLabel}</span>
             </div>
           </div>
@@ -92,7 +89,7 @@ export default function Topbar({
             )}
           </div>
           <div className="user-details">
-            <span className="user-name">{user?.fullName || user?.userName || 'User'}</span>
+            <span className="user-name">{user?.fullName || user?.username || 'User'}</span>
             <span className="user-role">{roleLabel}</span>
           </div>
         </div>

@@ -29,7 +29,7 @@ const MENU_BY_ROLE: Record<string, { section: string; items: { label: string; ic
       { label: 'Phòng máy', icon: 'fas fa-desktop', path: '/admin/rooms' },
       { label: 'Năm học', icon: 'fas fa-calendar-alt', path: '/admin/school-years' },
       { label: 'Kỳ học', icon: 'fas fa-calendar-week', path: '/admin/academic-years' },
-      { label: 'Điều kiện môn học', icon: 'fas fa-book-open', path: '/admin/subject-prerequisites' },
+      // { label: 'Điều kiện môn học', icon: 'fas fa-book-open', path: '/admin/subject-prerequisites' }, // Temporarily disabled - no route defined
     ]},
     { section: 'QUẢN LÝ HỌC TẬP', items: [
       { label: 'Đăng ký học phần', icon: 'fas fa-clipboard-check', path: '/admin/enrollments' },

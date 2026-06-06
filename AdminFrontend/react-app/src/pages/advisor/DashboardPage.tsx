@@ -88,14 +88,14 @@ export default function AdvisorDashboardPage(): React.JSX.Element {
 
   const statsResult: UseQueryResult<AdvisorDashboardStats> = useQuery<AdvisorDashboardStats>({
     queryKey: ['advisor-dashboard-stats'],
-    queryFn: () => apiClient.get<AdvisorDashboardStats>('/dashboard/advisor/stats').then((r) => r.data),
+    queryFn: () => apiClient.get<AdvisorDashboardStats>('/advisor/dashboard/stats').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
   })
   const stats = statsResult.data
 
   const warningResult: UseQueryResult<WarningStudent[]> = useQuery<WarningStudent[]>({
     queryKey: ['advisor-warning-students'],
-    queryFn: () => apiClient.get<WarningStudent[]>('/dashboard/advisor/warning-students').then((r) => r.data),
+    queryFn: () => apiClient.get<WarningStudent[]>('/advisor/dashboard/warning-students').then((r) => r.data),
     staleTime: 30 * 1000,
   })
   const { data: warningStudents, isLoading: loadingWarning, refetch: refetchWarning } = warningResult

@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import apiClient from '../../api'
 import '../../assets/css/components.css'
 
 const NOTIF_ICONS: Record<string, string> = {
@@ -35,9 +37,24 @@ interface NotificationItem {
 
 export default function NotificationBell({ userRole }: { userRole?: string }) {
   const [showDropdown, setShowDropdown] = useState(false)
-  const [notifications, setNotifications] = useState<NotificationItem[]>([])
-  const [loading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient()
+
+  // Fetch unread notifications
+  const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
+    queryKey: ['notifications-unread'],
+    queryFn: () => apiClient.get('/notifications/unread').then(r => r.data),
+    refetchInterval: 60000, // Refresh every minute
+  })
+
+  // Mark notification as read
+  const markAsReadMutation = useMutation({
+    mutationFn: (notificationId: number) => 
+      apiClient.put(`/notifications/${notificationId}/read`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread'] })
+    }
+  })
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -52,9 +69,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const markAndView = (notif: NotificationItem) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.notificationId === notif.notificationId ? { ...n, isRead: true } : n))
-    )
+    markAsReadMutation.mutate(notif.notificationId)
   }
 
   return (
@@ -122,11 +137,13 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
               )}
             </div>
 
-            <div className="notification-dropdown-footer">
-              <a href={`/${(userRole || '').toLowerCase()}/notifications`}>
-                <i className="fas fa-arrow-right"></i> Xem tất cả thông báo
-              </a>
-            </div>
+            {userRole === 'admin' && (
+              <div className="notification-dropdown-footer">
+                <a href="/admin/notifications">
+                  <i className="fas fa-arrow-right"></i> Xem tất cả thông báo
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}

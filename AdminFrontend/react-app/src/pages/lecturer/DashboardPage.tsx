@@ -93,6 +93,7 @@ export default function LecturerDashboardPage(): React.JSX.Element {
     queryFn: () =>
       apiClient.get<LecturerDashboardStats>('/dashboard/lecturer/stats').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   // API may return { data: [...] } or a flat array — normalise to array
@@ -103,6 +104,7 @@ export default function LecturerDashboardPage(): React.JSX.Element {
         .then((r) => r.data as unknown),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   const todaySchedule: TodaySession[] = Array.isArray(rawSchedule)
@@ -127,28 +129,28 @@ export default function LecturerDashboardPage(): React.JSX.Element {
           color="blue"
           value={rawStats?.totalClasses}
           label="Lớp đang giảng dạy"
-          onClick={undefined}
+          onClick={() => navigate('/lecturer/classes')}
         />
         <StatCard
           icon="fa-user-graduate"
           color="green"
           value={rawStats?.totalStudents}
           label="Tổng số sinh viên"
-          onClick={undefined}
+          onClick={() => navigate('/lecturer/classes')}
         />
         <StatCard
           icon="fa-calendar-check"
           color="orange"
           value={rawStats?.todayClasses}
           label="Tiết học hôm nay"
-          onClick={undefined}
+          onClick={() => navigate('/lecturer/timetable')}
         />
         <StatCard
           icon="fa-exclamation-triangle"
           color="purple"
           value={rawStats?.warningStudents}
           label="SV cảnh báo chuyên cần"
-          onClick={undefined}
+          onClick={() => navigate('/lecturer/classes')}
         />
       </div>
 

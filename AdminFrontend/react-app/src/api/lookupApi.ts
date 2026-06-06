@@ -4,9 +4,9 @@ const lookupApi = {
   getFaculties: () =>
     apiClient.get<{ facultyId: number; facultyName: string }[]>('/faculties'),
   getMajors: (facultyId?: number) =>
-    apiClient.get<{ majorId: number; majorName: string; facultyId: number }[]>('/majors', {
-      params: facultyId ? { facultyId } : {},
-    }),
+    facultyId 
+      ? apiClient.get<{ majorId: number; majorName: string; facultyId: number }[]>(`/majors/by-faculty/${facultyId}`)
+      : apiClient.get<{ majorId: number; majorName: string; facultyId: number }[]>('/majors'),
   getDepartments: () =>
     apiClient.get<{ departmentId: number; departmentName: string }[]>('/departments'),
   getSubjects: () =>

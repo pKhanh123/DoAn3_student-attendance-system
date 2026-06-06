@@ -37,10 +37,10 @@ apiClient.interceptors.response.use(
           window.location.href = '/auth/login'
           throw error
         }
-        const res = await axios.post('/api-edu/auth/refresh-token', { refreshToken })
-        const { token: newToken, refreshToken: newRefresh } = res.data as {
-          token: string
-          refreshToken: string
+        const res = await axios.post('/auth/refresh', { refreshToken })
+        const { Token: newToken, RefreshToken: newRefresh } = res.data as {
+          Token: string
+          RefreshToken: string
         }
         const storage = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME)
           ? localStorage

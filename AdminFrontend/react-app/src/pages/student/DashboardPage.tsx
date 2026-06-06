@@ -70,18 +70,21 @@ export default function StudentDashboardPage(): React.JSX.Element {
     queryKey: ['student-info'],
     queryFn: () => apiClient.get<StudentInfo>('/dashboard/student/info').then((r) => r.data),
     staleTime: 5 * 60 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   const { data: todayScheduleRaw, isLoading: loadingToday } = useQuery<unknown>({
     queryKey: ['student-today-schedule'],
     queryFn: () => apiClient.get('/dashboard/student/today-schedule').then((r) => r.data),
     staleTime: 30 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   const { data: upcomingScheduleRaw, isLoading: loadingUpcoming } = useQuery<unknown>({
     queryKey: ['student-upcoming-schedule'],
     queryFn: () => apiClient.get('/dashboard/student/upcoming-schedule').then((r) => r.data),
     staleTime: 60 * 1000,
+    enabled: false, // ⚠️ Backend chưa implement endpoint này — tạm disable
   })
 
   const todaySchedule = Array.isArray(todayScheduleRaw) ? todayScheduleRaw as TodayScheduleItem[] : []

@@ -7,6 +7,7 @@ interface ResetPasswordVariables {
   email: string
   otp: string
   newPassword: string
+  confirmPassword: string
 }
 
 interface FormState {
@@ -95,6 +96,7 @@ const ResetPasswordPage: React.FC = (): React.JSX.Element => {
       email: storedEmail,
       otp: storedOtp,
       newPassword: form.password,
+      confirmPassword: form.confirmPassword,
     }
 
     setIsPending(true)
