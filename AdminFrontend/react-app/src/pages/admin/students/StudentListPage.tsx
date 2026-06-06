@@ -152,7 +152,7 @@ export default function StudentListPage(): React.JSX.Element {
 
   // Delete mutation
   const deleteMutation = useMutation<unknown, ApiError, string>({
-    mutationFn: (id: string) => studentApi.delete(id),
+    mutationFn: (studentId: string) => studentApi.delete({ studentId, deletedBy: 'current_user' }),
     onSuccess: () => {
       toast.success('Xóa sinh viên thành công!')
       queryClient.invalidateQueries({ queryKey: ['students'] })
