@@ -194,7 +194,7 @@ export default function StudentFormPage(): React.JSX.Element {
         cohortYear: form.cohortYear || undefined,
       } as unknown as import('../../../types').StudentFormData
       return isEditMode
-        ? studentApi.update(id!, payload)
+        ? studentApi.update({ ...payload, StudentId: id! })
         : studentApi.create(payload)
     },
     onSuccess: () => {

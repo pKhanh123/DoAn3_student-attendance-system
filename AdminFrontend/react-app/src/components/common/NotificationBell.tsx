@@ -69,7 +69,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const markAndView = (notif: NotificationItem) => {
-    markAsReadMutation.mutate(notif.notificationId)
+    markAsReadMutation.mutate(Number(notif.notificationId))
   }
 
   return (
@@ -102,7 +102,7 @@ export default function NotificationBell({ userRole }: { userRole?: string }) {
             </div>
 
             <div className="notification-dropdown-body">
-              {loading ? (
+              {isLoading ? (
                 <div className="text-center" style={{ padding: '20px' }}>
                   <i className="fas fa-spinner fa-spin"></i> Đang tải...
                 </div>
