@@ -37,7 +37,7 @@ const ResetPasswordPage: React.FC = (): React.JSX.Element => {
   useEffect(() => {
     const pendingEmail = sessionStorage.getItem('pendingResetEmail')
     if (!email && !pendingEmail) {
-      navigate('/forgot-password', { replace: true })
+      navigate('/auth/forgot-password', { replace: true })
     }
   }, [email, navigate])
 
@@ -108,7 +108,7 @@ const ResetPasswordPage: React.FC = (): React.JSX.Element => {
         sessionStorage.removeItem('pendingResetOtp')
         sessionStorage.removeItem('otpExpiry')
         setTimeout(() => {
-          navigate('/login', { replace: true })
+          navigate('/auth/login', { replace: true })
         }, 2000)
       })
       .catch((err: ApiError) => {
@@ -237,7 +237,7 @@ const ResetPasswordPage: React.FC = (): React.JSX.Element => {
           <p style={styles.footerText}>
             <button
               type="button"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/auth/login')}
               style={styles.linkButton}
             >
               ← Quay lại đăng nhập

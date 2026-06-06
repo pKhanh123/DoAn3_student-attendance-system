@@ -82,8 +82,8 @@ const VerifyOTPPage: React.FC = (): React.JSX.Element => {
       setLocalError('Vui lòng nhập mã OTP.')
       return
     }
-    if (!/^\d{6}$/.test(trimmedOtp)) {
-      setLocalError('Mã OTP phải gồm 6 chữ số.')
+    if (!/^\d{4}$/.test(trimmedOtp)) {
+      setLocalError('Mã OTP phải gồm 4 chữ số.')
       return
     }
     if (isExpired) {
@@ -99,9 +99,10 @@ const VerifyOTPPage: React.FC = (): React.JSX.Element => {
         const res = response as unknown as { data?: AuthDefaultResponse['data'] }
         setMutationState({ isPending: false, error: null })
         setSuccessMessage('Xác thực OTP thành công! Đang chuyển hướng…')
+        sessionStorage.setItem('pendingResetOtp', trimmedOtp)
         sessionStorage.removeItem('otpExpiry')
         setTimeout(() => {
-          navigate('/reset-password', { state: { email } })
+          navigate('/auth/reset-password', { state: { email } })
         }, 1500)
       })
       .catch((err: ApiError) => {
@@ -132,7 +133,7 @@ const VerifyOTPPage: React.FC = (): React.JSX.Element => {
   }
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
     setOtp(value)
     setLocalError('')
     setSuccessMessage('')
@@ -159,10 +160,10 @@ const VerifyOTPPage: React.FC = (): React.JSX.Element => {
               inputMode="numeric"
               pattern="[0-9]*"
               autoComplete="one-time-code"
-              placeholder="Nhập 6 chữ số"
+              placeholder="Nhập 4 chữ số"
               value={otp}
               onChange={handleChange}
-              maxLength={6}
+              maxLength={4}
               style={styles.input}
               disabled={mutationState.isPending}
             />
